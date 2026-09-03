@@ -10,15 +10,68 @@ st.set_page_config(
     layout="centered"
 )
 
-# Custom CSS to hide default Streamlit header and footer
-hide_style = """
+# Custom Dark Theme Styling
+dark_style = """
     <style>
+    /* Hide Streamlit elements */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
+    
+    /* Main Background & Text Colors */
+    .stApp {
+        background-color: #0E1117;
+        color: #FFFFFF;
+    }
+    
+    /* Body & Paragraph Text */
+    p, span, label, div {
+        color: #FFFFFF !important;
+    }
+    
+    /* Main Headings (Blue) */
+    h1 {
+        color: #00BFFF !important;
+        font-weight: 700;
+    }
+    
+    /* Subtitles and Section Headers (Orange) */
+    h2, h3, .stSubheader {
+        color: #FF8C00 !important;
+        font-weight: 600;
+    }
+    
+    /* Metric Card Styling */
+    [data-testid="stMetricValue"] {
+        color: #00BFFF !important;
+    }
+    
+    /* Input Box Formatting */
+    textarea, input {
+        background-color: #1E222D !important;
+        color: #FFFFFF !important;
+        border: 1px solid #FF8C00 !important;
+    }
+    
+    /* Download Button Customization */
+    .stDownloadButton>button {
+        background-color: #FF8C00 !important;
+        color: #FFFFFF !important;
+        border: none;
+        font-weight: bold;
+    }
+    .stDownloadButton>button:hover {
+        background-color: #E07B00 !important;
+        color: #FFFFFF !important;
+    }
+    
+    /* Divider lines */
+    hr {
+        border-color: #262730 !important;
+    }
     </style>
 """
-st.markdown(hide_style, unsafe_allow_html=True)
+st.markdown(dark_style, unsafe_allow_html=True)
 
 # Main Title & Subtitle
 st.title("🏗️ ECP 203 Concrete Cube Acceptance Verifier")
@@ -219,7 +272,7 @@ cubes_matrix = {
 }
 raw_cubes_df = pd.DataFrame(cubes_matrix)
 
-# Extended Technical Notes for 7, 14, and 28 Days
+# Technical Notes
 calculation_notes = [
     {"Section": "1. Standard Reference", "Details": "Egyptian Code of Practice for Concrete Structures (ECP 203 - Section 2-6)."},
     {"Section": "2. Multi-Stage Testing Framework", "Details": "Evaluations are conducted for 7-Day (~70% target fcu), 14-Day (~85% target fcu), and 28-Day (100% full specified fcu)."},
