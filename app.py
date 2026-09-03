@@ -1,3 +1,4 @@
+import io
 import streamlit as st
 import numpy as np
 import pandas as pd
@@ -57,7 +58,6 @@ else:
             df = pd.read_excel(uploaded_file)
             st.write("📊 **Preview of Uploaded File:**", df.head())
             
-            # Allow user to pick the numeric column
             numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
             if not numeric_cols:
                 st.error("⚠️ No numeric columns found in the uploaded file.")
@@ -106,10 +106,63 @@ col2.metric("Mean Strength (f_m)", f"{mean_fcu:.2f} N/mm²")
 col3.metric("Std. Deviation (s)", f"{s:.2f} N/mm²")
 
 st.write("")
+status_text = "PASS" if is_compliant else "FAIL"
+
 if is_compliant:
     st.success(f"✅ **PASS:** Concrete batch complies with specified grade {fcu_spec:.1f} N/mm² per ECP 203.")
 else:
     st.error(f"❌ **FAIL:** Concrete batch DOES NOT comply with specified grade {fcu_spec:.1f} N/mm² per ECP 203.")
+
+# Export Results to Excel
+summary_data = {
+    "Parameter": [
+        "Project Name",
+        "Pour Location / Element",
+        "Engineer in Charge",
+        "Specified Grade fcu (N/mm²)",
+        "Sample Size (n)",
+        "Mean Strength f_m (N/mm²)",
+        "Standard Deviation s (N/mm²)",
+        "Margin Factor (k)",
+        "Calculated fcu (N/mm²)",
+        "Minimum Individual Cube (N/mm²)",
+        "Min. Individual Threshold (0.85*fcu)",
+        "Overall Compliance Status"
+    ],
+    "Value": [
+        project_name,
+        pour_location,
+        "Eng. Mohamed Abd Al Aty",
+        fcu_spec,
+        n,
+        round(mean_fcu, 2),
+        round(s, 2),
+        k,
+        round(fcu_char, 2),
+        round(min_cube, 2),
+        round(0.85 * fcu_spec, 2),
+        status_text
+    ]
+}
+
+cubes_df = pd.DataFrame({"Cube No.": range(1, n + 1), "Crushing Strength (N/mm²)": cube_values})
+summary_df = pd.DataFrame(summary_data)
+
+# Generate Excel buffer in memory
+buffer = io.BytesIO()
+with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+    summary_df.to_excel(writer, sheet_name="Compliance Summary", index=False)
+    cubes_df.to_excel(writer, sheet_name="Cube Results", index=False)
+
+buffer.seek(0)
+
+# Download Button
+st.download_button(
+    label="📥 Download Excel Compliance Report (.xlsx)",
+    data=buffer,
+    file_name=f"ECP203_Report_{project_name.replace(' ', '_')}.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
 
 # Educational / Step-by-Step Calculation Breakdown
 with st.expander("🔍 Show Step-by-Step ECP 203 Calculation Formulas"):
