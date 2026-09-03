@@ -51,8 +51,8 @@ if len(cube_values) < 3:
 
 # Statistical Calculations (ECP 203 Logic)
 n = len(cube_values)
-mean_fcu = np.mean(cube_values)
-s = np.std(cube_values, ddof=1)  # Sample standard deviation (n - 1)
+mean_fcu = float(np.mean(cube_values))
+s = float(np.std(cube_values, ddof=1))  # Sample standard deviation (n - 1)
 
 # Statistical factor k according to sample size n
 k = 1.91 if n < 30 else 1.64
@@ -92,38 +92,39 @@ with st.expander("🔍 Show Step-by-Step ECP 203 Calculation Formulas"):
     """)
     
     st.latex(r"\text{Mean Strength: } f_m = \frac{\sum f_i}{n}")
-    st.write(f"👉 **$f_m$** = `{mean_fcu:.2f}` N/mm²")
+    st.write(f"👉 **Mean ($f_m$)** = `{mean_fcu:.2f}` N/mm²")
     
     st.latex(r"\text{Standard Deviation: } s = \sqrt{\frac{\sum (f_i - f_m)^2}{n - 1}}")
-    st.write(f"👉 **$s$** = `{s:.2f}` N/mm²")
+    st.write(f"👉 **Std. Dev. ($s$)** = `{s:.2f}` N/mm²")
     
-    st.markdown(f"**Statistical Margin Factor ($k$):**")
+    st.markdown("**Statistical Margin Factor ($k$):**")
     st.write(f"• For $n < 30$: $k = 1.91$ | For $n \\ge 30$: $k = 1.64$")
-    st.write(f"👉 Applied factor: **$k = {k}$** (because $n = {n}$)")
+    st.write(f"👉 Applied factor: **$k = {k}$** (because sample count $n = {n}$)")
     
     st.markdown("---")
     st.markdown("### **1. Characteristic Strength Check ($f_{cu}$)**")
+    
     st.latex(r"f_{cu,1} = f_m - (k \times s)")
-    st.write(f"$$f_{cu,1} = {mean_fcu:.2f} - ({k} \\times {s:.2f}) = {fcu_calc_1:.2f} \\text{{ N/mm}}^2$$")
+    st.latex(rf"f_{{cu,1}} = {mean_fcu:.2f} - ({k} \times {s:.2f}) = {fcu_calc_1:.2f} \text{{ N/mm}}^2")
     
     st.latex(r"f_{cu,2} = 0.85 \times f_m")
-    st.write(f"$$f_{cu,2} = 0.85 \\times {mean_fcu:.2f} = {fcu_calc_2:.2f} \\text{{ N/mm}}^2$$")
+    st.latex(rf"f_{{cu,2}} = 0.85 \times {mean_fcu:.2f} = {fcu_calc_2:.2f} \text{{ N/mm}}^2")
     
     st.latex(r"f_{cu} = \max(f_{cu,1}, f_{cu,2})")
-    st.write(f"👉 **Calculated $f_{cu}$** = `{fcu_char:.2f}` N/mm² | **Required Spec:** `{fcu_spec:.1f}` N/mm²")
+    st.write(f"👉 **Calculated $f_{{cu}}$** = `{fcu_char:.2f}` N/mm² | **Required Spec:** `{fcu_spec:.1f}` N/mm²")
     
     if cond1:
-        st.markdown("✔️ **Condition 1 Met:** $f_{cu} \\ge f_{cu,\\text{spec}}$")
+        st.markdown("✔️ **Condition 1 Met:** $f_{cu} \ge f_{cu,\\text{spec}}$")
     else:
         st.markdown("❌ **Condition 1 Failed:** $f_{cu} < f_{cu,\\text{spec}}$")
 
     st.markdown("---")
     st.markdown("### **2. Individual Cube Minimum Check**")
     st.latex(r"f_{\text{cube, min}} \ge 0.85 \times f_{cu,\text{spec}}")
-    st.write(f"• Minimum allowed individual cube: $0.85 \\times {fcu_spec:.1f} = {0.85 * fcu_spec:.2f}$ N/mm²")
-    st.write(f"• Lowest recorded cube result: `{min_cube:.2f}` N/mm²")
+    st.write(f"• Minimum allowed individual cube limit ($0.85 \\times f_{{cu,\\text{{spec}}}}$): **`{0.85 * fcu_spec:.2f}` N/mm²**")
+    st.write(f"• Lowest recorded cube result in sample: **`{min_cube:.2f}` N/mm²**")
     
     if cond2:
-        st.markdown("✔️ **Condition 2 Met:** Lowest individual cube strength meets the $0.85 \\times f_{cu,\\text{spec}}$ threshold.")
+        st.markdown("✔️ **Condition 2 Met:** Lowest individual cube strength meets the requirement.")
     else:
         st.markdown("❌ **Condition 2 Failed:** Lowest individual cube strength is below the minimum allowable limit.")
