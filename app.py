@@ -9,7 +9,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# Hide default Streamlit header and footer for a cleaner UI
+# Custom CSS to hide default Streamlit header and footer
 hide_style = """
     <style>
     #MainMenu {visibility: hidden;}
@@ -31,20 +31,48 @@ project_name = st.sidebar.text_input("Project Name", "New Capital Site Alpha")
 pour_location = st.sidebar.text_input("Structural Element / Pour Location", "Slab Axis A1-C5")
 fcu_spec = st.sidebar.number_input("Specified Grade fcu (N/mm²)", min_value=10.0, max_value=100.0, value=30.0, step=5.0)
 
-# Main Input Section
+# Input Mode Selector (Manual Text or Excel Sheet)
 st.header("1. Input 28-Day Cube Crushing Results (N/mm²)")
-st.info("💡 ECP 203 evaluates compliance based on group statistical distribution and minimum individual cube strength.")
+input_method = st.radio("Choose Input Method:", ["Manual Entry", "Upload Excel File (.xlsx)"], horizontal=True)
 
-default_cubes = "32.5, 34.0, 31.0, 35.5, 29.0, 33.0"
-cubes_input = st.text_area("Enter cube results separated by commas:", value=default_cubes)
+cube_values = []
 
-# Process Input
-try:
-    cube_values = [float(x.strip()) for x in cubes_input.split(",") if x.strip() != ""]
-except ValueError:
-    st.error("⚠️ Please enter valid numerical values separated by commas.")
-    st.stop()
+if input_method == "Manual Entry":
+    st.info("💡 Enter individual cube strengths separated by commas.")
+    default_cubes = "32.5, 34.0, 31.0, 35.5, 29.0, 33.0"
+    cubes_input = st.text_area("Cube Crushing Strengths:", value=default_cubes)
+    
+    try:
+        cube_values = [float(x.strip()) for x in cubes_input.split(",") if x.strip() != ""]
+    except ValueError:
+        st.error("⚠️ Please enter valid numerical values separated by commas.")
+        st.stop()
 
+else:
+    st.info("💡 Upload an Excel file containing a column with cube strength values.")
+    uploaded_file = st.file_uploader("Choose an Excel file", type=["xlsx", "xls"])
+    
+    if uploaded_file is not None:
+        try:
+            df = pd.read_excel(uploaded_file)
+            st.write("📊 **Preview of Uploaded File:**", df.head())
+            
+            # Allow user to pick the numeric column
+            numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+            if not numeric_cols:
+                st.error("⚠️ No numeric columns found in the uploaded file.")
+                st.stop()
+                
+            selected_col = st.selectbox("Select Column Containing Cube Results:", numeric_cols)
+            cube_values = df[selected_col].dropna().astype(float).tolist()
+        except Exception as e:
+            st.error(f"⚠️ Error reading Excel file: {e}")
+            st.stop()
+    else:
+        st.warning("👈 Please upload an Excel sheet to continue.")
+        st.stop()
+
+# Validate Sample Size
 if len(cube_values) < 3:
     st.warning("⚠️ ECP 203 requires at least 3 cube results for statistical verification.")
     st.stop()
@@ -114,7 +142,7 @@ with st.expander("🔍 Show Step-by-Step ECP 203 Calculation Formulas"):
     st.write(f"👉 **Calculated $f_{{cu}}$** = `{fcu_char:.2f}` N/mm² | **Required Spec:** `{fcu_spec:.1f}` N/mm²")
     
     if cond1:
-        st.markdown("✔️ **Condition 1 Met:** $f_{cu} \ge f_{cu,\\text{spec}}$")
+        st.markdown("✔️ **Condition 1 Met:** $f_{cu} \\ge f_{cu,\\text{spec}}$")
     else:
         st.markdown("❌ **Condition 1 Failed:** $f_{cu} < f_{cu,\\text{spec}}$")
 
