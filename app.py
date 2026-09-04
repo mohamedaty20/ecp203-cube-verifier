@@ -722,7 +722,7 @@ with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
 excel_buffer.seek(0)
 
 
-# PDF Export Buffer Generation Function
+# PDF Export Buffer Generation Function (Charts strictly placed at the very end)
 def generate_pdf_report():
   pdf_buffer = io.BytesIO()
   doc = SimpleDocTemplate(
@@ -784,7 +784,7 @@ def generate_pdf_report():
       )
   )
 
-  # Overview Table
+  # 1. Overview Table
   story.append(Paragraph("<b>1. Project Overview & Metadata</b>", section_style))
   overview_data_list = [["Parameter", "Details"]] + df_overview.values.tolist()
   t_overview = Table(overview_data_list, colWidths=[180, 360])
@@ -804,7 +804,7 @@ def generate_pdf_report():
   story.append(t_overview)
   story.append(Spacer(1, 10))
 
-  # Summary Results Table
+  # 2. Summary Results Table
   story.append(Paragraph("<b>2. Compliance Results Summary</b>", section_style))
   summary_headers = [
       "Stage",
@@ -846,19 +846,9 @@ def generate_pdf_report():
   story.append(t_summary)
   story.append(Spacer(1, 10))
 
-  # Embed Visual Analytics Charts into PDF Report
-  if chart1_img_bytes or chart2_img_bytes:
-    story.append(Paragraph("<b>3. Visual Analytics & Trend Charts</b>", section_style))
-    if chart1_img_bytes:
-      story.append(ReportLabImage(io.BytesIO(chart1_img_bytes), width=480, height=260))
-      story.append(Spacer(1, 8))
-    if chart2_img_bytes:
-      story.append(ReportLabImage(io.BytesIO(chart2_img_bytes), width=480, height=260))
-      story.append(Spacer(1, 10))
-
-  # Raw Individual Cubes Table
+  # 3. Raw Individual Cubes Table
   story.append(
-      Paragraph("<b>4. Raw Individual Cube Crushing Values</b>", section_style)
+      Paragraph("<b>3. Raw Individual Cube Crushing Values</b>", section_style)
   )
   raw_headers = list(df_raw_cubes.columns)
   raw_rows_data = [raw_headers] + [
@@ -881,16 +871,26 @@ def generate_pdf_report():
   story.append(t_raw)
   story.append(Spacer(1, 10))
 
-  # Calculation Methodology Section
+  # 4. Calculation Methodology Section
   story.append(
       Paragraph(
-          "<b>5. Calculation Methodology & Standards (ECP 203)</b>",
+          "<b>4. Calculation Methodology & Standards (ECP 203)</b>",
           section_style,
       )
   )
   for item in calc_methods:
     p_text = f"<b>{item['Step / Parameter']}:</b> {item['Mathematical Definition / Description']}"
     story.append(Paragraph(p_text, body_style))
+  story.append(Spacer(1, 10))
+
+  # 5. Visual Analytics & Trend Charts (Strictly placed at the absolute bottom)
+  if chart1_img_bytes or chart2_img_bytes:
+    story.append(Paragraph("<b>5. Visual Analytics & Trend Charts</b>", section_style))
+    if chart1_img_bytes:
+      story.append(ReportLabImage(io.BytesIO(chart1_img_bytes), width=480, height=250))
+      story.append(Spacer(1, 6))
+    if chart2_img_bytes:
+      story.append(ReportLabImage(io.BytesIO(chart2_img_bytes), width=480, height=250))
 
   doc.build(story)
   pdf_buffer.seek(0)
