@@ -8,6 +8,7 @@ import plotly.graph_objects as go
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import qrcode  # <--- Added for unique QR code generation
 
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.drawing.image import Image as OpenpyxlImage
@@ -398,7 +399,6 @@ with tabs[3]:
       cube_vals = cubes_7 if stage_name == "7 Days" else (cubes_14 if stage_name == "14 Days" else cubes_28)
       vals_str = ", ".join([str(v) for v in cube_vals])
       
-      # Fixed plain-text values using clean unicode instead of broken raw code
       cond_check_str = "PASS ✅" if res['cond1'] else "FAIL ❌"
       min_check_str = "PASS ✅" if res['cond2'] else "FAIL ❌"
       
@@ -605,18 +605,38 @@ def generate_pdf_report(logo_bytes=None):
   story.append(t_raw)
   story.append(Spacer(1, 4))
 
-  # 5. Sign-Off Block
-  story.append(Paragraph("<b>5. Engineering Sign-Off & Approvals</b>", section_style))
+  # --- UNIQUE QR CODE GENERATION FOR THIS EXPORT ---
+  qr_data_content = f"ECP203_VERIFIED | Project: {display_project_name} | Location: {pour_location} | Ticket: {batch_ticket_id} | Date: {formatted_report_date} | Engineer: {display_engineer_name}"
+  qr = qrcode.QRCode(version=1, box_size=5, border=1)
+  qr.add_data(qr_data_content)
+  qr.make(fit=True)
+  qr_img = qr.make_image(fill_color="black", back_color="white")
+  
+  qr_buffer = io.BytesIO()
+  qr_img.save(qr_buffer, format="PNG")
+  qr_buffer.seek(0)
+  
+  reportlab_qr_image = ReportLabImage(qr_buffer, width=65, height=65)
+
+  # 5. Sign-Off Block with Unique QR Code Verification Seal
+  story.append(Paragraph("<b>5. Engineering Sign-Off & Approvals & Digital Verification</b>", section_style))
   sign_cell_1 = Paragraph(f"<b>Prepared By:</b><br/>{display_engineer_name}<br/>Sign: _________", body_style)
   sign_cell_2 = Paragraph("<b>Checked By (QA/QC):</b><br/>Name: _________<br/>Sign: _________", body_style)
-  sign_cell_3 = Paragraph("<b>Approved (Consultant):</b><br/>Name: _________<br/>Stamp: [ Seal ]", body_style)
-  t_sign = Table([[sign_cell_1, sign_cell_2, sign_cell_3]], colWidths=[180, 180, 180])
+  sign_cell_3 = Paragraph("<b>Approved (Consultant):</b><br/>Name: _________<br/>Sign: _________", body_style)
+  
+  qr_cell = [
+      Paragraph("<b>Scan to Verify:</b>", body_style),
+      reportlab_qr_image
+  ]
+  
+  t_sign = Table([[sign_cell_1, sign_cell_2, sign_cell_3, qr_cell]], colWidths=[140, 140, 140, 100])
   t_sign.setStyle(TableStyle([
       ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F9F9F9")),
-      ("VALIGN", (0, 0), (-1, -1), "TOP"),
+      ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
       ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
-      ("TOPPADDING", (0, 0), (-1, -1), 5),
-      ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+      ("TOPPADDING", (0, 0), (-1, -1), 4),
+      ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+      ("ALIGN", (3, 0), (3, 0), "CENTER"),
   ]))
   story.append(t_sign)
 
