@@ -145,7 +145,7 @@ st.subheader(
 st.markdown("---")
 
 # Sidebar Configuration
-st.sidebar.header("Project Details")
+st.sidebar.header("PROJECT DETAILS")
 project_name = st.sidebar.text_input("Project Name", "New Capital Site Alpha")
 pour_location = st.sidebar.text_input(
     "Structural Element / Pour Location", "Slab Axis A1-C5"
