@@ -186,8 +186,7 @@ engineer_name = st.sidebar.text_input(
 )
 st.sidebar.markdown("---")
 st.sidebar.markdown(
-    "<p style='color: #DDDDDD; font-size: 0.9rem; font-family: \"Times New"
-    " Roman\", Times, serif; line-height: 1.5; font-weight: normal; font-style:"
+    "<p style='color: #DDDDDD; font-size: 0.9rem; font-family: \"Cormorant Garamond" / "Garamond", Times, serif; line-height: 1.5; font-weight: normal; font-style:"
     " normal; text-align: left;'>Note to Engineers: All outputs and"
     " compliance calculations are in accordance with the Egyptian Code of"
     " Practice (ECP 203). Please verify these results for your structural"
