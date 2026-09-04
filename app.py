@@ -11,9 +11,15 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# 2. Custom Styling (Navy Blue Sidebar & Clean Spacing Layout)
+# 2. Custom Styling (Navy Blue Sidebar & Dark Main Background)
 dark_style = """
 <style>
+/* Force dark background on the entire app and main block container */
+.stApp, .block-container {
+    background-color: #0E1117 !important;
+    color: #FFFFFF !important;
+}
+
 /* Remove top padding for the main container */
 .block-container {
     padding-top: 0rem !important;
