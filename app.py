@@ -1,9 +1,14 @@
+io_import_check = True
 import io
 import numpy as np
 import pandas as pd
 import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.drawing.image import Image as OpenpyxlImage
 
@@ -400,33 +405,32 @@ st.header("3. Visual Analytics & Strength Trend Charts")
 
 chart_col1, chart_col2 = st.columns(2)
 
+chart_data_list = []
+for i, val in enumerate(cubes_7):
+  chart_data_list.append({
+      "Cube Label": f"Cube 7-{i+1} ({val} MPa)",
+      "Sample Index": i + 1,
+      "Strength": val,
+      "Stage": "7 Days"
+  })
+for i, val in enumerate(cubes_14):
+  chart_data_list.append({
+      "Cube Label": f"Cube 14-{i+1} ({val} MPa)",
+      "Sample Index": i + 1,
+      "Strength": val,
+      "Stage": "14 Days"
+  })
+for i, val in enumerate(cubes_28):
+  chart_data_list.append({
+      "Cube Label": f"Cube 28-{i+1} ({val} MPa)",
+      "Sample Index": i + 1,
+      "Strength": val,
+      "Stage": "28 Days"
+  })
+
 # Chart 1: Professional Labeled Scatter/Line Chart for Individual Cubes
 with chart_col1:
   st.subheader("Individual Cube Strengths Labeled")
-  chart_data_list = []
-  
-  for i, val in enumerate(cubes_7):
-    chart_data_list.append({
-        "Cube Label": f"Cube 7-{i+1} ({val} MPa)",
-        "Sample Index": i + 1,
-        "Strength": val,
-        "Stage": "7 Days"
-    })
-  for i, val in enumerate(cubes_14):
-    chart_data_list.append({
-        "Cube Label": f"Cube 14-{i+1} ({val} MPa)",
-        "Sample Index": i + 1,
-        "Strength": val,
-        "Stage": "14 Days"
-    })
-  for i, val in enumerate(cubes_28):
-    chart_data_list.append({
-        "Cube Label": f"Cube 28-{i+1} ({val} MPa)",
-        "Sample Index": i + 1,
-        "Strength": val,
-        "Stage": "28 Days"
-    })
-
   if chart_data_list:
     df_chart = pd.DataFrame(chart_data_list)
     fig_bars = px.scatter(
@@ -439,7 +443,6 @@ with chart_col1:
         labels={"Strength": "Crushing Strength (N/mm²)", "Sample Index": "Sample Number Sequence"},
         template="plotly_dark",
     )
-    # Style text labels to display cleanly right next to the points
     fig_bars.update_traces(
         mode="text+markers",
         textposition="top center",
@@ -456,18 +459,18 @@ with chart_col1:
     st.info("No data available for distribution chart.")
 
 # Chart 2: Summary Comparison vs Target Line Chart
+summary_chart_data = []
+for stage_key in ["7 Days", "14 Days", "28 Days"]:
+  res = stages_data[stage_key]
+  if res:
+    summary_chart_data.append({
+        "Stage": stage_key,
+        "Calculated fcu": res["fcu_char"],
+        "Target Requirement": res["stage_target_fcu"],
+    })
+
 with chart_col2:
   st.subheader("Characteristic fcu vs Target Thresholds")
-  summary_chart_data = []
-  for stage_key in ["7 Days", "14 Days", "28 Days"]:
-    res = stages_data[stage_key]
-    if res:
-      summary_chart_data.append({
-          "Stage": stage_key,
-          "Calculated fcu": res["fcu_char"],
-          "Target Requirement": res["stage_target_fcu"],
-      })
-
   if summary_chart_data:
     df_summary_chart = pd.DataFrame(summary_chart_data)
     fig_lines = go.Figure()
@@ -629,15 +632,65 @@ calc_methods = [
 ]
 df_methods = pd.DataFrame(calc_methods)
 
-# Convert Plotly figures into PNG binaries using Kaleido engine for file outputs
+# Robust Native Matplotlib Image Generation for Excel and PDF Exports
 chart1_img_bytes = None
 chart2_img_bytes = None
 try:
+  # Generate Chart 1 Image via Matplotlib
+  fig_m1, ax_m1 = plt.subplots(figsize=(7, 4), dpi=150)
+  fig_m1.patch.set_facecolor('#1B2A4A')
+  ax_m1.set_facecolor('#031338')
+  
   if chart_data_list:
-    chart1_img_bytes = fig_bars.to_image(format="png", width=700, height=400, scale=2)
+    df_c = pd.DataFrame(chart_data_list)
+    for stage_name, color in [("7 Days", "#00BFFF"), ("14 Days", "#FF8C00"), ("28 Days", "#2ecc71")]:
+      subset = df_c[df_c["Stage"] == stage_name]
+      if not subset.empty:
+        ax_m1.scatter(subset["Sample Index"], subset["Strength"], color=color, label=stage_name, s=70, zorder=3)
+        for _, row in subset.iterrows():
+          ax_m1.annotate(f"{row['Cube Label']}", (row["Sample Index"], row["Strength"]),
+                         textcoords="offset points", xytext=(0, 6), ha='center', fontsize=7, color='white')
+  
+  ax_m1.set_title("Individual Cube Strengths with Direct Labels", color='white', fontsize=10, fontweight='bold')
+  ax_m1.set_xlabel("Sample Index Sequence", color='white', fontsize=8)
+  ax_m1.set_ylabel("Crushing Strength (N/mm²)", color='white', fontsize=8)
+  ax_m1.tick_params(colors='white', labelsize=8)
+  ax_m1.grid(True, linestyle='--', alpha=0.3, color='gray')
+  ax_m1.legend(loc='upper right', facecolor='#1B2A4A', edgecolor='none', labelcolor='white', fontsize=8)
+  
+  buf1 = io.BytesIO()
+  fig_m1.savefig(buf1, format="png", bbox_inches='tight', facecolor=fig_m1.get_facecolor(), edgecolor='none')
+  buf1.seek(0)
+  chart1_img_bytes = buf1.getvalue()
+  plt.close(fig_m1)
+
+  # Generate Chart 2 Image via Matplotlib
+  fig_m2, ax_m2 = plt.subplots(figsize=(7, 4), dpi=150)
+  fig_m2.patch.set_facecolor('#1B2A4A')
+  ax_m2.set_facecolor('#031338')
+  
   if summary_chart_data:
-    chart2_img_bytes = fig_lines.to_image(format="png", width=700, height=400, scale=2)
-except Exception:
+    df_s = pd.DataFrame(summary_chart_data)
+    ax_m2.plot(df_s["Stage"], df_s["Calculated fcu"], marker='o', color="#00BFFF", linewidth=2.5, label="Calculated fcu")
+    ax_m2.plot(df_s["Stage"], df_s["Target Requirement"], marker='s', linestyle='--', color="#FF8C00", linewidth=2.5, label="Target Requirement")
+    
+    for _, row in df_s.iterrows():
+      ax_m2.annotate(f"{row['Calculated fcu']:.2f}", (row["Stage"], row["Calculated fcu"]), textcoords="offset points", xytext=(0, 8), ha='center', fontsize=8, color='#00BFFF', fontweight='bold')
+      ax_m2.annotate(f"{row['Target Requirement']:.2f}", (row["Stage"], row["Target Requirement"]), textcoords="offset points", xytext=(0, -12), ha='center', fontsize=8, color='#FF8C00', fontweight='bold')
+
+  ax_m2.set_title("Calculated fcu vs Target Thresholds", color='white', fontsize=10, fontweight='bold')
+  ax_m2.set_xlabel("Testing Stage", color='white', fontsize=8)
+  ax_m2.set_ylabel("Strength (N/mm²)", color='white', fontsize=8)
+  ax_m2.tick_params(colors='white', labelsize=8)
+  ax_m2.grid(True, linestyle='--', alpha=0.3, color='gray')
+  ax_m2.legend(loc='upper right', facecolor='#1B2A4A', edgecolor='none', labelcolor='white', fontsize=8)
+  
+  buf2 = io.BytesIO()
+  fig_m2.savefig(buf2, format="png", bbox_inches='tight', facecolor=fig_m2.get_facecolor(), edgecolor='none')
+  buf2.seek(0)
+  chart2_img_bytes = buf2.getvalue()
+  plt.close(fig_m2)
+except Exception as e:
   pass
 
 # Excel Export Buffer Construction
