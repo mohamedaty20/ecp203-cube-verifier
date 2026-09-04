@@ -30,7 +30,7 @@ dark_style = """
 <style>
 /* Force dark background on the entire app */
 .stApp {
-    background-color: #031d5c !important;
+    background-color: #031338 !important;
     color: #FFFFFF !important;
 }
 
