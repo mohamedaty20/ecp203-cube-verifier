@@ -376,7 +376,7 @@ overview_data = [
     {"Parameter": "Project Name", "Details": display_project_name},
     {"Parameter": "Structural Element / Pour Location", "Details": pour_location},
     {"Parameter": "Specified 28-Day Grade (fcu)", "Details": f"{fcu_spec} N/mm²"},
-    {"Parameter": "Engineer in Charge", "Details": "Eng. Mohamed Abd Al Aty"},
+    {"Parameter": "Engineer Name", "Details": display_engineer_name},
     {
         "Parameter": "Standard Specification",
         "Details": "Egyptian Code of Practice (ECP 203)",
