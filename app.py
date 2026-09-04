@@ -39,7 +39,6 @@ dark_style = """
 footer {visibility: hidden;}
 header {background-color: transparent !important;}
 """
-}
 
 /* Navy Blue Sidebar Styling */
 [data-testid="stSidebar"], 
