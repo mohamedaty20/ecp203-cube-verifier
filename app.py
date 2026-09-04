@@ -126,7 +126,7 @@ textarea, input {
 
 /* Download Button Styling with Custom Font */
 .stDownloadButton>button {
-    background-color: #FF8C00 !important;
+    background-color: #440345 !important;
     color: #FFFFFF !important;
     border: none;
     font-family: 'Segoe UI', Arial, sans-serif !important; /* Change your font style here */
