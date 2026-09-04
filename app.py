@@ -34,7 +34,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# 2. Custom Styling (Navy Blue Sidebar & Padded Main Layout with White Table Background Fix)
+# 2. Custom Styling (Navy Blue Sidebar & Complete Dark Table Theme Overrides)
 dark_style = """
 <style>
 .stApp {
@@ -124,11 +124,12 @@ hr {
     border-color: #262730 !important;
 }
 
-/* Fix to remove white container background wrapper around dataframes and tables */
-[data-testid="stDataFrame"], [data-testid="stTable"], div[data-baseweb="card"] {
+/* Force complete dark background removal for white table cards and wrappers */
+[data-testid="stDataFrame"] {
     background-color: #1B2A4A !important;
-    border-radius: 8px;
-    padding: 5px;
+}
+div[data-baseweb="card"], div[data-testid="stTable"] {
+    background-color: #1B2A4A !important;
 }
 </style>
 """
@@ -333,14 +334,19 @@ for idx, (stage_label, tab) in enumerate(zip(["7 Days", "14 Days", "28 Days"], t
       st.markdown("---")
       st.markdown(f"#### 🔍 Detailed Sample-by-Sample & Statistical Breakdown ({stage_label})")
       
-      st.markdown(f"""
-      * **Arithmetic Mean ($f_m$):** $\\frac{{\\sum x_i}}{{n}} = {res['mean']:.2f}$ N/mm²
-      * **Standard Deviation ($s$):** {res['s']:.2f} N/mm²
-      * **Factor ($k$):** {res['k']} (for $n = {res['n']}$)
-      * **Characteristic Strength ($f_{{cu}}$):** $\\max(f_m - k \\cdot s,\\ 0.85 \\cdot f_m) = \\max({res['mean']:.2f} - {res['k']} \\cdot {res['s']:.2f},\\ 0.85 \\cdot {res['mean']:.2f}) = $ **{res['fcu_char']:.2f} N/mm²**
-      * **Target Required Strength ($f_{{cu,\\text{{target}}}}$):** {res['stage_target_fcu']:.2f} N/mm²
-      * **Minimum Individual Cube Limit ($0.85 \\cdot f_{{cu,\\text{{target}}}}$):** {res['min_threshold']:.2f} N/mm²
-      """)
+      st.markdown(
+          f"* **Arithmetic Mean ($f_m$):** $\\frac{{\\sum x_i}}{{n}} ="
+          f" {res['mean']:.2f}$ N/mm²\n* **Standard Deviation ($s$):**"
+          f" {res['s']:.2f} N/mm²\n* **Factor ($k$):** {res['k']} (for $n ="
+          f" {res['n']}$)\n* **Characteristic Strength ($f_{{cu}}$):**"
+          f" $\\max(f_m - k \\cdot s,\\ 0.85 \\cdot f_m) ="
+          f" \\max({res['mean']:.2f} - {res['k']} \\cdot {res['s']:.2f},\\ 0.85"
+          f" \\cdot {res['mean']:.2f}) = $ **{res['fcu_char']:.2f} N/mm²**\n*"
+          f" **Target Required Strength ($f_{{cu,\\text{{target}}}}$):**"
+          f" {res['stage_target_fcu']:.2f} N/mm²\n* **Minimum Individual Cube"
+          f" Limit ($0.85 \\cdot f_{{cu,\\text{{target}}}}$):**"
+          f" {res['min_threshold']:.2f} N/mm²"
+      )
       
       cube_vals = cubes_7 if stage_label == "7 Days" else (cubes_14 if stage_label == "14 Days" else cubes_28)
       sample_breakdown = []
@@ -371,20 +377,24 @@ with tabs[3]:
       cube_vals = cubes_7 if stage_name == "7 Days" else (cubes_14 if stage_name == "14 Days" else cubes_28)
       vals_str = ", ".join([str(v) for v in cube_vals])
       
+      # Fixed plain-text markdown strings to avoid raw python backslash interpretation bugs in st.markdown
+      cond_check_str = "PASS ✅" if res['cond1'] else "FAIL ❌"
+      min_check_str = "PASS ✅" if res['cond2'] else "FAIL ❌"
+      
       st.markdown(f"""
-      * **Input Samples ($x_i$):** `[{vals_str}]` ($n = {res['n']}$)
-      * **Step 1: Arithmetic Mean ($f_m$):**
-        $$f_m = \\frac{{\\sum x_i}}{{n}} = \\frac{{{sum(cube_vals)}}}{{{res['n']}}} = \\mathbf{{{res['mean']:.2f}\\text{{ N/mm²}}}}$$
-      * **Step 2: Standard Deviation ($s$):**
-        $$s = \\sqrt{{\\frac{{\\sum (x_i - f_m)^2}}{{n - 1}}}} = \\mathbf{{{res['s']:.2f}\\text{{ N/mm²}}}}$$
-      * **Step 3: Characteristic Strength ($f_{{cu}}$):**
-        - Condition A ($f_m - k \\cdot s$): ${res['mean']:.2f} - ({res['k']} \\cdot {res['s']:.2f}) = {res['fcu_calc_1']:.2f}$ N/mm²
-        - Condition B ($0.85 \\cdot f_m$): $0.85 \\cdot {res['mean']:.2f} = {res['fcu_calc_2']:.2f}$ N/mm²
-        - Final $f_{{cu}} = \\max({res['fcu_calc_1']:.2f}, {res['fcu_calc_2']:.2f}) = \\mathbf{{{res['fcu_char']:.2f}\\text{{ N/mm²}}}}$$
-      * **Step 4: Target & Compliance Check:**
-        - Required Target ($f_{{target}}$): ${res['target_ratio']} \\times {fcu_spec} = {res['stage_target_fcu']:.2f}$ N/mm²
-        - Characteristic Check ($f_{{cu}} \\ge f_{{target}}$): `{res['fcu_char']:.2f} \\ge {res['stage_target_fcu']:.2f}` $\rightarrow$ **{'PASS ✅' if res['cond1'] else 'FAIL ❌'}**
-        - Min Individual Limit ($0.85 \\times f_{{target}}$): `{res['min_threshold']:.2f} N/mm²` (Minimum measured: `{res['min']} N/mm²`) $\rightarrow$ **{'PASS ✅' if res['cond2'] else 'FAIL ❌'}**
+* **Input Samples ($x_i$):** `[{vals_str}]` ($n = {res['n']}$)
+* **Step 1: Arithmetic Mean ($f_m$):**
+  $f_m = \\frac{{\\sum x_i}}{{n}} = \\frac{{{sum(cube_vals)}}}{{{res['n']}}} = \\mathbf{{{res['mean']:.2f}\\text{{ N/mm²}}}}$
+* **Step 2: Standard Deviation ($s$):**
+  $s = \\sqrt{{\\frac{{\\sum (x_i - f_m)^2}}{{n - 1}}}} = \\mathbf{{{res['s']:.2f}\\text{{ N/mm²}}}}$
+* **Step 3: Characteristic Strength ($f_{{cu}}$):**
+  - Condition A ($f_m - k \\cdot s$): ${res['mean']:.2f} - ({res['k']} \\cdot {res['s']:.2f}) = {res['fcu_calc_1']:.2f}$ N/mm²
+  - Condition B ($0.85 \\cdot f_m$): $0.85 \\cdot {res['mean']:.2f} = {res['fcu_calc_2']:.2f}$ N/mm²
+  - Final $f_{{cu}} = \\max({res['fcu_calc_1']:.2f}, {res['fcu_calc_2']:.2f}) = \\mathbf{{{res['fcu_char']:.2f}\\text{{ N/mm²}}}}$
+* **Step 4: Target & Compliance Check:**
+  - Required Target ($f_{{target}}$): ${res['target_ratio']} \\times {fcu_spec} = {res['stage_target_fcu']:.2f}$ N/mm²
+  - Characteristic Check ($f_{{cu}} \\ge f_{{target}}$): `{res['fcu_char']:.2f} \\ge {res['stage_target_fcu']:.2f}` $\\rightarrow$ **{cond_check_str}**
+  - Min Individual Limit ($0.85 \\times f_{{target}}$): `{res['min_threshold']:.2f} N/mm²` (Minimum measured: `{res['min']} N/mm²`) $\\rightarrow$ **{min_check_str}**
       """)
       st.markdown("---")
     else:
