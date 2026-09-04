@@ -34,7 +34,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# 2. Custom Styling (Navy Blue Sidebar & Padded Main Layout)
+# 2. Custom Styling (Navy Blue Sidebar & Padded Main Layout with White Table Background Fix)
 dark_style = """
 <style>
 .stApp {
@@ -122,6 +122,13 @@ textarea, input {
 }
 hr {
     border-color: #262730 !important;
+}
+
+/* Fix to remove white container background wrapper around dataframes and tables */
+[data-testid="stDataFrame"], [data-testid="stTable"], div[data-baseweb="card"] {
+    background-color: #1B2A4A !important;
+    border-radius: 8px;
+    padding: 5px;
 }
 </style>
 """
@@ -342,9 +349,9 @@ for idx, (stage_label, tab) in enumerate(zip(["7 Days", "14 Days", "28 Days"], t
         ind_pass = val >= min_lim
         sample_breakdown.append({
             "Sample #": i + 1,
-            "Measured Strength ($x_i$) N/mm²": val,
+            "Measured Strength (x_i) N/mm²": val,
             "Min Individual Limit (N/mm²)": round(min_lim, 2),
-            "Individual Check ($x_i \\ge 0.85 \\cdot f_{\\text{target}}$)": "PASS ✅" if ind_pass else "FAIL ❌"
+            "Individual Check (x_i >= 0.85 * f_target)": "PASS ✅" if ind_pass else "FAIL ❌"
         })
       df_sb = pd.DataFrame(sample_breakdown)
       st.dataframe(df_sb, use_container_width=True)
@@ -466,7 +473,7 @@ for stage_key in ["7 Days", "14 Days", "28 Days"]:
     })
 df_summary_table = pd.DataFrame(summary_rows)
 
-# Excel Buffer Construction (Excluded calculation formula sheet text as requested)
+# Excel Buffer Construction
 excel_buffer = io.BytesIO()
 with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
   df_overview.to_excel(writer, sheet_name="Project Overview & Metadata", index=False)
@@ -475,7 +482,7 @@ with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
   df_raw_cubes.to_excel(writer, sheet_name="Raw Individual Cubes", index=False)
 excel_buffer.seek(0)
 
-# PDF Report Generation Function (Formula section completely removed from export as requested)
+# PDF Report Generation Function
 def generate_pdf_report(logo_bytes=None):
   pdf_buffer = io.BytesIO()
   doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
