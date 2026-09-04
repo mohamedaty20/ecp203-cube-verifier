@@ -11,37 +11,40 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# 2. Custom Styling (Navy Blue Sidebar & Dark Main Background)
+# 2. Custom Styling (Navy Blue Sidebar & Padded Main Layout)
 dark_style = """
 <style>
-/* Force dark background on the entire app and main block container */
-.stApp, .block-container {
+/* Force dark background on the entire app */
+.stApp {
     background-color: #0E1117 !important;
     color: #FFFFFF !important;
 }
 
-/* Remove default block-container padding so the banner can span edge-to-edge */
+/* Give the main container proper padding so text never touches the sidebar */
 .block-container {
     padding-top: 0rem !important;
-    padding-bottom: 2rem !important;
-    padding-left: 0rem !important;
-    padding-right: 0rem !important;
+    padding-bottom: 3rem !important;
+    padding-left: 2.5rem !important;
+    padding-right: 2.5rem !important;
     max-width: 100% !important;
 }
 
-/* Ensure top banner/logo scales full width */
+/* Break the top banner image out of the padding to span 100% edge-to-edge */
 [data-testid="stImage"] {
+    width: 100vw !important;
+    position: relative !important;
+    left: 50% !important;
+    right: 50% !important;
+    margin-left: -50vw !important;
+    margin-right: -50vw !important;
+    margin-bottom: 2rem !important;
+}
+[data-testid="stImage"] img {
     width: 100% !important;
+    object-fit: cover;
 }
 
-/* Add clear horizontal spacing and padding to the main text container */
-.main-content {
-    padding-left: 2.5rem !important;
-    padding-right: 2.5rem !important;
-    padding-top: 1rem !important;
-}
-
-/* Hide Streamlit default menu/footer but keep sidebar arrow visible */
+/* Hide Streamlit default menu/footer but keep sidebar toggle visible */
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {background-color: transparent !important;}
@@ -127,11 +130,8 @@ hr {
 """
 st.markdown(dark_style, unsafe_allow_html=True)
 
-# 3. Top Banner / Cover Photo (Stretches edge-to-edge)
-st.image("logo.png", use_container_width=True)
-
-# 4. Main Body Content Wrapper (Applies clean spacing from the sidebar)
-st.markdown('<div class="main-content">', unsafe_allow_html=True)
+# 3. Top Banner / Cover Photo (Automatically stretches edge-to-edge via CSS)
+st.image("logo.png")
 
 # Main Title & Subtitle
 st.title("ECP 203 Concrete Cube Acceptance Verifier")
@@ -545,5 +545,3 @@ with st.expander(
       )
 
     st.markdown("---")
-
-st.markdown("</div>", unsafe_allow_html=True)
