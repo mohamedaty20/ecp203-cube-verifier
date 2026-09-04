@@ -142,6 +142,23 @@ st.markdown(dark_style, unsafe_allow_html=True)
 # 3. Top Banner / Cover Photo
 st.image("logo.png")
 
+# Moving Ticker Banner
+ticker_html = """
+<div style="overflow: hidden; white-space: nowrap; background-color: #FF8C00; color: #031338; padding: 8px 0; font-weight: bold; font-size: 15px; margin-bottom: 20px; border-radius: 4px;">
+  <div style="display: inline-block; padding-left: 100%; animation: marquee 25s linear infinite;">
+    🚀 ECP 203 Concrete Quality Control Active &nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp; ⚠️ Ensure all cube crushing results and batch tickets are verified daily &nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp; 🏗️ Current Project Inspection in Progress
+  </div>
+</div>
+
+<style>
+@keyframes marquee {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(-100%, 0); }
+}
+</style>
+"""
+st.markdown(ticker_html, unsafe_allow_html=True)
+
 st.title("ECP 203 Concrete Acceptance & Mix Compliance Verifier")
 st.markdown(
     '<p class="author-credit">Made by Eng. Mohamed Abd Al Aty</p>',
