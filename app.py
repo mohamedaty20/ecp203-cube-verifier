@@ -721,21 +721,21 @@ with st.expander(
 ):
   for stage_key in ["7 Days", "14 Days", "28 Days"]:
     res = stages_data[stage_key]
-    st.markdown(f"### **📌 {stage_key} Stage ECP 203 Evaluation**")
+    st.markdown(f"### **◪ {stage_key} Stage ECP 203 Evaluation**")
     if res is None:
       st.write(f"No sufficient data provided for {stage_key} stage.")
       st.markdown("---")
       continue
 
     st.latex(r"\text{Mean Strength: } f_m = \frac{\sum f_i}{n}")
-    st.write(f"👉 **Mean ($f_m$)** = `{res['mean']:.2f}` N/mm²")
+    st.write(f"◪ **Mean ($f_m$)** = `{res['mean']:.2f}` N/mm²")
 
     st.latex(
         r"\text{Standard Deviation: } s = \sqrt{\frac{\sum (f_i - f_m)^2}{n -"
         r" 1}}"
     )
     st.write(
-        f"👉 **Std. Dev. ($s$)** = `{res['s']:.2f}` N/mm² | **Factor $k$** ="
+        f"◪ **Std. Dev. ($s$)** = `{res['s']:.2f}` N/mm² | **Factor $k$** ="
         f" `{res['k']}` (Sample $n = {res['n']}$)"
     )
 
@@ -751,7 +751,7 @@ with st.expander(
         f" **`{res['fcu_calc_2']:.2f}` N/mm²**"
     )
     st.write(
-        f"👉 **Calculated Stage $f_{{cu}}$** = `{res['fcu_char']:.2f}` N/mm² |"
+        f"◪ **Calculated Stage $f_{{cu}}$** = `{res['fcu_char']:.2f}` N/mm² |"
         f" **Stage Target:** `{res['stage_target_fcu']:.2f}` N/mm²"
     )
 
