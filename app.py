@@ -31,7 +31,7 @@ dark_style = """
 /* Force dark background on the entire app */
 .stApp {
     background-color: #031338 !important;
-    color: #FFFFFF !important;
+    color: #121417 !important;
 }
 
 /* Give the main container proper padding so text never touches the sidebar */
