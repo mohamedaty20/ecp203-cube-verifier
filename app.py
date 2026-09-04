@@ -2,7 +2,10 @@ import io
 import numpy as np
 import pandas as pd
 import streamlit as st
+import plotly.express as px
+import plotly.graph_objects as go
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.drawing.image import Image as OpenpyxlImage
 
 # ReportLab imports for professional PDF generation
 from reportlab.lib import colors
@@ -15,6 +18,7 @@ from reportlab.platypus import (
     Spacer,
     Table,
     TableStyle,
+    Image as ReportLabImage,
 )
 
 # 1. Page Configuration (MUST be first Streamlit command)
@@ -390,6 +394,97 @@ for idx, (stage_label, tab) in enumerate(
             f" requirements of ECP 203 for {stage_label}."
         )
 
+# --- PROFESSIONAL PLOTLY VISUALIZATIONS SECTION ---
+st.markdown("---")
+st.header("3. Visual Analytics & Strength Trend Charts")
+
+chart_col1, chart_col2 = st.columns(2)
+
+# Chart 1: Bar Chart of Sample Strengths across Stages
+with chart_col1:
+  st.subheader("Individual Cube Strengths Distribution")
+  chart_data_list = []
+  for val in cubes_7:
+    chart_data_list.append(
+        {"Sample Index": len(chart_data_list) + 1, "Strength": val, "Stage": "7 Days"}
+    )
+  for val in cubes_14:
+    chart_data_list.append(
+        {"Sample Index": len(chart_data_list) + 1, "Strength": val, "Stage": "14 Days"}
+    )
+  for val in cubes_28:
+    chart_data_list.append(
+        {"Sample Index": len(chart_data_list) + 1, "Strength": val, "Stage": "28 Days"}
+    )
+
+  if chart_data_list:
+    df_chart = pd.DataFrame(chart_data_list)
+    fig_bars = px.bar(
+        df_chart,
+        x="Sample Index",
+        y="Strength",
+        color="Stage",
+        barmode="group",
+        title="Cube Strengths by Testing Age",
+        labels={"Strength": "Crushing Strength (N/mm²)"},
+        template="plotly_dark",
+    )
+    fig_bars.update_layout(
+        plot_bgcolor="#031338",
+        paper_bgcolor="#1B2A4A",
+        font=dict(color="#FFFFFF"),
+    )
+    st.plotly_chart(fig_bars, use_container_width=True)
+  else:
+    st.info("No data available for distribution chart.")
+
+# Chart 2: Summary Comparison vs Target Line Chart
+with chart_col2:
+  st.subheader("Characteristic fcu vs Target Thresholds")
+  summary_chart_data = []
+  for stage_key in ["7 Days", "14 Days", "28 Days"]:
+    res = stages_data[stage_key]
+    if res:
+      summary_chart_data.append({
+          "Stage": stage_key,
+          "Calculated fcu": res["fcu_char"],
+          "Target Requirement": res["stage_target_fcu"],
+      })
+
+  if summary_chart_data:
+    df_summary_chart = pd.DataFrame(summary_chart_data)
+    fig_lines = go.Figure()
+    fig_lines.add_trace(
+        go.Scatter(
+            x=df_summary_chart["Stage"],
+            y=df_summary_chart["Calculated fcu"],
+            mode="lines+markers",
+            name="Calculated fcu",
+            line=dict(color="#00BFFF", width=3),
+        )
+    )
+    fig_lines.add_trace(
+        go.Scatter(
+            x=df_summary_chart["Stage"],
+            y=df_summary_chart["Target Requirement"],
+            mode="lines+markers",
+            name="Target Requirement",
+            line=dict(color="#FF8C00", width=3, dash="dash"),
+        )
+    )
+    fig_lines.update_layout(
+        title="Calculated fcu vs Target Thresholds",
+        xaxis_title="Testing Stage",
+        yaxis_title="Strength (N/mm²)",
+        plot_bgcolor="#031338",
+        paper_bgcolor="#1B2A4A",
+        font=dict(color="#FFFFFF"),
+    )
+    st.plotly_chart(fig_lines, use_container_width=True)
+  else:
+    st.info("No data available for summary chart.")
+
+
 # Generate Rich Structured Excel & PDF Data Structures
 display_project_name = project_name if project_name.strip() else "Unnamed Project"
 display_engineer_name = (
@@ -512,6 +607,18 @@ calc_methods = [
 ]
 df_methods = pd.DataFrame(calc_methods)
 
+# Generate image buffers for Plotly charts to include in PDF and Excel exports
+chart1_img_bytes = None
+chart2_img_bytes = None
+try:
+  if chart_data_list:
+    chart1_img_bytes = fig_bars.to_image(format="png", width=600, height=350, scale=2)
+  if summary_chart_data:
+    chart2_img_bytes = fig_lines.to_image(format="png", width=600, height=350, scale=2)
+except Exception:
+  # Fallback if kaleido/static image generation encounters runtime restrictions
+  pass
+
 # Excel Export Buffer
 excel_buffer = io.BytesIO()
 with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
@@ -525,6 +632,20 @@ with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
   df_methods.to_excel(
       writer, sheet_name="Calculation Methodology", index=False
   )
+  
+  # Embed charts into openpyxl workbook if successfully generated
+  wb = writer.book
+  if chart1_img_bytes or chart2_img_bytes:
+    chart_sheet = wb.create_sheet(title="Visual Analytics Charts")
+    if chart1_img_bytes:
+      img1_io = io.BytesIO(chart1_img_bytes)
+      img_ux1 = OpenpyxlImage(img1_io)
+      chart_sheet.add_image(img_ux1, "B2")
+    if chart2_img_bytes:
+      img2_io = io.BytesIO(chart2_img_bytes)
+      img_ux2 = OpenpyxlImage(img2_io)
+      chart_sheet.add_image(img_ux2, "B22")
+
 excel_buffer.seek(0)
 
 
@@ -653,9 +774,19 @@ def generate_pdf_report():
   story.append(t_summary)
   story.append(Spacer(1, 10))
 
+  # Embed Visual Analytics Charts into PDF Report
+  if chart1_img_bytes or chart2_img_bytes:
+    story.append(Paragraph("<b>3. Visual Analytics & Trend Charts</b>", section_style))
+    if chart1_img_bytes:
+      story.append(ReportLabImage(io.BytesIO(chart1_img_bytes), width=450, height=220))
+      story.append(Spacer(1, 6))
+    if chart2_img_bytes:
+      story.append(ReportLabImage(io.BytesIO(chart2_img_bytes), width=450, height=220))
+      story.append(Spacer(1, 10))
+
   # Raw Individual Cubes Table
   story.append(
-      Paragraph("<b>3. Raw Individual Cube Crushing Values</b>", section_style)
+      Paragraph("<b>4. Raw Individual Cube Crushing Values</b>", section_style)
   )
   raw_headers = list(df_raw_cubes.columns)
   raw_rows_data = [raw_headers] + [
@@ -681,7 +812,7 @@ def generate_pdf_report():
   # Calculation Methodology Section (Symbol-free format)
   story.append(
       Paragraph(
-          "<b>4. Calculation Methodology & Standards (ECP 203)</b>",
+          "<b>5. Calculation Methodology & Standards (ECP 203)</b>",
           section_style,
       )
   )
