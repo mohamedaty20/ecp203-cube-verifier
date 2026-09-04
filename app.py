@@ -195,7 +195,7 @@ engineer_name = st.sidebar.text_input(
     placeholder="Enter your name here",
 )
 
-# Added Date Selector Dropdown/Widget below Engineer Name
+# Date Selector Dropdown below Engineer Name
 report_date = st.sidebar.date_input(
     "Report Date",
     value=datetime.date.today()
@@ -732,7 +732,7 @@ with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
 excel_buffer.seek(0)
 
 
-# PDF Export Buffer Generation Function (Charts strictly placed at the very end)
+# PDF Export Buffer Generation Function (Section headers and subtitles set to Black)
 def generate_pdf_report():
   pdf_buffer = io.BytesIO()
   doc = SimpleDocTemplate(
@@ -758,7 +758,7 @@ def generate_pdf_report():
       "DocSub",
       parent=styles["Normal"],
       fontSize=10,
-      textColor=colors.HexColor("#555555"),
+      textColor=colors.HexColor("#000000"),  # Changed from gray/orange to Black
       spaceAfter=15,
       alignment=1,
   )
@@ -766,7 +766,7 @@ def generate_pdf_report():
       "SecTitle",
       parent=styles["Heading2"],
       fontSize=13,
-      textColor=colors.HexColor("#FF8C00"),
+      textColor=colors.HexColor("#000000"),  # Changed from orange to Black
       spaceBefore=12,
       spaceAfter=6,
   )
