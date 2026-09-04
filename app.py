@@ -3,10 +3,16 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
+# ReportLab imports for professional PDF generation
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.platypus import HRFlowable, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
 # 1. Page Configuration (MUST be first Streamlit command)
 st.set_page_config(
     page_title="ECP 203 Concrete Cube Verifier",
-    page_icon="◮",
+    page_icon="🏗️",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -145,9 +151,12 @@ st.subheader(
 st.markdown("---")
 
 # Sidebar Configuration
-st.sidebar.header("PROJECT DETAILS")
-st.sidebar.caption("Please enter your project name here")
-project_name = st.sidebar.text_input("Project Name", "New Capital Site Alpha")
+st.sidebar.header("📋 Project Details")
+project_name = st.sidebar.text_input(
+    "Project Name",
+    value="",
+    placeholder="Please enter your project name here",
+)
 pour_location = st.sidebar.text_input(
     "Structural Element / Pour Location", "Slab Axis A1-C5"
 )
@@ -179,7 +188,7 @@ def parse_input(text_str):
 
 
 if input_method == "Manual Entry":
-  st.info(" Enter strength values separated by commas.")
+  st.info("💡 Enter strength values separated by commas.")
 
   col_a, col_b, col_c = st.columns(3)
   with col_a:
@@ -206,7 +215,7 @@ if input_method == "Manual Entry":
 
 else:
   st.info(
-      " Upload an Excel file. Select columns for each testing age from your"
+      "💡 Upload an Excel file. Select columns for each testing age from your"
       " file."
   )
   uploaded_file = st.file_uploader(
@@ -218,7 +227,7 @@ else:
       excel_file = pd.ExcelFile(uploaded_file)
       sheet_selected = st.selectbox("Select Sheet:", excel_file.sheet_names)
       df = pd.read_excel(uploaded_file, sheet_name=sheet_selected)
-      st.write(" **Preview of Uploaded Data:**", df.head())
+      st.write("📊 **Preview of Uploaded Data:**", df.head())
 
       numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
       if not numeric_cols:
@@ -244,7 +253,7 @@ else:
       st.error(f"⚠️ Error reading Excel file: {e}")
       st.stop()
   else:
-    st.warning(" Please upload an Excel sheet to continue.")
+    st.warning("👈 Please upload an Excel sheet to continue.")
     st.stop()
 
 if not (cubes_7 or cubes_14 or cubes_28):
@@ -305,6 +314,7 @@ stages_data = {
 st.markdown("---")
 st.header("2. Compliance Summaries (7, 14 & 28 Days)")
 
+# Tabs with bolded titles
 tabs = st.tabs([
     "**7-Day Stage Compliance**",
     "**14-Day Stage Compliance**",
@@ -353,161 +363,326 @@ for idx, (stage_label, tab) in enumerate(
             f" requirements of ECP 203 for {stage_label}."
         )
 
-# Generate Excel File Stream
-summary_rows = [
-    {"Metric / Field": "Project Name", "Value": project_name},
-    {"Metric / Field": "Pour Location / Element", "Value": pour_location},
-    {"Metric / Field": "Engineer in Charge", "Value": "Eng. Mohamed Abd Al Aty"},
-    {"Metric / Field": "Specified 28-Day Grade fcu (N/mm²)", "Value": fcu_spec},
+# Generate Rich Structured Excel Report
+display_project_name = project_name if project_name.strip() else "Unnamed Project"
+
+overview_data = [
+    {"Parameter": "Project Name", "Details": display_project_name},
+    {"Parameter": "Structural Element / Pour Location", "Details": pour_location},
+    {"Parameter": "Specified 28-Day Grade (fcu)", "Details": f"{fcu_spec} N/mm²"},
+    {"Parameter": "Engineer in Charge", "Details": "Eng. Mohamed Abd Al Aty"},
+    {
+        "Parameter": "Standard Specification",
+        "Details": "Egyptian Code of Practice (ECP 203)",
+    },
 ]
-
-for stage_key in ["7 Days", "14 Days", "28 Days"]:
-  res = stages_data[stage_key]
-  summary_rows.append(
-      {"Metric / Field": f"--- {stage_key} Evaluation ---", "Value": "---"}
-  )
-  if res:
-    summary_rows.extend([
-        {"Metric / Field": f"{stage_key} Sample Count (n)", "Value": res["n"]},
-        {
-            "Metric / Field": f"{stage_key} Target Strength (N/mm²)",
-            "Value": round(res["stage_target_fcu"], 2),
-        },
-        {
-            "Metric / Field": f"{stage_key} Mean Strength f_m (N/mm²)",
-            "Value": round(res["mean"], 2),
-        },
-        {
-            "Metric / Field": f"{stage_key} Standard Deviation s (N/mm²)",
-            "Value": round(res["s"], 2),
-        },
-        {"Metric / Field": f"{stage_key} Margin Factor (k)", "Value": res["k"]},
-        {
-            "Metric / Field": f"{stage_key} Calculated fcu (N/mm²)",
-            "Value": round(res["fcu_char"], 2),
-        },
-        {
-            "Metric / Field": f"{stage_key} Minimum Individual Cube (N/mm²)",
-            "Value": round(res["min"], 2),
-        },
-        {
-            "Metric / Field": f"{stage_key} Compliance Verdict",
-            "Value": "PASS" if res["is_compliant"] else "FAIL",
-        },
-    ])
-  else:
-    summary_rows.append({
-        "Metric / Field": f"{stage_key} Data Status",
-        "Value": "No valid data provided",
-    })
-
-summary_df = pd.DataFrame(summary_rows)
+df_overview = pd.DataFrame(overview_data)
 
 max_len = max(len(cubes_7), len(cubes_14), len(cubes_28), 1)
-cubes_matrix = {
-    "Cube #": list(range(1, max_len + 1)),
+raw_matrix = {
+    "Cube Sample #": list(range(1, max_len + 1)),
     "7-Day Strength (N/mm²)": cubes_7 + [None] * (max_len - len(cubes_7)),
     "14-Day Strength (N/mm²)": cubes_14 + [None] * (max_len - len(cubes_14)),
     "28-Day Strength (N/mm²)": cubes_28 + [None] * (max_len - len(cubes_28)),
 }
-raw_cubes_df = pd.DataFrame(cubes_matrix)
+df_raw_cubes = pd.DataFrame(raw_matrix)
 
-calculation_notes = [
+summary_rows = []
+for stage_key in ["7 Days", "14 Days", "28 Days"]:
+  res = stages_data[stage_key]
+  if res:
+    summary_rows.append({
+        "Testing Stage": stage_key,
+        "Sample Count (n)": res["n"],
+        "Target Ratio": f"{int(res['target_ratio']*100)}%",
+        "Target Strength (N/mm²)": round(res["stage_target_fcu"], 2),
+        "Mean Strength (N/mm²)": round(res["mean"], 2),
+        "Standard Deviation (N/mm²)": round(res["s"], 2),
+        "Margin Factor (k)": res["k"],
+        "Calculated fcu (N/mm²)": round(res["fcu_char"], 2),
+        "Min Individual Cube (N/mm²)": round(res["min"], 2),
+        "Min Allowable Limit (N/mm²)": round(res["min_threshold"], 2),
+        "Compliance Verdict": "PASS" if res["is_compliant"] else "FAIL",
+    })
+  else:
+    summary_rows.append({
+        "Testing Stage": stage_key,
+        "Sample Count (n)": "N/A",
+        "Target Ratio": "N/A",
+        "Target Strength (N/mm²)": "N/A",
+        "Mean Strength (N/mm²)": "N/A",
+        "Standard Deviation (N/mm²)": "N/A",
+        "Margin Factor (k)": "N/A",
+        "Calculated fcu (N/mm²)": "N/A",
+        "Min Individual Cube (N/mm²)": "N/A",
+        "Min Allowable Limit (N/mm²)": "N/A",
+        "Compliance Verdict": "No Data Provided",
+    })
+df_summary_table = pd.DataFrame(summary_rows)
+
+calc_methods = [
     {
-        "Section": "1. Standard Reference",
-        "Details": (
+        "Step / Parameter": "1. Standard Reference",
+        "Mathematical Definition / Description": (
             "Egyptian Code of Practice for Concrete Structures (ECP 203 -"
             " Section 2-6)."
         ),
     },
     {
-        "Section": "2. Multi-Stage Testing Framework",
-        "Details": (
+        "Step / Parameter": "2. Multi-Stage Testing Framework",
+        "Mathematical Definition / Description": (
             "Evaluations are conducted for 7-Day (~70% target fcu), 14-Day"
             " (~85% target fcu), and 28-Day (100% full specified fcu)."
         ),
     },
     {
-        "Section": "3. Mean Strength (f_m)",
-        "Details": (
-            "Calculated as the arithmetic mean per stage: f_m = Sum(f_i) / n."
+        "Step / Parameter": "3. Mean Strength",
+        "Mathematical Definition / Description": (
+            "Calculated as the arithmetic mean per stage: Sum of all cube"
+            " strengths divided by the total sample count (n)."
         ),
     },
     {
-        "Section": "4. Standard Deviation (s)",
-        "Details": (
-            "Calculated using sample degrees of freedom: s = sqrt(Sum(f_i -"
-            " f_m)^2 / (n - 1))."
+        "Step / Parameter": "4. Standard Deviation",
+        "Mathematical Definition / Description": (
+            "Calculated using sample degrees of freedom (n - 1) to measure data"
+            " dispersion around the mean."
         ),
     },
     {
-        "Section": "5. Margin Factor (k)",
-        "Details": (
-            "If sample size n < 30, k = 1.91. If sample size n >= 30, k = 1.64."
+        "Step / Parameter": "5. Statistical Margin Factor (k)",
+        "Mathematical Definition / Description": (
+            "If sample size n is less than 30, factor k is 1.91. If sample size"
+            " n is 30 or greater, factor k is 1.64."
         ),
     },
     {
-        "Section": "6. Characteristic Strength (f_cu)",
-        "Details": (
-            "Evaluated per stage as: f_cu,1 = f_m - (k * s) and f_cu,2 = 0.85 *"
-            " f_m. f_cu = max(f_cu,1, f_cu,2)."
+        "Step / Parameter": "6. Characteristic Strength Evaluation",
+        "Mathematical Definition / Description": (
+            "Evaluated per stage using two criteria: (1) Mean strength minus"
+            " product of factor k and standard deviation, and (2) 85 percent of"
+            " the mean strength. The final characteristic strength is the"
+            " maximum of these two values."
         ),
     },
     {
-        "Section": "7. Acceptance Condition 1",
-        "Details": (
-            "The calculated characteristic strength f_cu must meet or exceed"
-            " the target stage strength."
+        "Step / Parameter": "7. Acceptance Condition 1",
+        "Mathematical Definition / Description": (
+            "The calculated characteristic strength must be greater than or"
+            " equal to the specified target strength for that stage."
         ),
     },
     {
-        "Section": "8. Acceptance Condition 2",
-        "Details": (
-            "Every individual cube result must be >= 0.85 * (target stage"
-            " strength)."
+        "Step / Parameter": "8. Acceptance Condition 2",
+        "Mathematical Definition / Description": (
+            "Every individual cube result within the sample must be greater"
+            " than or equal to 85 percent of the target stage strength limit."
         ),
     },
 ]
-notes_df = pd.DataFrame(calculation_notes)
+df_methods = pd.DataFrame(calc_methods)
 
-buffer = io.BytesIO()
-with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
-  summary_df.to_excel(writer, sheet_name="Multi-Stage Compliance", index=False)
-  raw_cubes_df.to_excel(writer, sheet_name="Raw Cube Data", index=False)
-  notes_df.to_excel(
-      writer, sheet_name="ECP 203 Calculation Notes", index=False
+# Excel Export Buffer
+excel_buffer = io.BytesIO()
+with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
+  df_overview.to_excel(
+      writer, sheet_name="Project Overview & Info", index=False
+  )
+  df_summary_table.to_excel(
+      writer, sheet_name="Multi-Stage Results Summary", index=False
+  )
+  df_raw_cubes.to_excel(writer, sheet_name="Raw Individual Cubes", index=False)
+  df_methods.to_excel(
+      writer, sheet_name="Calculation Methodology", index=False
+  )
+excel_buffer.seek(0)
+
+# PDF Export Buffer Generation Function
+def generate_pdf_report():
+  pdf_buffer = io.BytesIO()
+  doc = SimpleDocTemplate(
+      pdf_buffer,
+      pagesize=letter,
+      rightMargin=36,
+      leftMargin=36,
+      topMargin=36,
+      bottomMargin=36,
+  )
+  story = []
+  styles = getSampleStyleSheet()
+
+  # Custom Styles
+  title_style = ParagraphStyle(
+      "DocTitle",
+      parent=styles["Heading1"],
+      fontSize=18,
+      textColor=colors.HexColor("#1B2A4A"),
+      spaceAfter=4,
+      alignment=1,
+  )
+  subtitle_style = ParagraphStyle(
+      "DocSub",
+      parent=styles["Normal"],
+      fontSize=10,
+      textColor=colors.HexColor("#555555"),
+      spaceAfter=15,
+      alignment=1,
+  )
+  section_style = ParagraphStyle(
+      "SecTitle",
+      parent=styles["Heading2"],
+      fontSize=13,
+      textColor=colors.HexColor("#FF8C00"),
+      spaceBefore=12,
+      spaceAfter=6,
+  )
+  body_style = ParagraphStyle(
+      "Body",
+      parent=styles["Normal"],
+      fontSize=9,
+      textColor=colors.HexColor("#333333"),
+      spaceAfter=4,
   )
 
-buffer.seek(0)
+  story.append(Paragraph("ECP 203 Concrete Cube Acceptance Report", title_style))
+  story.append(
+      Paragraph(
+          "Multi-Stage Compliance Verification (7, 14, & 28 Days)",
+          subtitle_style,
+      )
+  )
+  story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#1B2A4A"), spaceAfter=10))
 
-st.download_button(
-    label="📥 Download Complete Multi-Stage Excel Report (.xlsx)",
-    data=buffer,
-    file_name=f"ECP203_All_Stages_Report_{project_name.replace(' ', '_')}.xlsx",
-    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-)
+  # Overview Table
+  story.append(Paragraph("<b>1. Project Overview & Metadata</b>", section_style))
+  overview_data_list = [["Parameter", "Details"]] + df_overview.values.tolist()
+  t_overview = Table(overview_data_list, colWidths=[180, 360])
+  t_overview.setStyle(
+      TableStyle([
+          ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
+          ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+          ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+          ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+          ("FONTSIZE", (0, 0), (-1, -1), 9),
+          ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+          ("TOPPADDING", (0, 0), (-1, -1), 4),
+          ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
+          ("BACKGROUND", (0, 1), (-1, -1), colors.HexColor("#F9F9F9")),
+      ])
+  )
+  story.append(t_overview)
+  story.append(Spacer(1, 10))
 
-# Step-by-Step Breakdown
+  # Summary Results Table
+  story.append(Paragraph("<b>2. Compliance Results Summary</b>", section_style))
+  summary_headers = [
+      "Stage",
+      "n",
+      "Target",
+      "Req. (MPa)",
+      "Mean (MPa)",
+      "StdDev",
+      "fcu (MPa)",
+      "Verdict",
+  ]
+  summary_table_rows = [summary_headers]
+  for r in summary_rows:
+    summary_table_rows.append([
+        str(r["Testing Stage"]),
+        str(r["Sample Count (n)"]),
+        str(r["Target Ratio"]),
+        str(r["Target Strength (N/mm²)"]),
+        str(r["Mean Strength (N/mm²)"]),
+        str(r["Standard Deviation (N/mm²)"]),
+        str(r["Calculated fcu (N/mm²)"]),
+        str(r["Compliance Verdict"]),
+    ])
+  t_summary = Table(summary_table_rows, colWidths=[65, 30, 45, 60, 65, 55, 65, 115])
+  t_summary.setStyle(
+      TableStyle([
+          ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
+          ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+          ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+          ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+          ("FONTSIZE", (0, 0), (-1, -1), 8),
+          ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+          ("TOPPADDING", (0, 0), (-1, -1), 4),
+          ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
+      ])
+  )
+  story.append(t_summary)
+  story.append(Spacer(1, 10))
+
+  # Raw Individual Cubes Table
+  story.append(Paragraph("<b>3. Raw Individual Cube Crushing Values</b>", section_style))
+  raw_headers = list(df_raw_cubes.columns)
+  raw_rows_data = [raw_headers] + [[str(val) if val is not None else "-" for val in row] for row in df_raw_cubes.values]
+  t_raw = Table(raw_rows_data, colWidths=[90, 150, 150, 150])
+  t_raw.setStyle(
+      TableStyle([
+          ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
+          ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+          ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+          ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+          ("FONTSIZE", (0, 0), (-1, -1), 8),
+          ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+          ("TOPPADDING", (0, 0), (-1, -1), 4),
+          ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
+      ])
+  )
+  story.append(t_raw)
+  story.append(Spacer(1, 10))
+
+  # Calculation Methodology Section (Symbol-free format)
+  story.append(Paragraph("<b>4. Calculation Methodology & Standards (ECP 203)</b>", section_style))
+  for item in calc_methods:
+    p_text = f"<b>{item['Step / Parameter']}:</b> {item['Mathematical Definition / Description']}"
+    story.append(Paragraph(p_text, body_style))
+
+  doc.build(story)
+  pdf_buffer.seek(0)
+  return pdf_buffer
+
+pdf_data = generate_pdf_report()
+
+# Download Buttons Layout
+col_btn1, col_btn2 = st.columns(2)
+with col_btn1:
+  st.download_button(
+      label="📥 Download Excel Report (.xlsx)",
+      data=excel_buffer,
+      file_name=f"ECP203_Report_{display_project_name.replace(' ', '_')}.xlsx",
+      mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  )
+with col_btn2:
+  st.download_button(
+      label="📄 Download Professional PDF Report (.pdf)",
+      data=pdf_data,
+      file_name=f"ECP203_Report_{display_project_name.replace(' ', '_')}.pdf",
+      mime="application/pdf",
+  )
+
+# Step-by-Step Breakdown Expander
 with st.expander(
     "🔍 Show Step-by-Step ECP 203 Calculation Formulas (All Stages)"
 ):
   for stage_key in ["7 Days", "14 Days", "28 Days"]:
     res = stages_data[stage_key]
-    st.markdown(f"### ** {stage_key} Stage ECP 203 Evaluation**")
+    st.markdown(f"### **📌 {stage_key} Stage ECP 203 Evaluation**")
     if res is None:
       st.write(f"No sufficient data provided for {stage_key} stage.")
       st.markdown("---")
       continue
 
     st.latex(r"\text{Mean Strength: } f_m = \frac{\sum f_i}{n}")
-    st.write(f" **Mean ($f_m$)** = `{res['mean']:.2f}` N/mm²")
+    st.write(f"👉 **Mean ($f_m$)** = `{res['mean']:.2f}` N/mm²")
 
     st.latex(
         r"\text{Standard Deviation: } s = \sqrt{\frac{\sum (f_i - f_m)^2}{n -"
         r" 1}}"
     )
     st.write(
-        f" **Std. Dev. ($s$)** = `{res['s']:.2f}` N/mm² | **Factor $k$** ="
+        f"👉 **Std. Dev. ($s$)** = `{res['s']:.2f}` N/mm² | **Factor $k$** ="
         f" `{res['k']}` (Sample $n = {res['n']}$)"
     )
 
@@ -523,7 +698,7 @@ with st.expander(
         f" **`{res['fcu_calc_2']:.2f}` N/mm²**"
     )
     st.write(
-        f" **Calculated Stage $f_{{cu}}$** = `{res['fcu_char']:.2f}` N/mm² |"
+        f"👉 **Calculated Stage $f_{{cu}}$** = `{res['fcu_char']:.2f}` N/mm² |"
         f" **Stage Target:** `{res['stage_target_fcu']:.2f}` N/mm²"
     )
 
@@ -545,12 +720,22 @@ with st.expander(
           "❌ **Condition 2 Failed:** Lowest cube is below the minimum limit."
       )
 
-
     st.markdown("---")
-              # Footer Copyright Notice (Centered & Light Grey)
+
+# Contact Information & Footer Copyright Notice
+st.markdown(
+    "<p style='text-align: center; color: #FFFFFF; font-size: 0.95rem;"
+    " margin-top: 3rem;'><b>Contact me at:</b><br>LinkedIn: <a"
+    " href='https://www.linkedin.com' target='_blank'"
+    " style='color: #00BFFF;'>Mohamed Abd Al Aty</a><br>Gmail: <a"
+    " href='mailto:mohamedabdalaty63@gmail.com' style='color:"
+    " #00BFFF;'>mohamedabdalaty63@gmail.com</a></p>",
+    unsafe_allow_html=True,
+)
+
 st.markdown(
     "<p style='text-align: center; color: #888888; font-size: 0.85rem;"
-    " margin-top: 3rem;'>© 2026 Eng. Mohamed Abd Al Aty. All rights reserved."
+    " margin-top: 1.5rem;'>© 2026 Eng. Mohamed Abd Al Aty. All rights reserved."
     " Unauthorized commercial use, reproduction, or distribution is strictly"
     " prohibited.</p>",
     unsafe_allow_html=True,
