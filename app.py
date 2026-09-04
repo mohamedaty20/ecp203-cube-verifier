@@ -2,7 +2,15 @@ import io
 import streamlit as st
 import numpy as np
 import pandas as pd
+# 1. Add your image/logo here (replace 'logo.png' with your actual image file name)
+st.image("logo.png", use_container_width=True)
 
+# 2. Your main title stays right underneath the image
+st.title("ECP 203 Concrete Cube Acceptance Verifier")
+st.markdown(
+    '<p class="author-credit">Made by Eng. Mohamed Abd Al Aty</p>',
+    unsafe_allow_html=True,
+)
 # Page Configuration
 st.set_page_config(
     page_title="ECP 203 Concrete Cube Verifier",
