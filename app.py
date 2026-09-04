@@ -173,7 +173,7 @@ st.subheader(
 st.markdown("---")
 
 # Sidebar Configuration
-st.sidebar.header("PROJECT DETAILS")
+st.sidebar.header("PROJECT & BATCH DETAILS")
 project_name = st.sidebar.text_input(
     "Project Name",
     value="",
@@ -189,6 +189,15 @@ fcu_spec = st.sidebar.number_input(
     value=30.0,
     step=5.0,
 )
+
+# New Batch & Fresh Concrete Traceability Inputs
+st.sidebar.subheader("🚚 Traceability & Site Logs")
+mixer_truck_no = st.sidebar.text_input("Mixer Truck No.", value="TRK-104")
+batch_ticket_id = st.sidebar.text_input("Batch Ticket ID", value="BT-99482")
+casting_date = st.sidebar.date_input("Casting Date", value=datetime.date.today() - datetime.timedelta(days=7))
+slump_value = st.sidebar.number_input("Slump Test Value (mm)", min_value=0.0, max_value=300.0, value=150.0, step=5.0)
+concrete_temp = st.sidebar.number_input("Concrete Temp (°C)", min_value=0.0, max_value=60.0, value=28.5, step=0.5)
+
 engineer_name = st.sidebar.text_input(
     "Engineer Name",
     value="",
@@ -531,11 +540,17 @@ with chart_col2:
 display_project_name = project_name if project_name.strip() else "Unnamed Project"
 display_engineer_name = engineer_name if engineer_name.strip() else "Not Specified"
 formatted_report_date = report_date.strftime("%Y-%m-%d")
+formatted_casting_date = casting_date.strftime("%Y-%m-%d")
 
 overview_data = [
     {"Parameter": "Project Name", "Details": display_project_name},
     {"Parameter": "Structural Element / Pour Location", "Details": pour_location},
     {"Parameter": "Specified 28-Day Grade (fcu)", "Details": f"{fcu_spec} N/mm²"},
+    {"Parameter": "Mixer Truck Number", "Details": mixer_truck_no},
+    {"Parameter": "Batch Ticket ID", "Details": batch_ticket_id},
+    {"Parameter": "Casting Date", "Details": formatted_casting_date},
+    {"Parameter": "Fresh Concrete Slump", "Details": f"{slump_value} mm"},
+    {"Parameter": "Fresh Concrete Temperature", "Details": f"{concrete_temp} °C"},
     {"Parameter": "Engineer Name", "Details": display_engineer_name},
     {"Parameter": "Report Date", "Details": formatted_report_date},
     {
@@ -810,7 +825,7 @@ def generate_pdf_report(logo_bytes=None):
   )
 
   # 1. Overview Table
-  story.append(Paragraph("<b>1. Project Overview & Metadata</b>", section_style))
+  story.append(Paragraph("<b>1. Project Overview, Batch & Traceability Metadata</b>", section_style))
   overview_data_list = [["Parameter", "Details"]] + df_overview.values.tolist()
   t_overview = Table(overview_data_list, colWidths=[180, 360])
   t_overview.setStyle(
@@ -918,7 +933,7 @@ def generate_pdf_report(logo_bytes=None):
       story.append(ReportLabImage(io.BytesIO(chart2_img_bytes), width=480, height=250))
     story.append(Spacer(1, 10))
 
-  # 6. Formal Engineering Sign-Off & Approval Block (Properly Wrapped in Paragraphs)
+  # 6. Formal Engineering Sign-Off & Approval Block
   story.append(Paragraph("<b>6. Engineering Sign-Off & Approvals</b>", section_style))
   
   sign_cell_1 = Paragraph(
