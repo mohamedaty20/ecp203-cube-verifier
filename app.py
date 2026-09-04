@@ -106,7 +106,7 @@ h1 {
     font-weight: 700;
 }
 
-/* Subtitles and Section Headers (Orange) */
+/* Subtitles and Section Headers (Red) */
 h2, h3, .stSubheader {
     color: #FF8C00 !important;
     font-weight: 600;
