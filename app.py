@@ -34,7 +34,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# 2. Custom Styling (Navy Blue Sidebar & Complete Dark Table Theme Overrides)
+# 2. Custom Styling (Navy Blue Sidebar & Complete Dark Table Theme Overrides + Removing Table White Card Background & Fork Menu)
 dark_style = """
 <style>
 .stApp {
@@ -64,6 +64,14 @@ dark_style = """
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {background-color: transparent !important;}
+
+/* Hide Streamlit toolbar menu / fork button / GitHub icon element completely */
+[data-testid="stToolbar"] {
+    display: none !important;
+}
+.stToolbar {
+    display: none !important;
+}
 
 [data-testid="stSidebar"], 
 section[data-testid="stSidebar"] > div {
@@ -126,13 +134,16 @@ hr {
 
 /* Comprehensive override to completely eliminate white background containers on tables/dataframes */
 [data-testid="stDataFrame"], [data-testid="stTable"], div[data-baseweb="card"] {
-    background-color: #1B2A4A !important;
+    background-color: transparent !important;
 }
 div[data-testid="stDataFrame"] > div {
-    background-color: #1B2A4A !important;
+    background-color: transparent !important;
+}
+div[data-baseweb="block"] {
+    background-color: transparent !important;
 }
 .dataframe {
-    background-color: #1B2A4A !important;
+    background-color: transparent !important;
     color: #FFFFFF !important;
 }
 </style>
@@ -398,7 +409,6 @@ with tabs[3]:
       cube_vals = cubes_7 if stage_name == "7 Days" else (cubes_14 if stage_name == "14 Days" else cubes_28)
       vals_str = ", ".join([str(v) for v in cube_vals])
       
-      # Fixed plain-text values using clean unicode instead of broken raw code
       cond_check_str = "PASS ✅" if res['cond1'] else "FAIL ❌"
       min_check_str = "PASS ✅" if res['cond2'] else "FAIL ❌"
       
