@@ -151,7 +151,7 @@ st.subheader(
 st.markdown("---")
 
 # Sidebar Configuration
-st.sidebar.header("📋 Project Details")
+st.sidebar.header(" PROJECT DETAILS ")
 project_name = st.sidebar.text_input(
     "Project Name",
     value="",
@@ -166,6 +166,12 @@ fcu_spec = st.sidebar.number_input(
     max_value=100.0,
     value=30.0,
     step=5.0,
+)
+# --- ADD THIS LINE FOR THE ENGINEER NAME ---
+engineer_name = st.sidebar.text_input(
+    "Engineer in Charge",
+    value="",
+    placeholder="Enter your name here",
 )
 
 # Input Mode Selector
