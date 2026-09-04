@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# 2. Custom Styling (Navy Blue Sidebar & Full-Width Layout)
+# 2. Custom Styling (Navy Blue Sidebar & Clean Spacing Layout)
 dark_style = """
 <style>
 /* Remove top padding for the main container */
@@ -38,7 +38,6 @@ dark_style = """
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {background-color: transparent !important;}
-"""
 
 /* Navy Blue Sidebar Styling */
 [data-testid="stSidebar"], 
