@@ -739,7 +739,7 @@ with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
 excel_buffer.seek(0)
 
 
-# PDF Export Buffer Generation Function (Includes Logo & Engineering Sign-Off Block)
+# PDF Export Buffer Generation Function (Includes Logo & Formatted Sign-Off Block)
 def generate_pdf_report(logo_bytes=None):
   pdf_buffer = io.BytesIO()
   doc = SimpleDocTemplate(
@@ -918,23 +918,30 @@ def generate_pdf_report(logo_bytes=None):
       story.append(ReportLabImage(io.BytesIO(chart2_img_bytes), width=480, height=250))
     story.append(Spacer(1, 10))
 
-  # 6. Formal Engineering Sign-Off & Approval Block
+  # 6. Formal Engineering Sign-Off & Approval Block (Properly Wrapped in Paragraphs)
   story.append(Paragraph("<b>6. Engineering Sign-Off & Approvals</b>", section_style))
-  sign_off_data = [
-      [
-          f"<b>Prepared By:</b><br/><br/>Name: {display_engineer_name}<br/>Signature: ___________________<br/>Date: {formatted_report_date}",
-          "<b>Checked By (QA/QC):</b><br/><br/>Name: ___________________<br/>Signature: ___________________<br/>Date: ___________________",
-          "<b>Approved By (Consultant):</b><br/><br/>Name: ___________________<br/>Signature: ___________________<br/>Stamp: [ Official Seal ]"
-      ]
-  ]
+  
+  sign_cell_1 = Paragraph(
+      f"<b>Prepared By:</b><br/><br/>Name: {display_engineer_name}<br/>Signature: ___________________<br/>Date: {formatted_report_date}", 
+      body_style
+  )
+  sign_cell_2 = Paragraph(
+      "<b>Checked By (QA/QC):</b><br/><br/>Name: ___________________<br/>Signature: ___________________<br/>Date: ___________________", 
+      body_style
+  )
+  sign_cell_3 = Paragraph(
+      "<b>Approved By (Consultant):</b><br/><br/>Name: ___________________<br/>Signature: ___________________<br/>Stamp: [ Official Seal ]", 
+      body_style
+  )
+
+  sign_off_data = [[sign_cell_1, sign_cell_2, sign_cell_3]]
+  
   t_sign = Table(sign_off_data, colWidths=[180, 180, 180])
   t_sign.setStyle(
       TableStyle([
           ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F9F9F9")),
           ("ALIGN", (0, 0), (-1, -1), "LEFT"),
           ("VALIGN", (0, 0), (-1, -1), "TOP"),
-          ("FONTNAME", (0, 0), (-1, -1), "Helvetica"),
-          ("FONTSIZE", (0, 0), (-1, -1), 8),
           ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
           ("TOPPADDING", (0, 0), (-1, -1), 8),
           ("LEFTPADDING", (0, 0), (-1, -1), 8),
