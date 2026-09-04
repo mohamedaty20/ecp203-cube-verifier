@@ -2,6 +2,7 @@ import io
 import numpy as np
 import pandas as pd
 import streamlit as st
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
 # ReportLab imports for professional PDF generation
 from reportlab.lib import colors
@@ -123,13 +124,17 @@ textarea, input {
     border: 1px solid #FF8C00 !important;
 }
 
-/* Download Button Styling */
+/* Download Button Styling with Custom Font */
 .stDownloadButton>button {
     background-color: #FF8C00 !important;
     color: #FFFFFF !important;
     border: none;
-    font-weight: bold;
+    font-family: 'Segoe UI', Arial, sans-serif !important; /* Change your font style here */
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    font-style: normal !important; /* Can be 'italic' if you want it italicized */
 }
+
 .stDownloadButton>button:hover {
     background-color: #E07B00 !important;
     color: #FFFFFF !important;
