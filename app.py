@@ -136,7 +136,7 @@ textarea, input {
 }
 
 .stDownloadButton>button:hover {
-    background-color: #E07B00 !important;
+    background-color: #070a91 !important;
     color: #FFFFFF !important;
 }
 
