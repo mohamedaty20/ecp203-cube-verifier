@@ -726,7 +726,7 @@ with st.expander(
 st.markdown(
     "<p style='text-align: center; color: #FFFFFF; font-size: 0.95rem;"
     " margin-top: 3rem;'><b>Contact me at:</b><br>LinkedIn: <a"
-    " href='https://www.linkedin.com' target='_blank'"
+    " href='https://www.linkedin.com/in/mohamed-abd-al-aty-a326a1214/' target='_blank'"
     " style='color: #00BFFF;'>Mohamed Abd Al Aty</a><br>Gmail: <a"
     " href='mailto:mohamedabdalaty63@gmail.com' style='color:"
     " #00BFFF;'>mohamedabdalaty63@gmail.com</a></p>",
