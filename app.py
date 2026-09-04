@@ -184,15 +184,15 @@ engineer_name = st.sidebar.text_input(
     value="",
     placeholder="Enter your name here",
 )
-# Sidebar Divider & Professional Disclaimer Note
 st.sidebar.markdown("---")
 st.sidebar.markdown(
-    "<p style='color: #CCCCCC; font-size: 0.85rem; line-height: 1.4;"
-    " text-align: justify;'><i><b>Note to Engineers:</b> All outputs and"
-    " compliance calculations follow the Egyptian Code of Practice (ECP 203)."
-    " Please independently verify these results for your structural elements."
-    " If you notice any missing data or have feedback, feel free to reach out"
-    " to refine it. Thank you for your cooperation!</i></p>",
+    "<p style='color: #DDDDDD; font-size: 0.9rem; font-family: \"Times New"
+    " Roman\", Times, serif; line-height: 1.5; font-weight: normal; font-style:"
+    " normal; text-align: left;'>Note to Engineers: All outputs and"
+    " compliance calculations are in accordance with the Egyptian Code of"
+    " Practice (ECP 203). Please verify these results for your structural"
+    " elements. If you find any missing data, you are welcome to contact me"
+    " to refine it. Thank you for your cooperation.</p>",
     unsafe_allow_html=True,
 )
 # Input Mode Selector
