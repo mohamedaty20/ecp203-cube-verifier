@@ -29,7 +29,7 @@ from reportlab.platypus import (
 
 # 1. Page Configuration (MUST be first Streamlit command)
 st.set_page_config(
-    page_title="ECP 203 Concrete Cube Verifier",
+    page_title="ECP 203 Concrete Cube & Mix Verifier",
     page_icon="🏗️",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -38,13 +38,10 @@ st.set_page_config(
 # 2. Custom Styling (Navy Blue Sidebar & Padded Main Layout)
 dark_style = """
 <style>
-/* Force dark background on the entire app */
 .stApp {
     background-color: #031338 !important;
     color: #121417 !important;
 }
-
-/* Give the main container proper padding so text never touches the sidebar */
 .block-container {
     padding-top: 0rem !important;
     padding-bottom: 3rem !important;
@@ -52,8 +49,6 @@ dark_style = """
     padding-right: 2.5rem !important;
     max-width: 100% !important;
 }
-
-/* Break the top banner image out of the padding to span 100% edge-to-edge */
 [data-testid="stImage"] {
     width: 100vw !important;
     position: relative !important;
@@ -67,19 +62,14 @@ dark_style = """
     width: 100% !important;
     object-fit: cover;
 }
-
-/* Hide Streamlit default menu/footer but keep sidebar toggle visible */
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {background-color: transparent !important;}
 
-/* Navy Blue Sidebar Styling */
 [data-testid="stSidebar"], 
 section[data-testid="stSidebar"] > div {
     background-color: #1B2A4A !important;
 }
-
-/* Bold White Text in Sidebar */
 [data-testid="stSidebar"] *, 
 section[data-testid="stSidebar"] label,
 section[data-testid="stSidebar"] h1,
@@ -88,15 +78,11 @@ section[data-testid="stSidebar"] h3 {
     color: #FFFFFF !important;
     font-weight: bold !important;
 }
-
-/* Sidebar Arrow Toggle Button Styling */
 button[aria-label="Close sidebar"], 
 button[aria-label="Open sidebar"] {
     color: #FFFFFF !important;
     background-color: #1B2A4A !important;
 }
-
-/* Author Credit Subtitle Styling */
 .author-credit {
     color: #FFFFFF !important;
     font-size: 1rem;
@@ -104,37 +90,25 @@ button[aria-label="Open sidebar"] {
     margin-top: -15px;
     margin-bottom: 15px;
 }
-
-/* General Text Formatting */
 p, span, label, div {
     color: #FFFFFF !important;
 }
-
-/* Main Headings (Blue) */
 h1 {
     color: #00BFFF !important;
     font-weight: 700;
 }
-
-/* Subtitles and Section Headers (Red) */
 h2, h3, .stSubheader {
     color: #FF8C00 !important;
     font-weight: 600;
 }
-
-/* Metric Cards */
 [data-testid="stMetricValue"] {
     color: #7e8385 !important;
 }
-
-/* Text Inputs and Area Formatting */
 textarea, input {
     background-color: #1E222D !important;
     color: #FFFFFF !important;
     border: 1px solid #FF8C00 !important;
 }
-
-/* Download Button Styling with Custom Font */
 .stDownloadButton>button {
     background-color: #020461 !important;
     color: #FFFFFF !important;
@@ -142,15 +116,11 @@ textarea, input {
     font-family: 'Segoe UI', Arial, sans-serif !important;
     font-size: 15px !important;
     font-weight: 600 !important;
-    font-style: normal !important;
 }
-
 .stDownloadButton>button:hover {
     background-color: #8f010b !important;
     color: #FFFFFF !important;
 }
-
-/* Section Separator Lines */
 hr {
     border-color: #262730 !important;
 }
@@ -161,110 +131,99 @@ st.markdown(dark_style, unsafe_allow_html=True)
 # 3. Top Banner / Cover Photo
 st.image("logo.png")
 
-# Main Title & Subtitle
-st.title("ECP 203 Concrete Cube Acceptance Verifier")
+st.title("ECP 203 Concrete Acceptance & Mix Compliance Verifier")
 st.markdown(
     '<p class="author-credit">Made by Eng. Mohamed Abd Al Aty</p>',
     unsafe_allow_html=True,
 )
-st.subheader(
-    "Multi-Stage (7, 14, & 28-Day) Compliance Checking according to ECP 203"
-)
+st.subheader("Multi-Stage Cube Strength & Batch Plant Mix Design Audit according to ECP 203")
 st.markdown("---")
 
 # Sidebar Configuration
 st.sidebar.header("PROJECT & BATCH DETAILS")
-project_name = st.sidebar.text_input(
-    "Project Name",
-    value="",
-    placeholder="Please enter your project name here",
-)
-pour_location = st.sidebar.text_input(
-    "Structural Element / Pour Location", "Slab Axis A1-C5"
-)
-fcu_spec = st.sidebar.number_input(
-    "Specified 28-Day Grade fcu (N/mm²)",
-    min_value=10.0,
-    max_value=100.0,
-    value=30.0,
-    step=5.0,
-)
+project_name = st.sidebar.text_input("Project Name", value="", placeholder="Enter project name")
+pour_location = st.sidebar.text_input("Structural Element / Pour Location", "Slab Axis A1-C5")
+fcu_spec = st.sidebar.number_input("Specified 28-Day Grade fcu (N/mm²)", min_value=10.0, max_value=100.0, value=30.0, step=5.0)
 
-# New Batch & Fresh Concrete Traceability Inputs
-st.sidebar.subheader("🚚 Traceability & Site Logs")
+st.sidebar.subheader("🚚 Batch Plant & Site Logs")
 mixer_truck_no = st.sidebar.text_input("Mixer Truck No.", value="TRK-104")
 batch_ticket_id = st.sidebar.text_input("Batch Ticket ID", value="BT-99482")
 casting_date = st.sidebar.date_input("Casting Date", value=datetime.date.today() - datetime.timedelta(days=7))
+
+# Mix Design Parameters for ECP 203 Compliance Check
+st.sidebar.subheader("⚖️ Mix Design Specifications")
+cement_content = st.sidebar.number_input("Cement Content (kg/m³)", min_value=200.0, max_value=600.0, value=350.0, step=10.0)
+water_content = st.sidebar.number_input("Free Water Content (kg/m³)", min_value=100.0, max_value=300.0, value=150.0, step=5.0)
+wc_ratio = water_content / cement_content if cement_content > 0 else 0.0
+st.sidebar.write(f"• **Calculated W/C Ratio:** `{wc_ratio:.2f}`")
+
 slump_value = st.sidebar.number_input("Slump Test Value (mm)", min_value=0.0, max_value=300.0, value=150.0, step=5.0)
 concrete_temp = st.sidebar.number_input("Concrete Temp (°C)", min_value=0.0, max_value=60.0, value=28.5, step=0.5)
 
-engineer_name = st.sidebar.text_input(
-    "Engineer Name",
-    value="",
-    placeholder="Enter your name here",
-)
-
-# Date Selector Dropdown below Engineer Name
-report_date = st.sidebar.date_input(
-    "Report Date",
-    value=datetime.date.today()
-)
+engineer_name = st.sidebar.text_input("Engineer Name", value="", placeholder="Enter your name")
+report_date = st.sidebar.date_input("Report Date", value=datetime.date.today())
 
 st.sidebar.markdown("---")
 st.sidebar.header("COMPANY BRANDING")
-company_logo_file = st.sidebar.file_uploader(
-    "Upload Company Logo (PNG/JPG)", type=["png", "jpg", "jpeg"]
-)
+company_logo_file = st.sidebar.file_uploader("Upload Company Logo (PNG/JPG)", type=["png", "jpg", "jpeg"])
 company_logo_bytes = company_logo_file.read() if company_logo_file else None
 
-st.sidebar.markdown("---")
-st.sidebar.markdown(
-    "<p style='color: #DDDDDD; font-size: 0.9rem; font-family: \"Cormorant"
-    " Garamond\", Times, serif; line-height: 1.5; font-weight: normal; font-style:"
-    " normal; text-align: left;'>Note to Engineers: All outputs and"
-    " compliance calculations are in accordance with the Egyptian Code of"
-    " Practice (ECP 203). Please verify these results for your structural"
-    " elements. If you find any missing data, you are welcome to contact me"
-    " to refine it. Thank you for your cooperation.</p>",
-    unsafe_allow_html=True,
-)
+# --- BATCH PLANT MIX DESIGN ECP 203 AUDIT LOGIC ---
+max_allowed_wc = 0.45 if fcu_spec >= 30 else 0.50
+min_allowed_cement = 300.0
+max_allowed_temp = 35.0
 
-# Input Mode Selector
+wc_compliant = wc_ratio <= max_allowed_wc
+cement_compliant = cement_content >= min_allowed_cement
+temp_compliant = concrete_temp <= max_allowed_temp
+mix_overall_pass = wc_compliant and cement_compliant and temp_compliant
+
+mix_audit_rows = [
+    {
+        "Mix Parameter": "Water-Cement Ratio (W/C)",
+        "Actual Value": f"{wc_ratio:.2f}",
+        "ECP 203 Limit": f"≤ {max_allowed_wc:.2f}",
+        "Status": "PASS" if wc_compliant else "FAIL"
+    },
+    {
+        "Mix Parameter": "Minimum Cement Content",
+        "Actual Value": f"{cement_content} kg/m³",
+        "ECP 203 Limit": f"≥ {min_allowed_cement} kg/m³",
+        "Status": "PASS" if cement_compliant else "FAIL"
+    },
+    {
+        "Mix Parameter": "Fresh Concrete Temperature",
+        "Actual Value": f"{concrete_temp} °C",
+        "ECP 203 Limit": f"≤ {max_allowed_temp} °C",
+        "Status": "PASS" if temp_compliant else "FAIL"
+    }
+]
+df_mix_audit = pd.DataFrame(mix_audit_rows)
+
+
+# Input Mode Selector for Cubes
 st.header("1. Input Cube Crushing Results (N/mm²)")
-input_method = st.radio(
-    "Choose Input Method:",
-    ["Manual Entry", "Upload Excel File (.xlsx)"],
-    horizontal=True,
-)
+input_method = st.radio("Choose Input Method:", ["Manual Entry", "Upload Excel File (.xlsx)"], horizontal=True)
 
-cubes_7 = []
-cubes_14 = []
-cubes_28 = []
-
+cubes_7, cubes_14, cubes_28 = [], [], []
 
 def parse_input(text_str):
   if not text_str.strip():
     return []
   return [float(x.strip()) for x in text_str.split(",") if x.strip() != ""]
 
-
 if input_method == "Manual Entry":
   st.info("💡 Enter strength values separated by commas.")
-
   col_a, col_b, col_c = st.columns(3)
   with col_a:
     st.subheader("7-Day Test")
     input_7 = st.text_area("7-Day Cubes:", value="21.0, 22.5, 20.5", height=100)
   with col_b:
     st.subheader("14-Day Test")
-    input_14 = st.text_area(
-        "14-Day Cubes:", value="26.0, 27.2, 25.8", height=100
-    )
+    input_14 = st.text_area("14-Day Cubes:", value="26.0, 27.2, 25.8", height=100)
   with col_c:
     st.subheader("28-Day Test")
-    input_28 = st.text_area(
-        "28-Day Cubes:", value="32.5, 34.0, 31.0, 35.5, 29.0, 33.0", height=100
-    )
+    input_28 = st.text_area("28-Day Cubes:", value="32.5, 34.0, 31.0, 35.5, 29.0, 33.0", height=100)
 
   try:
     cubes_7 = parse_input(input_7)
@@ -273,28 +232,16 @@ if input_method == "Manual Entry":
   except ValueError:
     st.error("⚠️ Please enter valid numerical values separated by commas.")
     st.stop()
-
 else:
-  st.info(
-      "💡 Upload an Excel file. Select columns for each testing age from your"
-      " file."
-  )
-  uploaded_file = st.file_uploader(
-      "Choose an Excel file", type=["xlsx", "xls"]
-  )
-
+  st.info("💡 Upload an Excel file containing cube crushing test data.")
+  uploaded_file = st.file_uploader("Choose an Excel file", type=["xlsx", "xls"])
   if uploaded_file is not None:
     try:
       excel_file = pd.ExcelFile(uploaded_file)
       sheet_selected = st.selectbox("Select Sheet:", excel_file.sheet_names)
       df = pd.read_excel(uploaded_file, sheet_name=sheet_selected)
-      st.write("📊 **Preview of Uploaded Data:**", df.head())
-
       numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-      if not numeric_cols:
-        st.error("⚠️ No numeric columns found in the uploaded file.")
-        st.stop()
-
+      
       col_1, col_2, col_3 = st.columns(3)
       with col_1:
         col_7_name = st.selectbox("7-Day Column:", ["None"] + numeric_cols)
@@ -303,240 +250,120 @@ else:
       with col_3:
         col_28_name = st.selectbox("28-Day Column:", ["None"] + numeric_cols)
 
-      if col_7_name != "None":
-        cubes_7 = df[col_7_name].dropna().astype(float).tolist()
-      if col_14_name != "None":
-        cubes_14 = df[col_14_name].dropna().astype(float).tolist()
-      if col_28_name != "None":
-        cubes_28 = df[col_28_name].dropna().astype(float).tolist()
-
+      if col_7_name != "None": cubes_7 = df[col_7_name].dropna().astype(float).tolist()
+      if col_14_name != "None": cubes_14 = df[col_14_name].dropna().astype(float).tolist()
+      if col_28_name != "None": cubes_28 = df[col_28_name].dropna().astype(float).tolist()
     except Exception as e:
-      st.error(f"⚠️ Error reading Excel file: {e}")
+      st.error(f"⚠️ Error reading file: {e}")
       st.stop()
   else:
     st.warning("👈 Please upload an Excel sheet to continue.")
     st.stop()
 
 if not (cubes_7 or cubes_14 or cubes_28):
-  st.warning(
-      "⚠️ Please provide cube strength data for at least one testing age (7,"
-      " 14, or 28 days)."
-  )
+  st.warning("⚠️ Please provide cube strength data for at least one testing age.")
   st.stop()
 
-
-# Helper function for statistical analysis & multi-stage ECP 203 verification
+# Statistical analysis function
 def analyze_stage(cube_list, age_name, target_ratio):
   if not cube_list or len(cube_list) < 3:
     return None
-
   n_val = len(cube_list)
   mean_val = float(np.mean(cube_list))
   s_val = float(np.std(cube_list, ddof=1)) if n_val > 1 else 0.0
   k_val = 1.91 if n_val < 30 else 1.64
-
   fcu_calc_1 = mean_val - (k_val * s_val)
   fcu_calc_2 = 0.85 * mean_val
   fcu_char = max(fcu_calc_1, fcu_calc_2)
   min_val = min(cube_list)
-
   stage_target_fcu = target_ratio * fcu_spec
   cond1 = fcu_char >= stage_target_fcu
   cond2 = min_val >= (0.85 * stage_target_fcu)
   is_compliant = cond1 and cond2
-
   return {
-      "age_name": age_name,
-      "n": n_val,
-      "mean": mean_val,
-      "s": s_val,
-      "k": k_val,
-      "fcu_calc_1": fcu_calc_1,
-      "fcu_calc_2": fcu_calc_2,
-      "fcu_char": fcu_char,
-      "min": min_val,
-      "target_ratio": target_ratio,
-      "stage_target_fcu": stage_target_fcu,
-      "min_threshold": 0.85 * stage_target_fcu,
-      "cond1": cond1,
-      "cond2": cond2,
-      "is_compliant": is_compliant,
+      "age_name": age_name, "n": n_val, "mean": mean_val, "s": s_val, "k": k_val,
+      "fcu_calc_1": fcu_calc_1, "fcu_calc_2": fcu_calc_2, "fcu_char": fcu_char,
+      "min": min_val, "target_ratio": target_ratio, "stage_target_fcu": stage_target_fcu,
+      "min_threshold": 0.85 * stage_target_fcu, "cond1": cond1, "cond2": cond2, "is_compliant": is_compliant
   }
 
-
-# Analyze all three stages
 stages_data = {
     "7 Days": analyze_stage(cubes_7, "7-Day Stage", 0.70),
     "14 Days": analyze_stage(cubes_14, "14-Day Stage", 0.85),
     "28 Days": analyze_stage(cubes_28, "28-Day Stage", 1.00),
 }
 
+# --- MIX DESIGN AUDIT SECTION ---
+st.markdown("---")
+st.header("2. Batch Plant Mix Design ECP 203 Compliance Audit")
+col_mix1, col_mix2 = st.columns([2, 1])
+with col_mix1:
+  st.dataframe(df_mix_audit, use_container_width=True)
+with col_mix2:
+  if mix_overall_pass:
+    st.success("✅ **MIX DESIGN PASS:** All site mix parameters comply with ECP 203 limits.")
+  else:
+    st.error("❌ **MIX DESIGN FAIL:** One or more parameters exceed ECP 203 allowable limits.")
+
 # Results Display
 st.markdown("---")
-st.header("2. Compliance Summaries (7, 14 & 28 Days)")
+st.header("3. Cube Compliance Summaries (7, 14 & 28 Days)")
+tabs = st.tabs(["**7-Day Stage**", "**14-Day Stage**", "**28-Day Stage**"])
 
-tabs = st.tabs([
-    "**7-Day Stage Compliance**",
-    "**14-Day Stage Compliance**",
-    "**28-Day Stage Compliance**",
-])
-
-for idx, (stage_label, tab) in enumerate(
-    zip(["7 Days", "14 Days", "28 Days"], tabs)
-):
+for idx, (stage_label, tab) in enumerate(zip(["7 Days", "14 Days", "28 Days"], tabs)):
   with tab:
     res = stages_data[stage_label]
     if res is None:
-      st.info(
-          f"ℹ️ Insufficient or missing data for {stage_label} testing"
-          " (minimum 3 cubes required)."
-      )
+      st.info(f"ℹ️ Insufficient data for {stage_label} testing (minimum 3 cubes required).")
     else:
       c1, c2, c3 = st.columns(3)
       c1.metric("Sample Count (n)", f"{res['n']} cubes")
       c2.metric("Mean Strength (f_m)", f"{res['mean']:.2f} N/mm²")
       c3.metric("Std. Deviation (s)", f"{res['s']:.2f} N/mm²")
-
-      st.write("")
-      st.write(
-          f"• **Target Strength Threshold ({int(res['target_ratio']*100)}% of"
-          f" Spec):** `{res['stage_target_fcu']:.2f}` N/mm²"
-      )
-      st.write(
-          "• **Calculated Characteristic Strength (f_cu):**"
-          f" `{res['fcu_char']:.2f}` N/mm²"
-      )
-      st.write(
-          f"• **Minimum Individual Cube:** `{res['min']:.2f}` N/mm² (Min Limit:"
-          f" `{res['min_threshold']:.2f}` N/mm²)"
-      )
-
-      st.write("")
+      st.write(f"• **Target Strength Threshold:** `{res['stage_target_fcu']:.2f}` N/mm²")
+      st.write(f"• **Calculated Characteristic Strength (f_cu):** `{res['fcu_char']:.2f}` N/mm²")
+      st.write(f"• **Minimum Individual Cube:** `{res['min']:.2f}` N/mm² (Min Limit: `{res['min_threshold']:.2f}` N/mm²)")
       if res["is_compliant"]:
-        st.success(
-            f"✅ **PASS ({stage_label}):** Complies with the target requirements"
-            f" of ECP 203 for {stage_label}."
-        )
+        st.success(f"✅ **PASS ({stage_label}):** Compliant with ECP 203.")
       else:
-        st.error(
-            f"❌ **FAIL ({stage_label}):** DOES NOT comply with the target"
-            f" requirements of ECP 203 for {stage_label}."
-        )
+        st.error(f"❌ **FAIL ({stage_label}):** Non-compliant with ECP 203.")
 
-# --- PROFESSIONAL PLOTLY VISUALIZATIONS SECTION ---
+# Visualizations Section
 st.markdown("---")
-st.header("3. Visual Analytics & Strength Trend Charts")
-
+st.header("4. Visual Analytics & Strength Trend Charts")
 chart_col1, chart_col2 = st.columns(2)
 
 chart_data_list = []
-for i, val in enumerate(cubes_7):
-  chart_data_list.append({
-      "Cube Label": f"Cube 7-{i+1} ({val} MPa)",
-      "Sample Index": i + 1,
-      "Strength": val,
-      "Stage": "7 Days"
-  })
-for i, val in enumerate(cubes_14):
-  chart_data_list.append({
-      "Cube Label": f"Cube 14-{i+1} ({val} MPa)",
-      "Sample Index": i + 1,
-      "Strength": val,
-      "Stage": "14 Days"
-  })
-for i, val in enumerate(cubes_28):
-  chart_data_list.append({
-      "Cube Label": f"Cube 28-{i+1} ({val} MPa)",
-      "Sample Index": i + 1,
-      "Strength": val,
-      "Stage": "28 Days"
-  })
+for i, val in enumerate(cubes_7): chart_data_list.append({"Cube Label": f"7-{i+1} ({val})", "Sample Index": i+1, "Strength": val, "Stage": "7 Days"})
+for i, val in enumerate(cubes_14): chart_data_list.append({"Cube Label": f"14-{i+1} ({val})", "Sample Index": i+1, "Strength": val, "Stage": "14 Days"})
+for i, val in enumerate(cubes_28): chart_data_list.append({"Cube Label": f"28-{i+1} ({val})", "Sample Index": i+1, "Strength": val, "Stage": "28 Days"})
 
-# Chart 1: Professional Labeled Scatter/Line Chart for Individual Cubes
 with chart_col1:
-  st.subheader("Individual Cube Strengths Labeled")
+  st.subheader("Individual Cube Strengths")
   if chart_data_list:
     df_chart = pd.DataFrame(chart_data_list)
-    fig_bars = px.scatter(
-        df_chart,
-        x="Sample Index",
-        y="Strength",
-        color="Stage",
-        text="Cube Label",
-        title="Individual Cube Strengths with Direct Labels",
-        labels={"Strength": "Crushing Strength (N/mm²)", "Sample Index": "Sample Number Sequence"},
-        template="plotly_dark",
-    )
-    fig_bars.update_traces(
-        mode="text+markers",
-        textposition="top center",
-        marker=dict(size=12)
-    )
-    fig_bars.update_layout(
-        plot_bgcolor="#031338",
-        paper_bgcolor="#1B2A4A",
-        font=dict(color="#FFFFFF", size=10),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-    )
+    fig_bars = px.scatter(df_chart, x="Sample Index", y="Strength", color="Stage", text="Cube Label", template="plotly_dark")
+    fig_bars.update_traces(mode="text+markers", textposition="top center", marker=dict(size=12))
+    fig_bars.update_layout(plot_bgcolor="#031338", paper_bgcolor="#1B2A4A", font=dict(color="#FFFFFF", size=10))
     st.plotly_chart(fig_bars, use_container_width=True)
-  else:
-    st.info("No data available for distribution chart.")
 
-# Chart 2: Summary Comparison vs Target Line Chart
 summary_chart_data = []
 for stage_key in ["7 Days", "14 Days", "28 Days"]:
   res = stages_data[stage_key]
   if res:
-    summary_chart_data.append({
-        "Stage": stage_key,
-        "Calculated fcu": res["fcu_char"],
-        "Target Requirement": res["stage_target_fcu"],
-    })
+    summary_chart_data.append({"Stage": stage_key, "Calculated fcu": res["fcu_char"], "Target Requirement": res["stage_target_fcu"]})
 
 with chart_col2:
-  st.subheader("Characteristic fcu vs Target Thresholds")
+  st.subheader("Characteristic fcu vs Target")
   if summary_chart_data:
     df_summary_chart = pd.DataFrame(summary_chart_data)
     fig_lines = go.Figure()
-    fig_lines.add_trace(
-        go.Scatter(
-            x=df_summary_chart["Stage"],
-            y=df_summary_chart["Calculated fcu"],
-            mode="lines+markers+text",
-            text=[f"{val:.2f}" for val in df_summary_chart["Calculated fcu"]],
-            textposition="top center",
-            name="Calculated fcu",
-            line=dict(color="#00BFFF", width=3),
-            marker=dict(size=10)
-        )
-    )
-    fig_lines.add_trace(
-        go.Scatter(
-            x=df_summary_chart["Stage"],
-            y=df_summary_chart["Target Requirement"],
-            mode="lines+markers+text",
-            text=[f"{val:.2f}" for val in df_summary_chart["Target Requirement"]],
-            textposition="bottom center",
-            name="Target Requirement",
-            line=dict(color="#FF8C00", width=3, dash="dash"),
-            marker=dict(size=10)
-        )
-    )
-    fig_lines.update_layout(
-        title="Calculated fcu vs Target Thresholds",
-        xaxis_title="Testing Stage",
-        yaxis_title="Strength (N/mm²)",
-        plot_bgcolor="#031338",
-        paper_bgcolor="#1B2A4A",
-        font=dict(color="#FFFFFF", size=10),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-    )
+    fig_lines.add_trace(go.Scatter(x=df_summary_chart["Stage"], y=df_summary_chart["Calculated fcu"], mode="lines+markers+text", text=[f"{v:.2f}" for v in df_summary_chart["Calculated fcu"]], name="Calculated fcu", line=dict(color="#00BFFF", width=3)))
+    fig_lines.add_trace(go.Scatter(x=df_summary_chart["Stage"], y=df_summary_chart["Target Requirement"], mode="lines+markers+text", text=[f"{v:.2f}" for v in df_summary_chart["Target Requirement"]], name="Target", line=dict(color="#FF8C00", width=3, dash="dash")))
+    fig_lines.update_layout(plot_bgcolor="#031338", paper_bgcolor="#1B2A4A", font=dict(color="#FFFFFF", size=10))
     st.plotly_chart(fig_lines, use_container_width=True)
-  else:
-    st.info("No data available for summary chart.")
 
-
-# Generate DataFrames for Export
+# DataFrames for Export
 display_project_name = project_name if project_name.strip() else "Unnamed Project"
 display_engineer_name = engineer_name if engineer_name.strip() else "Not Specified"
 formatted_report_date = report_date.strftime("%Y-%m-%d")
@@ -549,14 +376,14 @@ overview_data = [
     {"Parameter": "Mixer Truck Number", "Details": mixer_truck_no},
     {"Parameter": "Batch Ticket ID", "Details": batch_ticket_id},
     {"Parameter": "Casting Date", "Details": formatted_casting_date},
+    {"Parameter": "Cement Content", "Details": f"{cement_content} kg/m³"},
+    {"Parameter": "Water Content", "Details": f"{water_content} kg/m³"},
+    {"Parameter": "Water-Cement Ratio (W/C)", "Details": f"{wc_ratio:.2f}"},
     {"Parameter": "Fresh Concrete Slump", "Details": f"{slump_value} mm"},
     {"Parameter": "Fresh Concrete Temperature", "Details": f"{concrete_temp} °C"},
     {"Parameter": "Engineer Name", "Details": display_engineer_name},
     {"Parameter": "Report Date", "Details": formatted_report_date},
-    {
-        "Parameter": "Standard Specification",
-        "Details": "Egyptian Code of Practice (ECP 203)",
-    },
+    {"Parameter": "Standard Specification", "Details": "Egyptian Code of Practice (ECP 203)"},
 ]
 df_overview = pd.DataFrame(overview_data)
 
@@ -574,415 +401,142 @@ for stage_key in ["7 Days", "14 Days", "28 Days"]:
   res = stages_data[stage_key]
   if res:
     summary_rows.append({
-        "Testing Stage": stage_key,
-        "Sample Count (n)": res["n"],
-        "Target Ratio": f"{int(res['target_ratio']*100)}%",
-        "Target Strength (N/mm²)": round(res["stage_target_fcu"], 2),
-        "Mean Strength (N/mm²)": round(res["mean"], 2),
-        "Standard Deviation (N/mm²)": round(res["s"], 2),
-        "Margin Factor (k)": res["k"],
-        "Calculated fcu (N/mm²)": round(res["fcu_char"], 2),
-        "Min Individual Cube (N/mm²)": round(res["min"], 2),
-        "Min Allowable Limit (N/mm²)": round(res["min_threshold"], 2),
-        "Compliance Verdict": "PASS" if res["is_compliant"] else "FAIL",
-    })
-  else:
-    summary_rows.append({
-        "Testing Stage": stage_key,
-        "Sample Count (n)": "N/A",
-        "Target Ratio": "N/A",
-        "Target Strength (N/mm²)": "N/A",
-        "Mean Strength (N/mm²)": "N/A",
-        "Standard Deviation (N/mm²)": "N/A",
-        "Margin Factor (k)": "N/A",
-        "Calculated fcu (N/mm²)": "N/A",
-        "Min Individual Cube (N/mm²)": "N/A",
-        "Min Allowable Limit (N/mm²)": "N/A",
-        "Compliance Verdict": "No Data Provided",
+        "Testing Stage": stage_key, "Sample Count (n)": res["n"], "Target Ratio": f"{int(res['target_ratio']*100)}%",
+        "Target Strength (N/mm²)": round(res["stage_target_fcu"], 2), "Mean Strength (N/mm²)": round(res["mean"], 2),
+        "Standard Deviation (N/mm²)": round(res["s"], 2), "Margin Factor (k)": res["k"],
+        "Calculated fcu (N/mm²)": round(res["fcu_char"], 2), "Min Individual Cube (N/mm²)": round(res["min"], 2),
+        "Compliance Verdict": "PASS" if res["is_compliant"] else "FAIL"
     })
 df_summary_table = pd.DataFrame(summary_rows)
 
-calc_methods = [
-    {
-        "Step / Parameter": "1. Standard Reference",
-        "Mathematical Definition / Description": (
-            "Egyptian Code of Practice for Concrete Structures (ECP 203 -"
-            " Section 2-6)."
-        ),
-    },
-    {
-        "Step / Parameter": "2. Multi-Stage Testing Framework",
-        "Mathematical Definition / Description": (
-            "Evaluations are conducted for 7-Day (~70% target fcu), 14-Day"
-            " (~85% target fcu), and 28-Day (100% full specified fcu)."
-        ),
-    },
-    {
-        "Step / Parameter": "3. Mean Strength",
-        "Mathematical Definition / Description": (
-            "Calculated as the arithmetic mean per stage: Sum of all cube"
-            " strengths divided by the total sample count (n)."
-        ),
-    },
-    {
-        "Step / Parameter": "4. Standard Deviation",
-        "Mathematical Definition / Description": (
-            "Calculated using sample degrees of freedom (n - 1) to measure data"
-            " dispersion around the mean."
-        ),
-    },
-    {
-        "Step / Parameter": "5. Statistical Margin Factor (k)",
-        "Mathematical Definition / Description": (
-            "If sample size n is less than 30, factor k is 1.91. If sample size"
-            " n is 30 or greater, factor k is 1.64."
-        ),
-    },
-    {
-        "Step / Parameter": "6. Characteristic Strength Evaluation",
-        "Mathematical Definition / Description": (
-            "Evaluated per stage using two criteria: (1) Mean strength minus"
-            " product of factor k and standard deviation, and (2) 85 percent of"
-            " the mean strength. The final characteristic strength is the"
-            " maximum of these two values."
-        ),
-    },
-    {
-        "Step / Parameter": "7. Acceptance Condition 1",
-        "Mathematical Definition / Description": (
-            "The calculated characteristic strength must be greater than or"
-            " equal to the specified target strength for that stage."
-        ),
-    },
-    {
-        "Step / Parameter": "8. Acceptance Condition 2",
-        "Mathematical Definition / Description": (
-            "Every individual cube result within the sample must be greater"
-            " than or equal to 85 percent of the target stage strength limit."
-        ),
-    },
-]
-df_methods = pd.DataFrame(calc_methods)
-
-# Robust Native Matplotlib Image Generation for Excel and PDF Exports
-chart1_img_bytes = None
-chart2_img_bytes = None
+# Matplotlib Images for Exports
+chart1_img_bytes, chart2_img_bytes = None, None
 try:
-  # Generate Chart 1 Image via Matplotlib
   fig_m1, ax_m1 = plt.subplots(figsize=(7, 4), dpi=150)
   fig_m1.patch.set_facecolor('#1B2A4A')
   ax_m1.set_facecolor('#031338')
-  
   if chart_data_list:
     df_c = pd.DataFrame(chart_data_list)
     for stage_name, color in [("7 Days", "#00BFFF"), ("14 Days", "#FF8C00"), ("28 Days", "#2ecc71")]:
-      subset = df_c[df_c["Stage"] == stage_name]
-      if not subset.empty:
-        ax_m1.scatter(subset["Sample Index"], subset["Strength"], color=color, label=stage_name, s=70, zorder=3)
-        for _, row in subset.iterrows():
-          ax_m1.annotate(f"{row['Cube Label']}", (row["Sample Index"], row["Strength"]),
-                         textcoords="offset points", xytext=(0, 6), ha='center', fontsize=7, color='white')
-  
-  ax_m1.set_title("Individual Cube Strengths with Direct Labels", color='white', fontsize=10, fontweight='bold')
-  ax_m1.set_xlabel("Sample Index Sequence", color='white', fontsize=8)
-  ax_m1.set_ylabel("Crushing Strength (N/mm²)", color='white', fontsize=8)
+      sub = df_c[df_c["Stage"] == stage_name]
+      if not sub.empty: ax_m1.scatter(sub["Sample Index"], sub["Strength"], color=color, label=stage_name, s=70)
+  ax_m1.set_title("Individual Cube Strengths", color='white', fontsize=10, fontweight='bold')
   ax_m1.tick_params(colors='white', labelsize=8)
-  ax_m1.grid(True, linestyle='--', alpha=0.3, color='gray')
-  ax_m1.legend(loc='upper right', facecolor='#1B2A4A', edgecolor='none', labelcolor='white', fontsize=8)
-  
   buf1 = io.BytesIO()
-  fig_m1.savefig(buf1, format="png", bbox_inches='tight', facecolor=fig_m1.get_facecolor(), edgecolor='none')
+  fig_m1.savefig(buf1, format="png", bbox_inches='tight', facecolor=fig_m1.get_facecolor())
   buf1.seek(0)
   chart1_img_bytes = buf1.getvalue()
   plt.close(fig_m1)
-
-  # Generate Chart 2 Image via Matplotlib
-  fig_m2, ax_m2 = plt.subplots(figsize=(7, 4), dpi=150)
-  fig_m2.patch.set_facecolor('#1B2A4A')
-  ax_m2.set_facecolor('#031338')
-  
-  if summary_chart_data:
-    df_s = pd.DataFrame(summary_chart_data)
-    ax_m2.plot(df_s["Stage"], df_s["Calculated fcu"], marker='o', color="#00BFFF", linewidth=2.5, label="Calculated fcu")
-    ax_m2.plot(df_s["Stage"], df_s["Target Requirement"], marker='s', linestyle='--', color="#FF8C00", linewidth=2.5, label="Target Requirement")
-    
-    for _, row in df_s.iterrows():
-      ax_m2.annotate(f"{row['Calculated fcu']:.2f}", (row["Stage"], row["Calculated fcu"]), textcoords="offset points", xytext=(0, 8), ha='center', fontsize=8, color='#00BFFF', fontweight='bold')
-      ax_m2.annotate(f"{row['Target Requirement']:.2f}", (row["Stage"], row["Target Requirement"]), textcoords="offset points", xytext=(0, -12), ha='center', fontsize=8, color='#FF8C00', fontweight='bold')
-
-  ax_m2.set_title("Calculated fcu vs Target Thresholds", color='white', fontsize=10, fontweight='bold')
-  ax_m2.set_xlabel("Testing Stage", color='white', fontsize=8)
-  ax_m2.set_ylabel("Strength (N/mm²)", color='white', fontsize=8)
-  ax_m2.tick_params(colors='white', labelsize=8)
-  ax_m2.grid(True, linestyle='--', alpha=0.3, color='gray')
-  ax_m2.legend(loc='upper right', facecolor='#1B2A4A', edgecolor='none', labelcolor='white', fontsize=8)
-  
-  buf2 = io.BytesIO()
-  fig_m2.savefig(buf2, format="png", bbox_inches='tight', facecolor=fig_m2.get_facecolor(), edgecolor='none')
-  buf2.seek(0)
-  chart2_img_bytes = buf2.getvalue()
-  plt.close(fig_m2)
-except Exception as e:
+except Exception:
   pass
 
-# Excel Export Buffer Construction
+# Excel Buffer Construction
 excel_buffer = io.BytesIO()
 with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
-  df_overview.to_excel(
-      writer, sheet_name="Project Overview & Info", index=False
-  )
-  df_summary_table.to_excel(
-      writer, sheet_name="Multi-Stage Results Summary", index=False
-  )
+  df_overview.to_excel(writer, sheet_name="Project Overview & Metadata", index=False)
+  df_mix_audit.to_excel(writer, sheet_name="Mix Design Audit", index=False)
+  df_summary_table.to_excel(writer, sheet_name="Multi-Stage Results Summary", index=False)
   df_raw_cubes.to_excel(writer, sheet_name="Raw Individual Cubes", index=False)
-  df_methods.to_excel(
-      writer, sheet_name="Calculation Methodology", index=False
-  )
-  
-  wb = writer.book
-  if chart1_img_bytes or chart2_img_bytes:
-    chart_sheet = wb.create_sheet(title="Visual Analytics Charts")
-    if chart1_img_bytes:
-      img1_io = io.BytesIO(chart1_img_bytes)
-      img_ux1 = OpenpyxlImage(img1_io)
-      chart_sheet.add_image(img_ux1, "B2")
-    if chart2_img_bytes:
-      img2_io = io.BytesIO(chart2_img_bytes)
-      img_ux2 = OpenpyxlImage(img2_io)
-      chart_sheet.add_image(img_ux2, "B24")
-
 excel_buffer.seek(0)
 
-
-# PDF Export Buffer Generation Function (Includes Logo & Formatted Sign-Off Block)
+# PDF Report Generation Function
 def generate_pdf_report(logo_bytes=None):
   pdf_buffer = io.BytesIO()
-  doc = SimpleDocTemplate(
-      pdf_buffer,
-      pagesize=letter,
-      rightMargin=36,
-      leftMargin=36,
-      topMargin=36,
-      bottomMargin=36,
-  )
+  doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
   story = []
   styles = getSampleStyleSheet()
 
-  title_style = ParagraphStyle(
-      "DocTitle",
-      parent=styles["Heading1"],
-      fontSize=18,
-      textColor=colors.HexColor("#1B2A4A"),
-      spaceAfter=4,
-      alignment=1,
-  )
-  subtitle_style = ParagraphStyle(
-      "DocSub",
-      parent=styles["Normal"],
-      fontSize=10,
-      textColor=colors.HexColor("#000000"),
-      spaceAfter=15,
-      alignment=1,
-  )
-  section_style = ParagraphStyle(
-      "SecTitle",
-      parent=styles["Heading2"],
-      fontSize=13,
-      textColor=colors.HexColor("#000000"),
-      spaceBefore=12,
-      spaceAfter=6,
-  )
-  body_style = ParagraphStyle(
-      "Body",
-      parent=styles["Normal"],
-      fontSize=9,
-      textColor=colors.HexColor("#333333"),
-      spaceAfter=4,
-  )
+  title_style = ParagraphStyle("DocTitle", parent=styles["Heading1"], fontSize=18, textColor=colors.HexColor("#1B2A4A"), spaceAfter=4, alignment=1)
+  subtitle_style = ParagraphStyle("DocSub", parent=styles["Normal"], fontSize=10, textColor=colors.HexColor("#000000"), spaceAfter=15, alignment=1)
+  section_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=12, textColor=colors.HexColor("#000000"), spaceBefore=10, spaceAfter=4)
+  body_style = ParagraphStyle("Body", parent=styles["Normal"], fontSize=8.5, textColor=colors.HexColor("#333333"), spaceAfter=4)
 
-  # Optional Company Logo Integration at Top
   if logo_bytes:
     try:
       story.append(ReportLabImage(io.BytesIO(logo_bytes), width=120, height=45))
-      story.append(Spacer(1, 6))
+      story.append(Spacer(1, 4))
     except Exception:
       pass
 
-  story.append(Paragraph("ECP 203 Concrete Cube Acceptance Report", title_style))
-  story.append(
-      Paragraph(
-          f"Multi-Stage Compliance Verification (7, 14, & 28 Days) | Report Date: {formatted_report_date}",
-          subtitle_style,
-      )
-  )
-  story.append(
-      HRFlowable(
-          width="100%",
-          thickness=1.5,
-          color=colors.HexColor("#1B2A4A"),
-          spaceAfter=10,
-      )
-  )
+  story.append(Paragraph("ECP 203 Concrete Acceptance & Mix Compliance Report", title_style))
+  story.append(Paragraph(f"Multi-Stage Verification & Mix Audit | Report Date: {formatted_report_date}", subtitle_style))
+  story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#1B2A4A"), spaceAfter=8))
 
-  # 1. Overview Table (Includes all Sidebar inputs: Trucks, Batch Tickets, Casting Dates, Slump, Temp, etc.)
-  story.append(Paragraph("<b>1. Project Overview, Batch & Traceability Metadata</b>", section_style))
+  # 1. Overview Table
+  story.append(Paragraph("<b>1. Project Overview & Traceability Metadata</b>", section_style))
   overview_data_list = [["Parameter", "Details"]] + df_overview.values.tolist()
   t_overview = Table(overview_data_list, colWidths=[180, 360])
-  t_overview.setStyle(
-      TableStyle([
-          ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
-          ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-          ("ALIGN", (0, 0), (-1, -1), "LEFT"),
-          ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-          ("FONTSIZE", (0, 0), (-1, -1), 9),
-          ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-          ("TOPPADDING", (0, 0), (-1, -1), 4),
-          ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
-          ("BACKGROUND", (0, 1), (-1, -1), colors.HexColor("#F9F9F9")),
-      ])
-  )
+  t_overview.setStyle(TableStyle([
+      ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
+      ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+      ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+      ("FONTSIZE", (0, 0), (-1, -1), 8),
+      ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
+      ("BACKGROUND", (0, 1), (-1, -1), colors.HexColor("#F9F9F9")),
+  ]))
   story.append(t_overview)
-  story.append(Spacer(1, 10))
+  story.append(Spacer(1, 6))
 
-  # 2. Summary Results Table
-  story.append(Paragraph("<b>2. Compliance Results Summary</b>", section_style))
-  summary_headers = [
-      "Stage",
-      "n",
-      "Target",
-      "Req. (MPa)",
-      "Mean (MPa)",
-      "StdDev",
-      "fcu (MPa)",
-      "Verdict",
-  ]
+  # 2. Mix Design Audit Table
+  story.append(Paragraph("<b>2. Batch Plant Mix Design ECP 203 Compliance Audit</b>", section_style))
+  mix_table_rows = [list(df_mix_audit.columns)] + df_mix_audit.values.tolist()
+  t_mix = Table(mix_table_rows, colWidths=[180, 120, 120, 120])
+  t_mix.setStyle(TableStyle([
+      ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
+      ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+      ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+      ("FONTSIZE", (0, 0), (-1, -1), 8),
+      ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
+  ]))
+  story.append(t_mix)
+  story.append(Spacer(1, 6))
+
+  # 3. Summary Results Table
+  story.append(Paragraph("<b>3. Cube Compliance Results Summary</b>", section_style))
+  summary_headers = ["Stage", "n", "Target", "Req (MPa)", "Mean (MPa)", "StdDev", "fcu (MPa)", "Verdict"]
   summary_table_rows = [summary_headers]
   for r in summary_rows:
-    summary_table_rows.append([
-        str(r["Testing Stage"]),
-        str(r["Sample Count (n)"]),
-        str(r["Target Ratio"]),
-        str(r["Target Strength (N/mm²)"]),
-        str(r["Mean Strength (N/mm²)"]),
-        str(r["Standard Deviation (N/mm²)"]),
-        str(r["Calculated fcu (N/mm²)"]),
-        str(r["Compliance Verdict"]),
-    ])
-  t_summary = Table(
-      summary_table_rows, colWidths=[65, 30, 45, 60, 65, 55, 65, 115]
-  )
-  t_summary.setStyle(
-      TableStyle([
-          ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
-          ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-          ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-          ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-          ("FONTSIZE", (0, 0), (-1, -1), 8),
-          ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-          ("TOPPADDING", (0, 0), (-1, -1), 4),
-          ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
-      ])
-  )
+    summary_table_rows.append([str(r["Testing Stage"]), str(r["Sample Count (n)"]), str(r["Target Ratio"]), str(r["Target Strength (N/mm²)"]), str(r["Mean Strength (N/mm²)"]), str(r["Standard Deviation (N/mm²)"]), str(r["Calculated fcu (N/mm²)"]), str(r["Compliance Verdict"])])
+  t_summary = Table(summary_table_rows, colWidths=[65, 30, 45, 60, 65, 55, 65, 115])
+  t_summary.setStyle(TableStyle([
+      ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
+      ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+      ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+      ("FONTSIZE", (0, 0), (-1, -1), 8),
+      ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
+  ]))
   story.append(t_summary)
-  story.append(Spacer(1, 10))
+  story.append(Spacer(1, 6))
 
-  # 3. Raw Individual Cubes Table
-  story.append(
-      Paragraph("<b>3. Raw Individual Cube Crushing Values</b>", section_style)
-  )
-  raw_headers = list(df_raw_cubes.columns)
-  raw_rows_data = [raw_headers] + [
-      [str(val) if val is not None else "-" for val in row]
-      for row in df_raw_cubes.values
-  ]
-  t_raw = Table(raw_rows_data, colWidths=[90, 150, 150, 150])
-  t_raw.setStyle(
-      TableStyle([
-          ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
-          ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-          ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-          ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-          ("FONTSIZE", (0, 0), (-1, -1), 8),
-          ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-          ("TOPPADDING", (0, 0), (-1, -1), 4),
-          ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
-      ])
-  )
-  story.append(t_raw)
-  story.append(Spacer(1, 10))
-
-  # 4. Calculation Methodology Section
-  story.append(
-      Paragraph(
-          "<b>4. Calculation Methodology & Standards (ECP 203)</b>",
-          section_style,
-      )
-  )
-  for item in calc_methods:
-    p_text = f"<b>{item['Step / Parameter']}:</b> {item['Mathematical Definition / Description']}"
-    story.append(Paragraph(p_text, body_style))
-  story.append(Spacer(1, 10))
-
-  # 5. Visual Analytics & Trend Charts
-  if chart1_img_bytes or chart2_img_bytes:
-    story.append(Paragraph("<b>5. Visual Analytics & Trend Charts</b>", section_style))
-    if chart1_img_bytes:
-      story.append(ReportLabImage(io.BytesIO(chart1_img_bytes), width=480, height=250))
-      story.append(Spacer(1, 6))
-    if chart2_img_bytes:
-      story.append(ReportLabImage(io.BytesIO(chart2_img_bytes), width=480, height=250))
-    story.append(Spacer(1, 10))
-
-  # 6. Formal Engineering Sign-Off & Approval Block
-  story.append(Paragraph("<b>6. Engineering Sign-Off & Approvals</b>", section_style))
-  
-  sign_cell_1 = Paragraph(
-      f"<b>Prepared By:</b><br/><br/>Name: {display_engineer_name}<br/>Signature: ___________________<br/>Date: {formatted_report_date}", 
-      body_style
-  )
-  sign_cell_2 = Paragraph(
-      "<b>Checked By (QA/QC):</b><br/><br/>Name: ___________________<br/>Signature: ___________________<br/>Date: ___________________", 
-      body_style
-  )
-  sign_cell_3 = Paragraph(
-      "<b>Approved By (Consultant):</b><br/><br/>Name: ___________________<br/>Signature: ___________________<br/>Stamp: [ Official Seal ]", 
-      body_style
-  )
-
-  sign_off_data = [[sign_cell_1, sign_cell_2, sign_cell_3]]
-  
-  t_sign = Table(sign_off_data, colWidths=[180, 180, 180])
-  t_sign.setStyle(
-      TableStyle([
-          ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F9F9F9")),
-          ("ALIGN", (0, 0), (-1, -1), "LEFT"),
-          ("VALIGN", (0, 0), (-1, -1), "TOP"),
-          ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
-          ("TOPPADDING", (0, 0), (-1, -1), 8),
-          ("LEFTPADDING", (0, 0), (-1, -1), 8),
-          ("RIGHTPADDING", (0, 0), (-1, -1), 8),
-          ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
-      ])
-  )
+  # 4. Sign-Off Block
+  story.append(Paragraph("<b>4. Engineering Sign-Off & Approvals</b>", section_style))
+  sign_cell_1 = Paragraph(f"<b>Prepared By:</b><br/>{display_engineer_name}<br/>Sign: _________", body_style)
+  sign_cell_2 = Paragraph("<b>Checked By (QA/QC):</b><br/>Name: _________<br/>Sign: _________", body_style)
+  sign_cell_3 = Paragraph("<b>Approved (Consultant):</b><br/>Name: _________<br/>Stamp: [ Seal ]", body_style)
+  t_sign = Table([[sign_cell_1, sign_cell_2, sign_cell_3]], colWidths=[180, 180, 180])
+  t_sign.setStyle(TableStyle([
+      ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F9F9F9")),
+      ("VALIGN", (0, 0), (-1, -1), "TOP"),
+      ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
+      ("TOPPADDING", (0, 0), (-1, -1), 6),
+      ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+  ]))
   story.append(t_sign)
 
   doc.build(story)
   pdf_buffer.seek(0)
   return pdf_buffer
 
-
 pdf_data = generate_pdf_report(company_logo_bytes)
 
-# Download Buttons Layout
+# Download Buttons
 col_btn1, col_btn2 = st.columns(2)
 with col_btn1:
   st.download_button(
       label="📥 Download Excel Report (.xlsx)",
       data=excel_buffer,
       file_name=f"ECP203_Report_{display_project_name.replace(' ', '_')}.xlsx",
-      mime=(
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-      ),
+      mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   )
 with col_btn2:
   st.download_button(
@@ -992,81 +546,12 @@ with col_btn2:
       mime="application/pdf",
   )
 
-# Step-by-Step Breakdown Expander
-with st.expander(
-    "🔍 Show Step-by-Step ECP 203 Calculation Formulas (All Stages)"
-):
-  for stage_key in ["7 Days", "14 Days", "28 Days"]:
-    res = stages_data[stage_key]
-    st.markdown(f"### **◪ {stage_key} Stage ECP 203 Evaluation**")
-    if res is None:
-      st.write(f"No sufficient data provided for {stage_key} stage.")
-      st.markdown("---")
-      continue
-
-    st.latex(r"\text{Mean Strength: } f_m = \frac{\sum f_i}{n}")
-    st.write(f"◪ **Mean ($f_m$)** = `{res['mean']:.2f}` N/mm²")
-
-    st.latex(
-        r"\text{Standard Deviation: } s = \sqrt{\frac{\sum (f_i - f_m)^2}{n -"
-        r" 1}}"
-    )
-    st.write(
-        f"◪ **Std. Dev. ($s$)** = `{res['s']:.2f}` N/mm² | **Factor $k$** ="
-        f" `{res['k']}` (Sample $n = {res['n']}$)"
-    )
-
-    st.latex(
-        r"f_{cu,1} = f_m - (k \times s) \quad | \quad f_{cu,2} = 0.85 \times f_m"
-    )
-    st.write(
-        f"• $f_{{cu,1}} = {res['mean']:.2f} - ({res['k']} \\times"
-        f" {res['s']:.2f}) =$ **`{res['fcu_calc_1']:.2f}` N/mm²**"
-    )
-    st.write(
-        f"• $f_{{cu,2}} = 0.85 \\times {res['mean']:.2f} =$"
-        f" **`{res['fcu_calc_2']:.2f}` N/mm²**"
-    )
-    st.write(
-        f"◪ **Calculated Stage $f_{{cu}}$** = `{res['fcu_char']:.2f}` N/mm² |"
-        f" **Stage Target:** `{res['stage_target_fcu']:.2f}` N/mm²"
-    )
-
-    if res["cond1"]:
-      st.markdown("✔️ **Condition 1 Met:** Stage $f_{cu} \\ge$ Target Strength.")
-    else:
-      st.markdown("❌ **Condition 1 Failed:** Stage $f_{cu} <$ Target Strength.")
-
-    st.latex(r"f_{\text{cube, min}} \ge 0.85 \times f_{cu,\text{target}}")
-    st.write(
-        f"• Min Individual Limit: **`{res['min_threshold']:.2f}` N/mm²** | Lowest"
-        f" Cube: **`{res['min']:.2f}` N/mm²**"
-    )
-
-    if res["cond2"]:
-      st.markdown("✔️ **Condition 2 Met:** Lowest cube meets the minimum limit.")
-    else:
-      st.markdown(
-          "❌ **Condition 2 Failed:** Lowest cube is below the minimum limit."
-      )
-
-    st.markdown("---")
-
-# Contact Information & Footer Copyright Notice
+# Contact Footer
 st.markdown(
-    "<p style='text-align: center; color: #FFFFFF; font-size: 0.95rem;"
-    " margin-top: 3rem;'><b>Contact me at:</b><br>Linkedin: <a"
-    " href='https://www.linkedin.com/in/mohamed-abd-al-aty-a326a1214/'"
-    " target='_blank' style='color: #00BFFF;'>Mohamed Abd Al Aty</a><br>Gmail:"
-    " <a href='mailto:mohamedabdalaty63@gmail.com' style='color:"
-    " #00BFFF;'>mohamedabdalaty63@gmail.com</a></p>",
+    "<p style='text-align: center; color: #FFFFFF; font-size: 0.95rem; margin-top: 3rem;'><b>Contact me at:</b><br>Linkedin: <a href='https://www.linkedin.com/in/mohamed-abd-al-aty-a326a1214/' target='_blank' style='color: #00BFFF;'>Mohamed Abd Al Aty</a><br>Gmail: <a href='mailto:mohamedabdalaty63@gmail.com' style='color: #00BFFF;'>mohamedabdalaty63@gmail.com</a></p>",
     unsafe_allow_html=True,
 )
-
 st.markdown(
-    "<p style='text-align: center; color: #888888; font-size: 0.85rem;"
-    " margin-top: 1.5rem;'>© 2026 Eng. Mohamed Abd Al Aty. All rights reserved."
-    " Unauthorized commercial use, reproduction, or distribution is strictly"
-    " prohibited.</p>",
+    "<p style='text-align: center; color: #888888; font-size: 0.85rem; margin-top: 1.5rem;'>© 2026 Eng. Mohamed Abd Al Aty. All rights reserved.</p>",
     unsafe_allow_html=True,
 )
