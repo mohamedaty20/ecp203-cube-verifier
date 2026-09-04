@@ -114,7 +114,7 @@ h2, h3, .stSubheader {
 
 /* Metric Cards */
 [data-testid="stMetricValue"] {
-    color: #00BFFF !important;
+    color: #7e8385 !important;
 }
 
 /* Text Inputs and Area Formatting */
