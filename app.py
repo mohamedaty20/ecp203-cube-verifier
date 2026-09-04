@@ -262,7 +262,7 @@ if not (cubes_7 or cubes_14 or cubes_28):
   st.warning("⚠️ Please provide cube strength data for at least one testing age.")
   st.stop()
 
-# Statistical analysis function with detailed formulas/steps tracked
+# Statistical analysis function with detailed calculations
 def analyze_stage(cube_list, age_name, target_ratio):
   if not cube_list or len(cube_list) < 3:
     return None
@@ -291,19 +291,48 @@ stages_data = {
     "28 Days": analyze_stage(cubes_28, "28-Day Stage", 1.00),
 }
 
-# --- MIX DESIGN AUDIT SECTION ---
+# --- MIX DESIGN AUDIT SECTION (Navy Dark Blue Background with White Text) ---
 st.markdown("---")
 st.header("2. Batch Plant Mix Design ECP 203 Compliance Audit")
-col_mix1, col_mix2 = st.columns([2, 1])
-with col_mix1:
-  st.dataframe(df_mix_audit, use_container_width=True)
-with col_mix2:
-  if mix_overall_pass:
-    st.success("✅ **MIX DESIGN PASS:** All site mix parameters comply with ECP 203 limits.")
-  else:
-    st.error("❌ **MIX DESIGN FAIL:** One or more parameters exceed ECP 203 allowable limits.")
 
-# Results Display
+mix_html = f"""
+<div style="background-color: #1B2A4A; padding: 25px; border-radius: 12px; border: 1px solid #FF8C00; margin-bottom: 25px;">
+    <h3 style="color: #FF8C00; margin-top: 0; margin-bottom: 15px;">🚚 Batch Plant Mix Design Audit Summary</h3>
+    <p style="color: #FFFFFF; margin-bottom: 20px;">Review of fresh concrete and mix proportioning limits set by ECP 203:</p>
+    <table style="width: 100%; border-collapse: collapse; color: #FFFFFF; font-family: sans-serif;">
+        <thead>
+            <tr style="border-bottom: 2px solid #FF8C00; background-color: #0f1c30;">
+                <th style="padding: 12px; text-align: left; color: #00BFFF;">Mix Parameter</th>
+                <th style="padding: 12px; text-align: left; color: #00BFFF;">Actual Value</th>
+                <th style="padding: 12px; text-align: left; color: #00BFFF;">ECP 203 Limit</th>
+                <th style="padding: 12px; text-align: left; color: #00BFFF;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+"""
+for row in mix_audit_rows:
+  status_color = "#28a745" if row["Status"] == "PASS" else "#dc3545"
+  mix_html += f"""
+            <tr style="border-bottom: 1px solid #262730;">
+                <td style="padding: 12px; color: #FFFFFF;">{row['Mix Parameter']}</td>
+                <td style="padding: 12px; color: #FFFFFF;">{row['Actual Value']}</td>
+                <td style="padding: 12px; color: #FFFFFF;">{row['ECP 203 Limit']}</td>
+                <td style="padding: 12px; color: {status_color}; font-weight: bold;">{row['Status']}</td>
+            </tr>
+  """
+mix_overall_text = "PASS - All site mix parameters comply with ECP 203 limits." if mix_overall_pass else "FAIL - One or more parameters exceed ECP 203 allowable limits."
+overall_color = "#28a745" if mix_overall_pass else "#dc3545"
+mix_html += f"""
+        </tbody>
+    </table>
+    <div style="margin-top: 20px; padding: 12px; background-color: #0f1c30; border-radius: 6px; color: #FFFFFF; border-left: 5px solid {overall_color};">
+        <strong>Overall Mix Verdict:</strong> <span style="color: {overall_color}; font-weight: bold;">{mix_overall_text}</span>
+    </div>
+</div>
+"""
+st.markdown(mix_html, unsafe_allow_html=True)
+
+# Results Display with Sample-by-Sample Calculation Sheets
 st.markdown("---")
 st.header("3. Cube Compliance Summaries & Detailed Calculation Sheets")
 tabs = st.tabs(["**7-Day Stage**", "**14-Day Stage**", "**28-Day Stage**", "**📐 Detailed Calculation Formulas & Methodology**"])
@@ -318,16 +347,42 @@ for idx, (stage_label, tab) in enumerate(zip(["7 Days", "14 Days", "28 Days"], t
       c1.metric("Sample Count (n)", f"{res['n']} cubes")
       c2.metric("Mean Strength (f_m)", f"{res['mean']:.2f} N/mm²")
       c3.metric("Std. Deviation (s)", f"{res['s']:.2f} N/mm²")
-      st.write(f"• **Target Strength Threshold:** `{res['stage_target_fcu']:.2f}` N/mm²")
-      st.write(f"• **Calculated Characteristic Strength (f_cu):** `{res['fcu_char']:.2f}` N/mm²")
-      st.write(f"• **Minimum Individual Cube:** `{res['min']:.2f}` N/mm² (Min Limit: `{res['min_threshold']:.2f}` N/mm²)")
+      
+      st.markdown("---")
+      st.markdown(f"#### 🔍 Detailed Sample-by-Sample & Statistical Breakdown ({stage_label})")
+      
+      # Show step-by-step evaluated formulas for this stage
+      st.markdown(f"""
+      * **Arithmetic Mean ($f_m$):** $\\frac{{\\sum x_i}}{{n}} = {res['mean']:.2f}$ N/mm²
+      * **Standard Deviation ($s$):** {res['s']:.2f} N/mm²
+      * **Factor ($k$):** {res['k']} (for $n = {res['n']}$)
+      * **Characteristic Strength ($f_{{cu}}$):** $\\max(f_m - k \\cdot s,\\ 0.85 \\cdot f_m) = \\max({res['mean']:.2f} - {res['k']} \\cdot {res['s']:.2f},\\ 0.85 \\cdot {res['mean']:.2f}) = $ **{res['fcu_char']:.2f} N/mm²**
+      * **Target Required Strength ($f_{{cu,\\text{{target}}}}$):** {res['stage_target_fcu']:.2f} N/mm²
+      * **Minimum Individual Cube Limit ($0.85 \\cdot f_{{cu,\\text{{target}}}}$):** {res['min_threshold']:.2f} N/mm²
+      """)
+      
+      # Build sample-by-sample verification table
+      cube_vals = cubes_7 if stage_label == "7 Days" else (cubes_14 if stage_label == "14 Days" else cubes_28)
+      sample_breakdown = []
+      for i, val in enumerate(cube_vals):
+        min_lim = res['min_threshold']
+        ind_pass = val >= min_lim
+        sample_breakdown.append({
+            "Sample #": i + 1,
+            "Measured Strength ($x_i$) N/mm²": val,
+            "Min Individual Limit (N/mm²)": round(min_lim, 2),
+            "Individual Check ($x_i \\ge 0.85 \\cdot f_{\\text{target}}$)": "PASS ✅" if ind_pass else "FAIL ❌"
+        })
+      df_sb = pd.DataFrame(sample_breakdown)
+      st.dataframe(df_sb, use_container_width=True)
+      
       if res["is_compliant"]:
-        st.success(f"✅ **PASS ({stage_label}):** Compliant with ECP 203.")
+        st.success(f"✅ **STAGE PASS ({stage_label}):** Both statistical characteristic strength condition and individual sample limits are fully satisfied according to ECP 203.")
       else:
-        st.error(f"❌ **FAIL ({stage_label}):** Non-compliant with ECP 203.")
+        st.error(f"❌ **STAGE FAIL ({stage_label}):** Non-compliant with ECP 203 (Characteristic strength or individual sample falling below the 85% limit).")
 
 with tabs[3]:
-  st.subheader("📐 ECP 203 Statistical Evaluation Formulas & Calculation Sheet")
+  st.subheader("📐 ECP 203 Statistical Evaluation Formulas & Methodology Sheet")
   st.markdown("""
   According to the **Egyptian Code of Practice (ECP 203)**, concrete cube results are evaluated statistically using the following equations:
   
