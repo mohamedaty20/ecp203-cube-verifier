@@ -1,4 +1,3 @@
-io_import_check = True
 import io
 import datetime
 import numpy as np
@@ -409,27 +408,6 @@ for stage_key in ["7 Days", "14 Days", "28 Days"]:
     })
 df_summary_table = pd.DataFrame(summary_rows)
 
-# Matplotlib Images for Exports
-chart1_img_bytes, chart2_img_bytes = None, None
-try:
-  fig_m1, ax_m1 = plt.subplots(figsize=(7, 4), dpi=150)
-  fig_m1.patch.set_facecolor('#1B2A4A')
-  ax_m1.set_facecolor('#031338')
-  if chart_data_list:
-    df_c = pd.DataFrame(chart_data_list)
-    for stage_name, color in [("7 Days", "#00BFFF"), ("14 Days", "#FF8C00"), ("28 Days", "#2ecc71")]:
-      sub = df_c[df_c["Stage"] == stage_name]
-      if not sub.empty: ax_m1.scatter(sub["Sample Index"], sub["Strength"], color=color, label=stage_name, s=70)
-  ax_m1.set_title("Individual Cube Strengths", color='white', fontsize=10, fontweight='bold')
-  ax_m1.tick_params(colors='white', labelsize=8)
-  buf1 = io.BytesIO()
-  fig_m1.savefig(buf1, format="png", bbox_inches='tight', facecolor=fig_m1.get_facecolor())
-  buf1.seek(0)
-  chart1_img_bytes = buf1.getvalue()
-  plt.close(fig_m1)
-except Exception:
-  pass
-
 # Excel Buffer Construction
 excel_buffer = io.BytesIO()
 with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
@@ -448,8 +426,8 @@ def generate_pdf_report(logo_bytes=None):
 
   title_style = ParagraphStyle("DocTitle", parent=styles["Heading1"], fontSize=18, textColor=colors.HexColor("#1B2A4A"), spaceAfter=4, alignment=1)
   subtitle_style = ParagraphStyle("DocSub", parent=styles["Normal"], fontSize=10, textColor=colors.HexColor("#000000"), spaceAfter=15, alignment=1)
-  section_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=12, textColor=colors.HexColor("#000000"), spaceBefore=10, spaceAfter=4)
-  body_style = ParagraphStyle("Body", parent=styles["Normal"], fontSize=8.5, textColor=colors.HexColor("#333333"), spaceAfter=4)
+  section_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=11, textColor=colors.HexColor("#000000"), spaceBefore=8, spaceAfter=3)
+  body_style = ParagraphStyle("Body", parent=styles["Normal"], fontSize=8, textColor=colors.HexColor("#333333"), spaceAfter=3)
 
   if logo_bytes:
     try:
@@ -460,7 +438,7 @@ def generate_pdf_report(logo_bytes=None):
 
   story.append(Paragraph("ECP 203 Concrete Acceptance & Mix Compliance Report", title_style))
   story.append(Paragraph(f"Multi-Stage Verification & Mix Audit | Report Date: {formatted_report_date}", subtitle_style))
-  story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#1B2A4A"), spaceAfter=8))
+  story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#1B2A4A"), spaceAfter=6))
 
   # 1. Overview Table
   story.append(Paragraph("<b>1. Project Overview & Traceability Metadata</b>", section_style))
@@ -475,7 +453,7 @@ def generate_pdf_report(logo_bytes=None):
       ("BACKGROUND", (0, 1), (-1, -1), colors.HexColor("#F9F9F9")),
   ]))
   story.append(t_overview)
-  story.append(Spacer(1, 6))
+  story.append(Spacer(1, 4))
 
   # 2. Mix Design Audit Table
   story.append(Paragraph("<b>2. Batch Plant Mix Design ECP 203 Compliance Audit</b>", section_style))
@@ -489,7 +467,7 @@ def generate_pdf_report(logo_bytes=None):
       ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
   ]))
   story.append(t_mix)
-  story.append(Spacer(1, 6))
+  story.append(Spacer(1, 4))
 
   # 3. Summary Results Table
   story.append(Paragraph("<b>3. Cube Compliance Results Summary</b>", section_style))
@@ -506,10 +484,33 @@ def generate_pdf_report(logo_bytes=None):
       ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
   ]))
   story.append(t_summary)
-  story.append(Spacer(1, 6))
+  story.append(Spacer(1, 4))
 
-  # 4. Sign-Off Block
-  story.append(Paragraph("<b>4. Engineering Sign-Off & Approvals</b>", section_style))
+  # 4. Raw Individual Cubes Matrix Table (FIXED & INCLUDED)
+  story.append(Paragraph("<b>4. Raw Individual Cube Strengths Matrix & Sample Counts</b>", section_style))
+  raw_headers = list(df_raw_cubes.columns)
+  raw_table_rows = [raw_headers]
+  for idx, row in df_raw_cubes.iterrows():
+    raw_table_rows.append([
+        str(row["Cube Sample #"]),
+        str(row["7-Day Strength (N/mm²)"]) if pd.notna(row["7-Day Strength (N/mm²)"]) else "-",
+        str(row["14-Day Strength (N/mm²)"]) if pd.notna(row["14-Day Strength (N/mm²)"]) else "-",
+        str(row["28-Day Strength (N/mm²)"]) if pd.notna(row["28-Day Strength (N/mm²)"]) else "-"
+    ])
+  t_raw = Table(raw_table_rows, colWidths=[100, 146, 146, 148])
+  t_raw.setStyle(TableStyle([
+      ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
+      ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+      ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+      ("FONTSIZE", (0, 0), (-1, -1), 8),
+      ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
+      ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+  ]))
+  story.append(t_raw)
+  story.append(Spacer(1, 4))
+
+  # 5. Sign-Off Block
+  story.append(Paragraph("<b>5. Engineering Sign-Off & Approvals</b>", section_style))
   sign_cell_1 = Paragraph(f"<b>Prepared By:</b><br/>{display_engineer_name}<br/>Sign: _________", body_style)
   sign_cell_2 = Paragraph("<b>Checked By (QA/QC):</b><br/>Name: _________<br/>Sign: _________", body_style)
   sign_cell_3 = Paragraph("<b>Approved (Consultant):</b><br/>Name: _________<br/>Stamp: [ Seal ]", body_style)
@@ -518,8 +519,8 @@ def generate_pdf_report(logo_bytes=None):
       ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F9F9F9")),
       ("VALIGN", (0, 0), (-1, -1), "TOP"),
       ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
-      ("TOPPADDING", (0, 0), (-1, -1), 6),
-      ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+      ("TOPPADDING", (0, 0), (-1, -1), 5),
+      ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
   ]))
   story.append(t_sign)
 
