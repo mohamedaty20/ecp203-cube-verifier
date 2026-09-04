@@ -824,7 +824,7 @@ def generate_pdf_report(logo_bytes=None):
       )
   )
 
-  # 1. Overview Table
+  # 1. Overview Table (Includes all Sidebar inputs: Trucks, Batch Tickets, Casting Dates, Slump, Temp, etc.)
   story.append(Paragraph("<b>1. Project Overview, Batch & Traceability Metadata</b>", section_style))
   overview_data_list = [["Parameter", "Details"]] + df_overview.values.tolist()
   t_overview = Table(overview_data_list, colWidths=[180, 360])
