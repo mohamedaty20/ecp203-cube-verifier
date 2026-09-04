@@ -202,6 +202,13 @@ report_date = st.sidebar.date_input(
 )
 
 st.sidebar.markdown("---")
+st.sidebar.header("COMPANY BRANDING")
+company_logo_file = st.sidebar.file_uploader(
+    "Upload Company Logo (PNG/JPG)", type=["png", "jpg", "jpeg"]
+)
+company_logo_bytes = company_logo_file.read() if company_logo_file else None
+
+st.sidebar.markdown("---")
 st.sidebar.markdown(
     "<p style='color: #DDDDDD; font-size: 0.9rem; font-family: \"Cormorant"
     " Garamond\", Times, serif; line-height: 1.5; font-weight: normal; font-style:"
@@ -732,8 +739,8 @@ with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
 excel_buffer.seek(0)
 
 
-# PDF Export Buffer Generation Function (Section headers and subtitles set to Black)
-def generate_pdf_report():
+# PDF Export Buffer Generation Function (Includes Logo & Engineering Sign-Off Block)
+def generate_pdf_report(logo_bytes=None):
   pdf_buffer = io.BytesIO()
   doc = SimpleDocTemplate(
       pdf_buffer,
@@ -758,7 +765,7 @@ def generate_pdf_report():
       "DocSub",
       parent=styles["Normal"],
       fontSize=10,
-      textColor=colors.HexColor("#000000"),  # Changed from gray/orange to Black
+      textColor=colors.HexColor("#000000"),
       spaceAfter=15,
       alignment=1,
   )
@@ -766,7 +773,7 @@ def generate_pdf_report():
       "SecTitle",
       parent=styles["Heading2"],
       fontSize=13,
-      textColor=colors.HexColor("#000000"),  # Changed from orange to Black
+      textColor=colors.HexColor("#000000"),
       spaceBefore=12,
       spaceAfter=6,
   )
@@ -777,6 +784,14 @@ def generate_pdf_report():
       textColor=colors.HexColor("#333333"),
       spaceAfter=4,
   )
+
+  # Optional Company Logo Integration at Top
+  if logo_bytes:
+    try:
+      story.append(ReportLabImage(io.BytesIO(logo_bytes), width=120, height=45))
+      story.append(Spacer(1, 6))
+    except Exception:
+      pass
 
   story.append(Paragraph("ECP 203 Concrete Cube Acceptance Report", title_style))
   story.append(
@@ -893,7 +908,7 @@ def generate_pdf_report():
     story.append(Paragraph(p_text, body_style))
   story.append(Spacer(1, 10))
 
-  # 5. Visual Analytics & Trend Charts (Strictly placed at the absolute bottom)
+  # 5. Visual Analytics & Trend Charts
   if chart1_img_bytes or chart2_img_bytes:
     story.append(Paragraph("<b>5. Visual Analytics & Trend Charts</b>", section_style))
     if chart1_img_bytes:
@@ -901,13 +916,40 @@ def generate_pdf_report():
       story.append(Spacer(1, 6))
     if chart2_img_bytes:
       story.append(ReportLabImage(io.BytesIO(chart2_img_bytes), width=480, height=250))
+    story.append(Spacer(1, 10))
+
+  # 6. Formal Engineering Sign-Off & Approval Block
+  story.append(Paragraph("<b>6. Engineering Sign-Off & Approvals</b>", section_style))
+  sign_off_data = [
+      [
+          f"<b>Prepared By:</b><br/><br/>Name: {display_engineer_name}<br/>Signature: ___________________<br/>Date: {formatted_report_date}",
+          "<b>Checked By (QA/QC):</b><br/><br/>Name: ___________________<br/>Signature: ___________________<br/>Date: ___________________",
+          "<b>Approved By (Consultant):</b><br/><br/>Name: ___________________<br/>Signature: ___________________<br/>Stamp: [ Official Seal ]"
+      ]
+  ]
+  t_sign = Table(sign_off_data, colWidths=[180, 180, 180])
+  t_sign.setStyle(
+      TableStyle([
+          ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F9F9F9")),
+          ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+          ("VALIGN", (0, 0), (-1, -1), "TOP"),
+          ("FONTNAME", (0, 0), (-1, -1), "Helvetica"),
+          ("FONTSIZE", (0, 0), (-1, -1), 8),
+          ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+          ("TOPPADDING", (0, 0), (-1, -1), 8),
+          ("LEFTPADDING", (0, 0), (-1, -1), 8),
+          ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+          ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
+      ])
+  )
+  story.append(t_sign)
 
   doc.build(story)
   pdf_buffer.seek(0)
   return pdf_buffer
 
 
-pdf_data = generate_pdf_report()
+pdf_data = generate_pdf_report(company_logo_bytes)
 
 # Download Buttons Layout
 col_btn1, col_btn2 = st.columns(2)
