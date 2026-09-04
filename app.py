@@ -544,5 +544,13 @@ with st.expander(
       st.markdown(
           "❌ **Condition 2 Failed:** Lowest cube is below the minimum limit."
       )
+        # Footer Copyright Notice (Centered & Light Grey)
+st.markdown(
+    "<p style='text-align: center; color: #888888; font-size: 0.85rem;"
+    " margin-top: 3rem;'>© 2026 Eng. Mohamed Abd Al Aty. All rights reserved."
+    " Unauthorized commercial use, reproduction, or distribution is strictly"
+    " prohibited.</p>",
+    unsafe_allow_html=True,
+)
 
     st.markdown("---")
