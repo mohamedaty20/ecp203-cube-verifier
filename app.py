@@ -7,24 +7,57 @@ import pandas as pd
 st.set_page_config(
     page_title="ECP 203 Concrete Cube Verifier",
     page_icon="🏗️",
-    layout="centered"
+    layout="centered",
+    initial_sidebar_state="expanded"
 )
 
-# Custom Dark Theme Styling
+# Custom Dark & Navy Blue Styling
 dark_style = """
     <style>
-    /* Hide Streamlit elements */
+    /* Hide Streamlit default footer/menu while keeping the sidebar toggle arrow visible */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header {visibility: hidden;}
+    header {background-color: transparent !important;}
     
-    /* Main Background & Text Colors */
+    /* Main App Dark Background */
     .stApp {
         background-color: #0E1117;
         color: #FFFFFF;
     }
     
-    /* Body & Paragraph Text */
+    /* Navy Blue Sidebar Styling */
+    [data-testid="stSidebar"], 
+    section[data-testid="stSidebar"] > div {
+        background-color: #1B2A4A !important;
+    }
+    
+    /* Bold White Text in Sidebar */
+    [data-testid="stSidebar"] *, 
+    section[data-testid="stSidebar"] label,
+    section[data-testid="stSidebar"] h1,
+    section[data-testid="stSidebar"] h2,
+    section[data-testid="stSidebar"] h3 {
+        color: #FFFFFF !important;
+        font-weight: bold !important;
+    }
+    
+    /* Sidebar Arrow Toggle Button Styling */
+    button[aria-label="Close sidebar"], 
+    button[aria-label="Open sidebar"] {
+        color: #FFFFFF !important;
+        background-color: #1B2A4A !important;
+    }
+    
+    /* Author Credit Subtitle Styling */
+    .author-credit {
+        color: #FFFFFF !important;
+        font-size: 1rem;
+        font-weight: bold;
+        margin-top: -15px;
+        margin-bottom: 15px;
+    }
+    
+    /* General Text Formatting */
     p, span, label, div {
         color: #FFFFFF !important;
     }
@@ -41,19 +74,19 @@ dark_style = """
         font-weight: 600;
     }
     
-    /* Metric Card Styling */
+    /* Metric Cards */
     [data-testid="stMetricValue"] {
         color: #00BFFF !important;
     }
     
-    /* Input Box Formatting */
+    /* Text Inputs and Area Formatting */
     textarea, input {
         background-color: #1E222D !important;
         color: #FFFFFF !important;
         border: 1px solid #FF8C00 !important;
     }
     
-    /* Download Button Customization */
+    /* Download Button Styling */
     .stDownloadButton>button {
         background-color: #FF8C00 !important;
         color: #FFFFFF !important;
@@ -65,7 +98,7 @@ dark_style = """
         color: #FFFFFF !important;
     }
     
-    /* Divider lines */
+    /* Section Separator Lines */
     hr {
         border-color: #262730 !important;
     }
@@ -74,8 +107,8 @@ dark_style = """
 st.markdown(dark_style, unsafe_allow_html=True)
 
 # Main Title & Subtitle
-st.title("🏗️ ECP 203 Concrete Cube Acceptance Verifier")
-st.caption("Made by Eng. Mohamed Abd Al Aty")
+st.title("ECP 203 Concrete Cube Acceptance Verifier")
+st.markdown('<p class="author-credit">Made by Eng. Mohamed Abd Al Aty</p>', unsafe_allow_html=True)
 st.subheader("Multi-Stage (7, 14, & 28-Day) Compliance Checking according to ECP 203")
 st.markdown("---")
 
@@ -200,7 +233,7 @@ def analyze_stage(cube_list, age_name, target_ratio):
         "is_compliant": is_compliant
     }
 
-# Analyze all three stages (7 Days: ~70%, 14 Days: ~85%, 28 Days: 100% of fcu_spec)
+# Analyze all three stages
 stages_data = {
     "7 Days": analyze_stage(cubes_7, "7-Day Stage", 0.70),
     "14 Days": analyze_stage(cubes_14, "14-Day Stage", 0.85),
@@ -235,7 +268,7 @@ for idx, (stage_label, tab) in enumerate(zip(["7 Days", "14 Days", "28 Days"], t
             else:
                 st.error(f"❌ **FAIL ({stage_label}):** DOES NOT comply with the target requirements of ECP 203 for {stage_label}.")
 
-# Generate Professional Excel File
+# Generate Excel File Stream
 summary_rows = [
     {"Metric / Field": "Project Name", "Value": project_name},
     {"Metric / Field": "Pour Location / Element", "Value": pour_location},
@@ -262,7 +295,6 @@ for stage_key in ["7 Days", "14 Days", "28 Days"]:
 
 summary_df = pd.DataFrame(summary_rows)
 
-# Side-by-side raw cube data table
 max_len = max(len(cubes_7), len(cubes_14), len(cubes_28), 1)
 cubes_matrix = {
     "Cube #": list(range(1, max_len + 1)),
@@ -272,7 +304,6 @@ cubes_matrix = {
 }
 raw_cubes_df = pd.DataFrame(cubes_matrix)
 
-# Technical Notes
 calculation_notes = [
     {"Section": "1. Standard Reference", "Details": "Egyptian Code of Practice for Concrete Structures (ECP 203 - Section 2-6)."},
     {"Section": "2. Multi-Stage Testing Framework", "Details": "Evaluations are conducted for 7-Day (~70% target fcu), 14-Day (~85% target fcu), and 28-Day (100% full specified fcu)."},
@@ -285,7 +316,6 @@ calculation_notes = [
 ]
 notes_df = pd.DataFrame(calculation_notes)
 
-# Excel Stream Generation
 buffer = io.BytesIO()
 with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
     summary_df.to_excel(writer, sheet_name="Multi-Stage Compliance", index=False)
@@ -294,7 +324,6 @@ with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
 
 buffer.seek(0)
 
-# Download Button
 st.download_button(
     label="📥 Download Complete Multi-Stage Excel Report (.xlsx)",
     data=buffer,
@@ -302,7 +331,7 @@ st.download_button(
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
 
-# Step-by-Step ECP 203 Breakdown for 7, 14, and 28 Days
+# Step-by-Step Breakdown
 with st.expander("🔍 Show Step-by-Step ECP 203 Calculation Formulas (All Stages)"):
     for stage_key in ["7 Days", "14 Days", "28 Days"]:
         res = stages_data[stage_key]
