@@ -1,5 +1,6 @@
 import io
 import datetime
+import textwrap
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -295,7 +296,22 @@ stages_data = {
 st.markdown("---")
 st.header("2. Batch Plant Mix Design ECP 203 Compliance Audit")
 
-mix_html = f"""
+table_rows_html = ""
+for row in mix_audit_rows:
+  status_color = "#28a745" if row["Status"] == "PASS" else "#dc3545"
+  table_rows_html += f"""
+            <tr style="border-bottom: 1px solid #262730;">
+                <td style="padding: 12px; color: #FFFFFF;">{row['Mix Parameter']}</td>
+                <td style="padding: 12px; color: #FFFFFF;">{row['Actual Value']}</td>
+                <td style="padding: 12px; color: #FFFFFF;">{row['ECP 203 Limit']}</td>
+                <td style="padding: 12px; color: {status_color}; font-weight: bold;">{row['Status']}</td>
+            </tr>
+  """
+
+mix_overall_text = "PASS - All site mix parameters comply with ECP 203 limits." if mix_overall_pass else "FAIL - One or more parameters exceed ECP 203 allowable limits."
+overall_color = "#28a745" if mix_overall_pass else "#dc3545"
+
+mix_html = textwrap.dedent(f"""
 <div style="background-color: #1B2A4A; padding: 25px; border-radius: 12px; border: 1px solid #FF8C00; margin-bottom: 25px;">
     <h3 style="color: #FF8C00; margin-top: 0; margin-bottom: 15px;">🚚 Batch Plant Mix Design Audit Summary</h3>
     <p style="color: #FFFFFF; margin-bottom: 20px;">Review of fresh concrete and mix proportioning limits set by ECP 203:</p>
@@ -309,27 +325,14 @@ mix_html = f"""
             </tr>
         </thead>
         <tbody>
-"""
-for row in mix_audit_rows:
-  status_color = "#28a745" if row["Status"] == "PASS" else "#dc3545"
-  mix_html += f"""
-            <tr style="border-bottom: 1px solid #262730;">
-                <td style="padding: 12px; color: #FFFFFF;">{row['Mix Parameter']}</td>
-                <td style="padding: 12px; color: #FFFFFF;">{row['Actual Value']}</td>
-                <td style="padding: 12px; color: #FFFFFF;">{row['ECP 203 Limit']}</td>
-                <td style="padding: 12px; color: {status_color}; font-weight: bold;">{row['Status']}</td>
-            </tr>
-  """
-mix_overall_text = "PASS - All site mix parameters comply with ECP 203 limits." if mix_overall_pass else "FAIL - One or more parameters exceed ECP 203 allowable limits."
-overall_color = "#28a745" if mix_overall_pass else "#dc3545"
-mix_html += f"""
+            {table_rows_html}
         </tbody>
     </table>
     <div style="margin-top: 20px; padding: 12px; background-color: #0f1c30; border-radius: 6px; color: #FFFFFF; border-left: 5px solid {overall_color};">
         <strong>Overall Mix Verdict:</strong> <span style="color: {overall_color}; font-weight: bold;">{mix_overall_text}</span>
     </div>
 </div>
-"""
+""")
 st.markdown(mix_html, unsafe_allow_html=True)
 
 # Results Display with Sample-by-Sample Calculation Sheets
@@ -351,7 +354,6 @@ for idx, (stage_label, tab) in enumerate(zip(["7 Days", "14 Days", "28 Days"], t
       st.markdown("---")
       st.markdown(f"#### 🔍 Detailed Sample-by-Sample & Statistical Breakdown ({stage_label})")
       
-      # Show step-by-step evaluated formulas for this stage
       st.markdown(f"""
       * **Arithmetic Mean ($f_m$):** $\\frac{{\\sum x_i}}{{n}} = {res['mean']:.2f}$ N/mm²
       * **Standard Deviation ($s$):** {res['s']:.2f} N/mm²
@@ -361,7 +363,6 @@ for idx, (stage_label, tab) in enumerate(zip(["7 Days", "14 Days", "28 Days"], t
       * **Minimum Individual Cube Limit ($0.85 \\cdot f_{{cu,\\text{{target}}}}$):** {res['min_threshold']:.2f} N/mm²
       """)
       
-      # Build sample-by-sample verification table
       cube_vals = cubes_7 if stage_label == "7 Days" else (cubes_14 if stage_label == "14 Days" else cubes_28)
       sample_breakdown = []
       for i, val in enumerate(cube_vals):
