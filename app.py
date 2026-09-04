@@ -793,3 +793,12 @@ st.markdown(
     " prohibited.</p>",
     unsafe_allow_html=True,
 )
+# Live Visitor Counter Badge
+st.sidebar.markdown("---")
+st.sidebar.markdown(
+    "<div style='text-align: center;'><p style='color: #CCCCCC; font-size:"
+    " 0.85rem; margin-bottom: 5px;'>Total App Views:</p><img"
+    " src='https://api.visitorbadge.io/api/combined?path=ecp203-concrete-verifier-mohamed-abdalaty&countColor=%23FF8C00'"
+    " /></div>",
+    unsafe_allow_html=True,
+)
