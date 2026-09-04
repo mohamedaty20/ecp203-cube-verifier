@@ -306,9 +306,9 @@ st.markdown("---")
 st.header("2. Compliance Summaries (7, 14 & 28 Days)")
 
 tabs = st.tabs([
-    "7-Day Stage Compliance",
-    "14-Day Stage Compliance",
-    "28-Day Stage Compliance",
+    "**7-Day Stage Compliance**",
+    "**14-Day Stage Compliance**",
+    "**28-Day Stage Compliance**",
 ])
 
 for idx, (stage_label, tab) in enumerate(
