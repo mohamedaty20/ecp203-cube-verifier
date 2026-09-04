@@ -299,7 +299,6 @@ with st.container():
   st.markdown("### 🚚 Batch Plant Mix Design Audit Summary")
   st.write("Review of fresh concrete and mix proportioning limits set by ECP 203:")
   
-  # Render table using clean native dataframe to prevent markdown formatting issues
   st.dataframe(df_mix_audit, use_container_width=True)
   
   mix_overall_text = "PASS - All site mix parameters comply with ECP 203 limits." if mix_overall_pass else "FAIL - One or more parameters exceed ECP 203 allowable limits."
@@ -476,7 +475,7 @@ with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
   df_raw_cubes.to_excel(writer, sheet_name="Raw Individual Cubes", index=False)
 excel_buffer.seek(0)
 
-# PDF Report Generation Function
+# PDF Report Generation Function (Fixed formulas to plain readable text)
 def generate_pdf_report(logo_bytes=None):
   pdf_buffer = io.BytesIO()
   doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
@@ -545,14 +544,14 @@ def generate_pdf_report(logo_bytes=None):
   story.append(t_summary)
   story.append(Spacer(1, 4))
 
-  # 4. Calculation Methodology Note
+  # 4. Calculation Methodology Note (Fixed LaTeX syntax to clean plain text)
   story.append(Paragraph("<b>4. ECP 203 Calculation Formulas & Methodology Sheet</b>", section_style))
   calc_note_text = (
-      "<b>Formulas Applied:</b><br/>"
-      "• Mean Strength ($f_m$) = sum($x_i$) / n<br/>"
-      "• Standard Deviation ($s$) = sqrt( sum($x_i - f_m$)² / (n - 1) )<br/>"
-      "• Characteristic Strength ($f_{cu}$) = max( $f_m - k \\cdot s$, $0.85 \\cdot f_m$ ) [where $k = 1.91$ for $n < 30$]<br/>"
-      "• Acceptance Rule: $f_{cu} \\ge f_{cu,\text{target}}$ AND individual cube strength $x_i \\ge 0.85 \\cdot f_{cu,\text{target}}$."
+      "<b>Formulas Applied (ECP 203):</b><br/>"
+      "• Mean Strength (fm) = Sum of all individual cube strengths (xi) / Sample count (n)<br/>"
+      "• Standard Deviation (s) = Square root [ Sum (xi - fm)^2 / (n - 1) ]<br/>"
+      "• Characteristic Strength (fcu) = Maximum of [ (fm - k * s) ] or [ (0.85 * fm) ], where factor k = 1.91 for n < 30<br/>"
+      "• Acceptance Rule: Characteristic strength fcu >= Target strength AND individual cube strength xi >= 0.85 * Target strength."
   )
   story.append(Paragraph(calc_note_text, body_style))
   story.append(Spacer(1, 4))
