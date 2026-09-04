@@ -291,7 +291,7 @@ stages_data = {
     "28 Days": analyze_stage(cubes_28, "28-Day Stage", 1.00),
 }
 
-# --- BATCH PLANT MIX DESIGN AUDIT SECTION (Using Safe Native Elements) ---
+# --- BATCH PLANT MIX DESIGN AUDIT SECTION ---
 st.markdown("---")
 st.header("2. Batch Plant Mix Design ECP 203 Compliance Audit")
 
@@ -466,7 +466,7 @@ for stage_key in ["7 Days", "14 Days", "28 Days"]:
     })
 df_summary_table = pd.DataFrame(summary_rows)
 
-# Excel Buffer Construction
+# Excel Buffer Construction (Excluded calculation formula sheet text as requested)
 excel_buffer = io.BytesIO()
 with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
   df_overview.to_excel(writer, sheet_name="Project Overview & Metadata", index=False)
@@ -475,7 +475,7 @@ with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
   df_raw_cubes.to_excel(writer, sheet_name="Raw Individual Cubes", index=False)
 excel_buffer.seek(0)
 
-# PDF Report Generation Function (Fixed formulas to plain readable text)
+# PDF Report Generation Function (Formula section completely removed from export as requested)
 def generate_pdf_report(logo_bytes=None):
   pdf_buffer = io.BytesIO()
   doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
@@ -544,20 +544,8 @@ def generate_pdf_report(logo_bytes=None):
   story.append(t_summary)
   story.append(Spacer(1, 4))
 
-  # 4. Calculation Methodology Note (Fixed LaTeX syntax to clean plain text)
-  story.append(Paragraph("<b>4. ECP 203 Calculation Formulas & Methodology Sheet</b>", section_style))
-  calc_note_text = (
-      "<b>Formulas Applied (ECP 203):</b><br/>"
-      "• Mean Strength (fm) = Sum of all individual cube strengths (xi) / Sample count (n)<br/>"
-      "• Standard Deviation (s) = Square root [ Sum (xi - fm)^2 / (n - 1) ]<br/>"
-      "• Characteristic Strength (fcu) = Maximum of [ (fm - k * s) ] or [ (0.85 * fm) ], where factor k = 1.91 for n < 30<br/>"
-      "• Acceptance Rule: Characteristic strength fcu >= Target strength AND individual cube strength xi >= 0.85 * Target strength."
-  )
-  story.append(Paragraph(calc_note_text, body_style))
-  story.append(Spacer(1, 4))
-
-  # 5. Raw Individual Cubes Matrix Table
-  story.append(Paragraph("<b>5. Raw Individual Cube Strengths Matrix & Sample Counts</b>", section_style))
+  # 4. Raw Individual Cubes Matrix Table
+  story.append(Paragraph("<b>4. Raw Individual Cube Strengths Matrix & Sample Counts</b>", section_style))
   raw_headers = list(df_raw_cubes.columns)
   raw_table_rows = [raw_headers]
   for idx, row in df_raw_cubes.iterrows():
@@ -579,8 +567,8 @@ def generate_pdf_report(logo_bytes=None):
   story.append(t_raw)
   story.append(Spacer(1, 4))
 
-  # 6. Sign-Off Block
-  story.append(Paragraph("<b>6. Engineering Sign-Off & Approvals</b>", section_style))
+  # 5. Sign-Off Block
+  story.append(Paragraph("<b>5. Engineering Sign-Off & Approvals</b>", section_style))
   sign_cell_1 = Paragraph(f"<b>Prepared By:</b><br/>{display_engineer_name}<br/>Sign: _________", body_style)
   sign_cell_2 = Paragraph("<b>Checked By (QA/QC):</b><br/>Name: _________<br/>Sign: _________", body_style)
   sign_cell_3 = Paragraph("<b>Approved (Consultant):</b><br/>Name: _________<br/>Stamp: [ Seal ]", body_style)
