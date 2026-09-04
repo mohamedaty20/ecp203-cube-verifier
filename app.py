@@ -126,7 +126,7 @@ textarea, input {
 
 /* Download Button Styling with Custom Font */
 .stDownloadButton>button {
-    background-color: #440345 !important;
+    background-color: #020461 !important;
     color: #FFFFFF !important;
     border: none;
     font-family: 'Segoe UI', Arial, sans-serif !important; /* Change your font style here */
@@ -136,7 +136,7 @@ textarea, input {
 }
 
 .stDownloadButton>button:hover {
-    background-color: #070a91 !important;
+    background-color: #8f010b !important;
     color: #FFFFFF !important;
 }
 
