@@ -1,5 +1,6 @@
 io_import_check = True
 import io
+import datetime
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -193,6 +194,13 @@ engineer_name = st.sidebar.text_input(
     value="",
     placeholder="Enter your name here",
 )
+
+# Added Date Selector Dropdown/Widget below Engineer Name
+report_date = st.sidebar.date_input(
+    "Report Date",
+    value=datetime.date.today()
+)
+
 st.sidebar.markdown("---")
 st.sidebar.markdown(
     "<p style='color: #DDDDDD; font-size: 0.9rem; font-family: \"Cormorant"
@@ -515,12 +523,14 @@ with chart_col2:
 # Generate DataFrames for Export
 display_project_name = project_name if project_name.strip() else "Unnamed Project"
 display_engineer_name = engineer_name if engineer_name.strip() else "Not Specified"
+formatted_report_date = report_date.strftime("%Y-%m-%d")
 
 overview_data = [
     {"Parameter": "Project Name", "Details": display_project_name},
     {"Parameter": "Structural Element / Pour Location", "Details": pour_location},
     {"Parameter": "Specified 28-Day Grade (fcu)", "Details": f"{fcu_spec} N/mm²"},
     {"Parameter": "Engineer Name", "Details": display_engineer_name},
+    {"Parameter": "Report Date", "Details": formatted_report_date},
     {
         "Parameter": "Standard Specification",
         "Details": "Egyptian Code of Practice (ECP 203)",
@@ -771,7 +781,7 @@ def generate_pdf_report():
   story.append(Paragraph("ECP 203 Concrete Cube Acceptance Report", title_style))
   story.append(
       Paragraph(
-          "Multi-Stage Compliance Verification (7, 14, & 28 Days)",
+          f"Multi-Stage Compliance Verification (7, 14, & 28 Days) | Report Date: {formatted_report_date}",
           subtitle_style,
       )
   )
