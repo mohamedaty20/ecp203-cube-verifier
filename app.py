@@ -184,7 +184,17 @@ engineer_name = st.sidebar.text_input(
     value="",
     placeholder="Enter your name here",
 )
-
+# Sidebar Divider & Professional Disclaimer Note
+st.sidebar.markdown("---")
+st.sidebar.markdown(
+    "<p style='color: #CCCCCC; font-size: 0.85rem; line-height: 1.4;"
+    " text-align: justify;'><i><b>Note to Engineers:</b> All outputs and"
+    " compliance calculations follow the Egyptian Code of Practice (ECP 203)."
+    " Please independently verify these results for your structural elements."
+    " If you notice any missing data or have feedback, feel free to reach out"
+    " to refine it. Thank you for your cooperation!</i></p>",
+    unsafe_allow_html=True,
+)
 # Input Mode Selector
 st.header("1. Input Cube Crushing Results (N/mm²)")
 input_method = st.radio(
