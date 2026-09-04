@@ -165,7 +165,13 @@ st.markdown(
     '<p class="author-credit">Made by Eng. Mohamed Abd Al Aty</p>',
     unsafe_allow_html=True,
 )
-st.subheader("Multi-Stage Cube Strength & Batch Plant Mix Design Audit according to ECP 203")
+
+# --- APP SCREEN NAVIGATION SELECTOR ---
+app_mode = st.radio(
+    "📱 App Screen Navigation:",
+    ["📊 Verifier & Calculator Dashboard", "📖 ECP 203 Official Formulas & Site Instructions Handbook"],
+    horizontal=True,
+)
 st.markdown("---")
 
 # Sidebar Configuration
@@ -321,142 +327,195 @@ stages_data = {
     "28 Days": analyze_stage(cubes_28, "28-Day Stage", 1.00),
 }
 
-# --- BATCH PLANT MIX DESIGN AUDIT SECTION ---
-st.markdown("---")
-st.header("2. Batch Plant Mix Design ECP 203 Compliance Audit")
+# --- CONDITIONAL DISPLAY BASED ON SELECTED APP MODE ---
+if app_mode == "📖 ECP 203 Official Formulas & Site Instructions Handbook":
+  st.markdown("---")
+  st.header("📖 Egyptian Code of Practice (ECP 203) - Technical Reference Handbook")
+  st.markdown("Professional guidance notes, acceptance criteria formulas, and site quality control protocols.")
 
-with st.container():
-  st.markdown("### 🚚 Batch Plant Mix Design Audit Summary")
-  st.write("Review of fresh concrete and mix proportioning limits set by ECP 203:")
-  
-  st.dataframe(df_mix_audit, use_container_width=True)
-  
-  mix_overall_text = "PASS - All site mix parameters comply with ECP 203 limits." if mix_overall_pass else "FAIL - One or more parameters exceed ECP 203 allowable limits."
-  if mix_overall_pass:
-    st.success(f"**Overall Mix Verdict:** {mix_overall_text}")
-  else:
-    st.error(f"**Overall Mix Verdict:** {mix_overall_text}")
+  tab_hb1, tab_hb2, tab_hb3 = st.tabs(["🏗️ 1. Characteristic Strength Formulas", "⚖️ 2. Mix Proportioning & Limits", "📋 3. Site Inspection Instructions"])
 
-# Results Display with Sample-by-Sample Calculation Sheets
-st.markdown("---")
-st.header("3. Cube Compliance Summaries & Detailed Calculation Sheets")
-tabs = st.tabs(["**7-Day Stage**", "**14-Day Stage**", "**28-Day Stage**", "**📐 Worked Calculation Sheet**"])
+  with tab_hb1:
+    st.subheader("Statistical Acceptance Criteria & Formulas (ECP 203)")
+    st.markdown("""
+    According to the Egyptian Code for Design and Construction of Reinforced Concrete Structures (**ECP 203**), structural concrete acceptance is evaluated based on standard cube crushing tests (150mm cubes tested at 28 days unless specified otherwise).
 
-for idx, (stage_label, tab) in enumerate(zip(["7 Days", "14 Days", "28 Days"], tabs[:3])):
-  with tab:
-    res = stages_data[stage_label]
-    if res is None:
-      st.info(f"ℹ️ Insufficient data for {stage_label} testing (minimum 3 cubes required).")
+    * **1. Arithmetic Mean Strength ($f_m$):**
+      $$f_m = \\frac{\\sum_{i=1}^{n} x_i}{n}$$
+      Where $x_i$ represents individual cube test results and $n$ is the total sample count.
+
+    * **2. Standard Deviation ($s$):**
+      $$s = \\sqrt{\\frac{\\sum_{i=1}^{n} (x_i - f_m)^2}{n - 1}}$$
+      Measures the dispersion and consistency of batch plant production quality.
+
+    * **3. Characteristic Compressive Strength ($f_{cu}$):**
+      The characteristic strength must satisfy the statistical lower bound condition:
+      $$f_{cu} = \\max\\left(f_m - k \\cdot s,\\; 0.85 \\cdot f_m\\right)$$
+      * **Factor $k$:** Equal to **1.91** for small sample batches ($n < 30$) and **1.64** for large production lots ($n \\ge 30$).
+
+    * **4. Individual Specimen Verification Rule:**
+      No single individual cube test result $x_i$ shall fall below:
+      $$\\text{Minimum Allowable Individual Strength} = 0.85 \\times f_{cu,\\text{target}}$$
+    """)
+
+  with tab_hb2:
+    st.subheader("Mix Design Limits & Compliance Thresholds (ECP 203)")
+    st.markdown("""
+    * **Water-Cement Ratio (W/C):**
+      * For grades $f_{cu} \\ge 30\\text{ N/mm}^2$: Maximum allowed W/C ratio is **0.45**.
+      * For lower grades ($f_{cu} < 30\\text{ N/mm}^2$): Maximum allowed W/C ratio is **0.50**.
+    * **Minimum Cement Content:**
+      * Standard structural elements require a minimum cement content of **300 kg/m³** to guarantee durability, alkalinity, and adequate paste volume.
+    * **Fresh Concrete Temperature:**
+      * Fresh concrete temperature at time of placement must not exceed **35 °C** (especially in hot weather concreting) to prevent rapid slump loss and thermal cracking.
+    """)
+
+  with tab_hb3:
+    st.subheader("Site Quality Control & QA/QC Inspection Guidelines")
+    st.markdown("""
+    1. **Sampling Frequency:** Take at least one set of 6 cubes (3 for 7-day testing, 3 for 28-day testing) for every $100\\text{ m}^3$ of concrete poured, or for each structural pour per shift.
+    2. **Curing Conditions:** Cubes must be demolded after $24 \\pm 4$ hours and immediately immersed in water curing tanks maintained at $20 \\pm 2 °C$ until testing age.
+    3. **Testing Procedure:** Compression testing machines must be calibrated annually. Apply load at a uniform stress rate of $0.4$ to $0.6\\text{ N/mm}^2$ per second without shock.
+    4. **Non-Conformance Action:** If a batch fails 28-day compliance criteria, immediate non-conformance report (NCR) procedures must be initiated, followed by non-destructive testing (Rebound Hammer / Ultrasonic Pulse Velocity) or core drilling as directed by the structural consultant.
+    """)
+
+else:
+  # --- BATCH PLANT MIX DESIGN AUDIT SECTION ---
+  st.markdown("---")
+  st.header("2. Batch Plant Mix Design ECP 203 Compliance Audit")
+
+  with st.container():
+    st.markdown("### 🚚 Batch Plant Mix Design Audit Summary")
+    st.write("Review of fresh concrete and mix proportioning limits set by ECP 203:")
+    
+    st.dataframe(df_mix_audit, use_container_width=True)
+    
+    mix_overall_text = "PASS - All site mix parameters comply with ECP 203 limits." if mix_overall_pass else "FAIL - One or more parameters exceed ECP 203 allowable limits."
+    if mix_overall_pass:
+      st.success(f"**Overall Mix Verdict:** {mix_overall_text}")
     else:
-      c1, c2, c3 = st.columns(3)
-      c1.metric("Sample Count (n)", f"{res['n']} cubes")
-      c2.metric("Mean Strength (f_m)", f"{res['mean']:.2f} N/mm²")
-      c3.metric("Std. Deviation (s)", f"{res['s']:.2f} N/mm²")
-      
-      st.markdown("---")
-      st.markdown(f"#### 🔍 Detailed Sample-by-Sample & Statistical Breakdown ({stage_label})")
-      
-      st.markdown(
-          f"* **Arithmetic Mean ($f_m$):** $\\frac{{\\sum x_i}}{{n}} ="
-          f" {res['mean']:.2f}$ N/mm²\n* **Standard Deviation ($s$):**"
-          f" {res['s']:.2f} N/mm²\n* **Factor ($k$):** {res['k']} (for $n ="
-          f" {res['n']}$)\n* **Characteristic Strength ($f_{{cu}}$):**"
-          f" $\\max(f_m - k \\cdot s,\\ 0.85 \\cdot f_m) ="
-          f" \\max({res['mean']:.2f} - {res['k']} \\cdot {res['s']:.2f},\\ 0.85"
-          f" \\cdot {res['mean']:.2f}) = $ **{res['fcu_char']:.2f} N/mm²**\n*"
-          f" **Target Required Strength ($f_{{cu,\\text{{target}}}}$):**"
-          f" {res['stage_target_fcu']:.2f} N/mm²\n* **Minimum Individual Cube"
-          f" Limit ($0.85 \\cdot f_{{cu,\\text{{target}}}}$):**"
-          f" {res['min_threshold']:.2f} N/mm²"
-      )
-      
-      cube_vals = cubes_7 if stage_label == "7 Days" else (cubes_14 if stage_label == "14 Days" else cubes_28)
-      sample_breakdown = []
-      for i, val in enumerate(cube_vals):
-        min_lim = res['min_threshold']
-        ind_pass = val >= min_lim
-        sample_breakdown.append({
-            "Sample #": i + 1,
-            "Measured Strength (x_i) N/mm²": val,
-            "Min Individual Limit (N/mm²)": round(min_lim, 2),
-            "Individual Check (x_i >= 0.85 * f_target)": "PASS ✅" if ind_pass else "FAIL ❌"
-        })
-      df_sb = pd.DataFrame(sample_breakdown)
-      st.dataframe(df_sb, use_container_width=True)
-      
-      if res["is_compliant"]:
-        st.success(f"✅ **STAGE PASS ({stage_label}):** Both statistical characteristic strength condition and individual sample limits are fully satisfied according to ECP 203.")
+      st.error(f"**Overall Mix Verdict:** {mix_overall_text}")
+
+  # Results Display with Sample-by-Sample Calculation Sheets
+  st.markdown("---")
+  st.header("3. Cube Compliance Summaries & Detailed Calculation Sheets")
+  tabs = st.tabs(["**7-Day Stage**", "**14-Day Stage**", "**28-Day Stage**", "**📐 Worked Calculation Sheet**"])
+
+  for idx, (stage_label, tab) in enumerate(zip(["7 Days", "14 Days", "28 Days"], tabs[:3])):
+    with tab:
+      res = stages_data[stage_label]
+      if res is None:
+        st.info(f"ℹ️ Insufficient data for {stage_label} testing (minimum 3 cubes required).")
       else:
-        st.error(f"❌ **STAGE FAIL ({stage_label}):** Non-compliant with ECP 203 (Characteristic strength or individual sample falling below the 85% limit).")
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Sample Count (n)", f"{res['n']} cubes")
+        c2.metric("Mean Strength (f_m)", f"{res['mean']:.2f} N/mm²")
+        c3.metric("Std. Deviation (s)", f"{res['s']:.2f} N/mm²")
+        
+        st.markdown("---")
+        st.markdown(f"#### 🔍 Detailed Sample-by-Sample & Statistical Breakdown ({stage_label})")
+        
+        st.markdown(
+            f"* **Arithmetic Mean ($f_m$):** $\\frac{{\\sum x_i}}{{n}} ="
+            f" {res['mean']:.2f}$ N/mm²\n* **Standard Deviation ($s$):**"
+            f" {res['s']:.2f} N/mm²\n* **Factor ($k$):** {res['k']} (for $n ="
+            f" {res['n']}$)\n* **Characteristic Strength ($f_{{cu}}$):**"
+            f" $\\max(f_m - k \\cdot s,\\ 0.85 \\cdot f_m) ="
+            f" \\max({res['mean']:.2f} - {res['k']} \\cdot {res['s']:.2f},\\ 0.85"
+            f" \\cdot {res['mean']:.2f}) = $ **{res['fcu_char']:.2f} N/mm²**\n*"
+            f" **Target Required Strength ($f_{{cu,\\text{{target}}}}$):**"
+            f" {res['stage_target_fcu']:.2f} N/mm²\n* **Minimum Individual Cube"
+            f" Limit ($0.85 \\cdot f_{{cu,\\text{{target}}}}$):**"
+            f" {res['min_threshold']:.2f} N/mm²"
+        )
+        
+        cube_vals = cubes_7 if stage_label == "7 Days" else (cubes_14 if stage_label == "14 Days" else cubes_28)
+        sample_breakdown = []
+        for i, val in enumerate(cube_vals):
+          min_lim = res['min_threshold']
+          ind_pass = val >= min_lim
+          sample_breakdown.append({
+              "Sample #": i + 1,
+              "Measured Strength (x_i) N/mm²": val,
+              "Min Individual Limit (N/mm²)": round(min_lim, 2),
+              "Individual Check (x_i >= 0.85 * f_target)": "PASS ✅" if ind_pass else "FAIL ❌"
+          })
+        df_sb = pd.DataFrame(sample_breakdown)
+        st.dataframe(df_sb, use_container_width=True)
+        
+        if res["is_compliant"]:
+          st.success(f"✅ **STAGE PASS ({stage_label}):** Both statistical characteristic strength condition and individual sample limits are fully satisfied according to ECP 203.")
+        else:
+          st.error(f"❌ **STAGE FAIL ({stage_label}):** Non-compliant with ECP 203 (Characteristic strength or individual sample falling below the 85% limit).")
 
-with tabs[3]:
-  st.subheader("📐 Fully Worked Numerical Calculation Sheet (ECP 203)")
-  st.write("Below are the fully plugged-in numerical steps and formulas calculated automatically from your entered cube test data across all testing stages:")
-  
-  for stage_name, res in stages_data.items():
-    if res is not None:
-      st.markdown(f"### 🔹 {stage_name} Evaluation Breakdown")
-      cube_vals = cubes_7 if stage_name == "7 Days" else (cubes_14 if stage_name == "14 Days" else cubes_28)
-      vals_str = ", ".join([str(v) for v in cube_vals])
-      
-      cond_check_str = "PASS ✅" if res['cond1'] else "FAIL ❌"
-      min_check_str = "PASS ✅" if res['cond2'] else "FAIL ❌"
-      
-      st.markdown(f"""
-* **Input Samples ($x_i$):** `[{vals_str}]` ($n = {res['n']}$)
-* **Step 1: Arithmetic Mean ($f_m$):**
-  $f_m = \\frac{{\\sum x_i}}{{n}} = \\frac{{{sum(cube_vals)}}}{{{res['n']}}} = \\mathbf{{{res['mean']:.2f}\\text{{ N/mm²}}}}$
-* **Step 2: Standard Deviation ($s$):**
-  $s = \\sqrt{{\\frac{{\\sum (x_i - f_m)^2}}{{n - 1}}}} = \\mathbf{{{res['s']:.2f}\\text{{ N/mm²}}}}$
-* **Step 3: Characteristic Strength ($f_{{cu}}$):**
-  - Condition A ($f_m - k \\cdot s$): ${res['mean']:.2f} - ({res['k']} \\cdot {res['s']:.2f}) = {res['fcu_calc_1']:.2f}$ N/mm²
-  - Condition B ($0.85 \\cdot f_m$): $0.85 \\cdot {res['mean']:.2f} = {res['fcu_calc_2']:.2f}$ N/mm²
-  - Final $f_{{cu}} = \\max({res['fcu_calc_1']:.2f}, {res['fcu_calc_2']:.2f}) = \\mathbf{{{res['fcu_char']:.2f}\\text{{ N/mm²}}}}$
-* **Step 4: Target & Compliance Check:**
-  - Required Target ($f_{{target}}$): ${res['target_ratio']} \\times {fcu_spec} = {res['stage_target_fcu']:.2f}$ N/mm²
-  - Characteristic Check ($f_{{cu}} \\ge f_{{target}}$): `{res['fcu_char']:.2f} ≥ {res['stage_target_fcu']:.2f}` $\\rightarrow$ **{cond_check_str}**
-  - Min Individual Limit ($0.85 \\times f_{{target}}$): `{res['min_threshold']:.2f} N/mm²` (Minimum measured: `{res['min']} N/mm²`) $\\rightarrow$ **{min_check_str}**
-      """)
-      st.markdown("---")
-    else:
-      st.markdown(f"### 🔹 {stage_name} Evaluation Breakdown")
-      st.info(f"No data available for {stage_name}.")
-      st.markdown("---")
+  with tabs[3]:
+    st.subheader("📐 Fully Worked Numerical Calculation Sheet (ECP 203)")
+    st.write("Below are the fully plugged-in numerical steps and formulas calculated automatically from your entered cube test data across all testing stages:")
+    
+    for stage_name, res in stages_data.items():
+      if res is not None:
+        st.markdown(f"### 🔹 {stage_name} Evaluation Breakdown")
+        cube_vals = cubes_7 if stage_name == "7 Days" else (cubes_14 if stage_name == "14 Days" else cubes_28)
+        vals_str = ", ".join([str(v) for v in cube_vals])
+        
+        cond_check_str = "PASS ✅" if res['cond1'] else "FAIL ❌"
+        min_check_str = "PASS ✅" if res['cond2'] else "FAIL ❌"
+        
+        st.markdown(f"""
+  * **Input Samples ($x_i$):** `[{vals_str}]` ($n = {res['n']}$)
+  * **Step 1: Arithmetic Mean ($f_m$):**
+    $f_m = \\frac{{\\sum x_i}}{{n}} = \\frac{{{sum(cube_vals)}}}{{{res['n']}}} = \\mathbf{{{res['mean']:.2f}\\text{{ N/mm²}}}}$
+  * **Step 2: Standard Deviation ($s$):**
+    $s = \\sqrt{{\\frac{{\\sum (x_i - f_m)^2}}{{n - 1}}}} = \\mathbf{{{res['s']:.2f}\\text{{ N/mm²}}}}$
+  * **Step 3: Characteristic Strength ($f_{{cu}}$):**
+    - Condition A ($f_m - k \\cdot s$): ${res['mean']:.2f} - ({res['k']} \\cdot {res['s']:.2f}) = {res['fcu_calc_1']:.2f}$ N/mm²
+    - Condition B ($0.85 \\cdot f_m$): $0.85 \\cdot {res['mean']:.2f} = {res['fcu_calc_2']:.2f}$ N/mm²
+    - Final $f_{{cu}} = \\max({res['fcu_calc_1']:.2f}, {res['fcu_calc_2']:.2f}) = \\mathbf{{{res['fcu_char']:.2f}\\text{{ N/mm²}}}}$
+  * **Step 4: Target & Compliance Check:**
+    - Required Target ($f_{{target}}$): ${res['target_ratio']} \\times {fcu_spec} = {res['stage_target_fcu']:.2f}$ N/mm²
+    - Characteristic Check ($f_{{cu}} \\ge f_{{target}}$): `{res['fcu_char']:.2f} ≥ {res['stage_target_fcu']:.2f}` $\\rightarrow$ **{cond_check_str}**
+    - Min Individual Limit ($0.85 \\times f_{{target}}$): `{res['min_threshold']:.2f} N/mm²` (Minimum measured: `{res['min']} N/mm²`) $\\rightarrow$ **{min_check_str}**
+        """)
+        st.markdown("---")
+      else:
+        st.markdown(f"### 🔹 {stage_name} Evaluation Breakdown")
+        st.info(f"No data available for {stage_name}.")
+        st.markdown("---")
 
-# Visualizations Section
-st.markdown("---")
-st.header("4. Visual Analytics & Strength Trend Charts")
-chart_col1, chart_col2 = st.columns(2)
+  # Visualizations Section
+  st.markdown("---")
+  st.header("4. Visual Analytics & Strength Trend Charts")
+  chart_col1, chart_col2 = st.columns(2)
 
-chart_data_list = []
-for i, val in enumerate(cubes_7): chart_data_list.append({"Cube Label": f"7-{i+1} ({val})", "Sample Index": i+1, "Strength": val, "Stage": "7 Days"})
-for i, val in enumerate(cubes_14): chart_data_list.append({"Cube Label": f"14-{i+1} ({val})", "Sample Index": i+1, "Strength": val, "Stage": "14 Days"})
-for i, val in enumerate(cubes_28): chart_data_list.append({"Cube Label": f"28-{i+1} ({val})", "Sample Index": i+1, "Strength": val, "Stage": "28 Days"})
+  chart_data_list = []
+  for i, val in enumerate(cubes_7): chart_data_list.append({"Cube Label": f"7-{i+1} ({val})", "Sample Index": i+1, "Strength": val, "Stage": "7 Days"})
+  for i, val in enumerate(cubes_14): chart_data_list.append({"Cube Label": f"14-{i+1} ({val})", "Sample Index": i+1, "Strength": val, "Stage": "14 Days"})
+  for i, val in enumerate(cubes_28): chart_data_list.append({"Cube Label": f"28-{i+1} ({val})", "Sample Index": i+1, "Strength": val, "Stage": "28 Days"})
 
-with chart_col1:
-  st.subheader("Individual Cube Strengths")
-  if chart_data_list:
-    df_chart = pd.DataFrame(chart_data_list)
-    fig_bars = px.scatter(df_chart, x="Sample Index", y="Strength", color="Stage", text="Cube Label", template="plotly_dark")
-    fig_bars.update_traces(mode="text+markers", textposition="top center", marker=dict(size=12))
-    fig_bars.update_layout(plot_bgcolor="#031338", paper_bgcolor="#1B2A4A", font=dict(color="#FFFFFF", size=10))
-    st.plotly_chart(fig_bars, use_container_width=True)
+  with chart_col1:
+    st.subheader("Individual Cube Strengths")
+    if chart_data_list:
+      df_chart = pd.DataFrame(chart_data_list)
+      fig_bars = px.scatter(df_chart, x="Sample Index", y="Strength", color="Stage", text="Cube Label", template="plotly_dark")
+      fig_bars.update_traces(mode="text+markers", textposition="top center", marker=dict(size=12))
+      fig_bars.update_layout(plot_bgcolor="#031338", paper_bgcolor="#1B2A4A", font=dict(color="#FFFFFF", size=10))
+      st.plotly_chart(fig_bars, use_container_width=True)
 
-summary_chart_data = []
-for stage_key in ["7 Days", "14 Days", "28 Days"]:
-  res = stages_data[stage_key]
-  if res:
-    summary_chart_data.append({"Stage": stage_key, "Calculated fcu": res["fcu_char"], "Target Requirement": res["stage_target_fcu"]})
+  summary_chart_data = []
+  for stage_key in ["7 Days", "14 Days", "28 Days"]:
+    res = stages_data[stage_key]
+    if res:
+      summary_chart_data.append({"Stage": stage_key, "Calculated fcu": res["fcu_char"], "Target Requirement": res["stage_target_fcu"]})
 
-with chart_col2:
-  st.subheader("Characteristic fcu vs Target")
-  if summary_chart_data:
-    df_summary_chart = pd.DataFrame(summary_chart_data)
-    fig_lines = go.Figure()
-    fig_lines.add_trace(go.Scatter(x=df_summary_chart["Stage"], y=df_summary_chart["Calculated fcu"], mode="lines+markers+text", text=[f"{v:.2f}" for v in df_summary_chart["Calculated fcu"]], name="Calculated fcu", line=dict(color="#00BFFF", width=3)))
-    fig_lines.add_trace(go.Scatter(x=df_summary_chart["Stage"], y=df_summary_chart["Target Requirement"], mode="lines+markers+text", text=[f"{v:.2f}" for v in df_summary_chart["Target Requirement"]], name="Target", line=dict(color="#FF8C00", width=3, dash="dash")))
-    fig_lines.update_layout(plot_bgcolor="#031338", paper_bgcolor="#1B2A4A", font=dict(color="#FFFFFF", size=10))
-    st.plotly_chart(fig_lines, use_container_width=True)
+  with chart_col2:
+    st.subheader("Characteristic fcu vs Target")
+    if summary_chart_data:
+      df_summary_chart = pd.DataFrame(summary_chart_data)
+      fig_lines = go.Figure()
+      fig_lines.add_trace(go.Scatter(x=df_summary_chart["Stage"], y=df_summary_chart["Calculated fcu"], mode="lines+markers+text", text=[f"{v:.2f}" for v in df_summary_chart["Calculated fcu"]], name="Calculated fcu", line=dict(color="#00BFFF", width=3)))
+      fig_lines.add_trace(go.Scatter(x=df_summary_chart["Stage"], y=df_summary_chart["Target Requirement"], mode="lines+markers+text", text=[f"{v:.2f}" for v in df_summary_chart["Target Requirement"]], name="Target", line=dict(color="#FF8C00", width=3, dash="dash")))
+      fig_lines.update_layout(plot_bgcolor="#031338", paper_bgcolor="#1B2A4A", font=dict(color="#FFFFFF", size=10))
+      st.plotly_chart(fig_lines, use_container_width=True)
 
 # DataFrames for Export
 display_project_name = project_name if project_name.strip() else "Unnamed Project"
