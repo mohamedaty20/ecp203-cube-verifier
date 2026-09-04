@@ -133,10 +133,10 @@ textarea, input {
     background-color: #020461 !important;
     color: #FFFFFF !important;
     border: none;
-    font-family: 'Segoe UI', Arial, sans-serif !important; /* Change your font style here */
+    font-family: 'Segoe UI', Arial, sans-serif !important;
     font-size: 15px !important;
     font-weight: 600 !important;
-    font-style: normal !important; /* Can be 'italic' if you want it italicized */
+    font-style: normal !important;
 }
 
 .stDownloadButton>button:hover {
@@ -152,7 +152,7 @@ hr {
 """
 st.markdown(dark_style, unsafe_allow_html=True)
 
-# 3. Top Banner / Cover Photo (Automatically stretches edge-to-edge via CSS)
+# 3. Top Banner / Cover Photo
 st.image("logo.png")
 
 # Main Title & Subtitle
@@ -199,6 +199,7 @@ st.sidebar.markdown(
     " to refine it. Thank you for your cooperation.</p>",
     unsafe_allow_html=True,
 )
+
 # Input Mode Selector
 st.header("1. Input Cube Crushing Results (N/mm²)")
 input_method = st.radio(
@@ -345,7 +346,6 @@ stages_data = {
 st.markdown("---")
 st.header("2. Compliance Summaries (7, 14 & 28 Days)")
 
-# Tabs with bolded titles
 tabs = st.tabs([
     "**7-Day Stage Compliance**",
     "**14-Day Stage Compliance**",
@@ -400,39 +400,56 @@ st.header("3. Visual Analytics & Strength Trend Charts")
 
 chart_col1, chart_col2 = st.columns(2)
 
-# Chart 1: Bar Chart of Sample Strengths across Stages
+# Chart 1: Professional Labeled Scatter/Line Chart for Individual Cubes
 with chart_col1:
-  st.subheader("Individual Cube Strengths Distribution")
+  st.subheader("Individual Cube Strengths Labeled")
   chart_data_list = []
-  for val in cubes_7:
-    chart_data_list.append(
-        {"Sample Index": len(chart_data_list) + 1, "Strength": val, "Stage": "7 Days"}
-    )
-  for val in cubes_14:
-    chart_data_list.append(
-        {"Sample Index": len(chart_data_list) + 1, "Strength": val, "Stage": "14 Days"}
-    )
-  for val in cubes_28:
-    chart_data_list.append(
-        {"Sample Index": len(chart_data_list) + 1, "Strength": val, "Stage": "28 Days"}
-    )
+  
+  for i, val in enumerate(cubes_7):
+    chart_data_list.append({
+        "Cube Label": f"Cube 7-{i+1} ({val} MPa)",
+        "Sample Index": i + 1,
+        "Strength": val,
+        "Stage": "7 Days"
+    })
+  for i, val in enumerate(cubes_14):
+    chart_data_list.append({
+        "Cube Label": f"Cube 14-{i+1} ({val} MPa)",
+        "Sample Index": i + 1,
+        "Strength": val,
+        "Stage": "14 Days"
+    })
+  for i, val in enumerate(cubes_28):
+    chart_data_list.append({
+        "Cube Label": f"Cube 28-{i+1} ({val} MPa)",
+        "Sample Index": i + 1,
+        "Strength": val,
+        "Stage": "28 Days"
+    })
 
   if chart_data_list:
     df_chart = pd.DataFrame(chart_data_list)
-    fig_bars = px.bar(
+    fig_bars = px.scatter(
         df_chart,
         x="Sample Index",
         y="Strength",
         color="Stage",
-        barmode="group",
-        title="Cube Strengths by Testing Age",
-        labels={"Strength": "Crushing Strength (N/mm²)"},
+        text="Cube Label",
+        title="Individual Cube Strengths with Direct Labels",
+        labels={"Strength": "Crushing Strength (N/mm²)", "Sample Index": "Sample Number Sequence"},
         template="plotly_dark",
+    )
+    # Style text labels to display cleanly right next to the points
+    fig_bars.update_traces(
+        mode="text+markers",
+        textposition="top center",
+        marker=dict(size=12)
     )
     fig_bars.update_layout(
         plot_bgcolor="#031338",
         paper_bgcolor="#1B2A4A",
-        font=dict(color="#FFFFFF"),
+        font=dict(color="#FFFFFF", size=10),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
     )
     st.plotly_chart(fig_bars, use_container_width=True)
   else:
@@ -458,18 +475,24 @@ with chart_col2:
         go.Scatter(
             x=df_summary_chart["Stage"],
             y=df_summary_chart["Calculated fcu"],
-            mode="lines+markers",
+            mode="lines+markers+text",
+            text=[f"{val:.2f}" for val in df_summary_chart["Calculated fcu"]],
+            textposition="top center",
             name="Calculated fcu",
             line=dict(color="#00BFFF", width=3),
+            marker=dict(size=10)
         )
     )
     fig_lines.add_trace(
         go.Scatter(
             x=df_summary_chart["Stage"],
             y=df_summary_chart["Target Requirement"],
-            mode="lines+markers",
+            mode="lines+markers+text",
+            text=[f"{val:.2f}" for val in df_summary_chart["Target Requirement"]],
+            textposition="bottom center",
             name="Target Requirement",
             line=dict(color="#FF8C00", width=3, dash="dash"),
+            marker=dict(size=10)
         )
     )
     fig_lines.update_layout(
@@ -478,18 +501,17 @@ with chart_col2:
         yaxis_title="Strength (N/mm²)",
         plot_bgcolor="#031338",
         paper_bgcolor="#1B2A4A",
-        font=dict(color="#FFFFFF"),
+        font=dict(color="#FFFFFF", size=10),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
     )
     st.plotly_chart(fig_lines, use_container_width=True)
   else:
     st.info("No data available for summary chart.")
 
 
-# Generate Rich Structured Excel & PDF Data Structures
+# Generate DataFrames for Export
 display_project_name = project_name if project_name.strip() else "Unnamed Project"
-display_engineer_name = (
-    engineer_name if engineer_name.strip() else "Not Specified"
-)
+display_engineer_name = engineer_name if engineer_name.strip() else "Not Specified"
 
 overview_data = [
     {"Parameter": "Project Name", "Details": display_project_name},
@@ -607,19 +629,18 @@ calc_methods = [
 ]
 df_methods = pd.DataFrame(calc_methods)
 
-# Generate image buffers for Plotly charts to include in PDF and Excel exports
+# Convert Plotly figures into PNG binaries using Kaleido engine for file outputs
 chart1_img_bytes = None
 chart2_img_bytes = None
 try:
   if chart_data_list:
-    chart1_img_bytes = fig_bars.to_image(format="png", width=600, height=350, scale=2)
+    chart1_img_bytes = fig_bars.to_image(format="png", width=700, height=400, scale=2)
   if summary_chart_data:
-    chart2_img_bytes = fig_lines.to_image(format="png", width=600, height=350, scale=2)
+    chart2_img_bytes = fig_lines.to_image(format="png", width=700, height=400, scale=2)
 except Exception:
-  # Fallback if kaleido/static image generation encounters runtime restrictions
   pass
 
-# Excel Export Buffer
+# Excel Export Buffer Construction
 excel_buffer = io.BytesIO()
 with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
   df_overview.to_excel(
@@ -633,7 +654,6 @@ with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
       writer, sheet_name="Calculation Methodology", index=False
   )
   
-  # Embed charts into openpyxl workbook if successfully generated
   wb = writer.book
   if chart1_img_bytes or chart2_img_bytes:
     chart_sheet = wb.create_sheet(title="Visual Analytics Charts")
@@ -644,7 +664,7 @@ with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
     if chart2_img_bytes:
       img2_io = io.BytesIO(chart2_img_bytes)
       img_ux2 = OpenpyxlImage(img2_io)
-      chart_sheet.add_image(img_ux2, "B22")
+      chart_sheet.add_image(img_ux2, "B24")
 
 excel_buffer.seek(0)
 
@@ -663,7 +683,6 @@ def generate_pdf_report():
   story = []
   styles = getSampleStyleSheet()
 
-  # Custom Styles
   title_style = ParagraphStyle(
       "DocTitle",
       parent=styles["Heading1"],
@@ -778,10 +797,10 @@ def generate_pdf_report():
   if chart1_img_bytes or chart2_img_bytes:
     story.append(Paragraph("<b>3. Visual Analytics & Trend Charts</b>", section_style))
     if chart1_img_bytes:
-      story.append(ReportLabImage(io.BytesIO(chart1_img_bytes), width=450, height=220))
-      story.append(Spacer(1, 6))
+      story.append(ReportLabImage(io.BytesIO(chart1_img_bytes), width=480, height=260))
+      story.append(Spacer(1, 8))
     if chart2_img_bytes:
-      story.append(ReportLabImage(io.BytesIO(chart2_img_bytes), width=450, height=220))
+      story.append(ReportLabImage(io.BytesIO(chart2_img_bytes), width=480, height=260))
       story.append(Spacer(1, 10))
 
   # Raw Individual Cubes Table
@@ -809,7 +828,7 @@ def generate_pdf_report():
   story.append(t_raw)
   story.append(Spacer(1, 10))
 
-  # Calculation Methodology Section (Symbol-free format)
+  # Calculation Methodology Section
   story.append(
       Paragraph(
           "<b>5. Calculation Methodology & Standards (ECP 203)</b>",
