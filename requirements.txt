@@ -3,5 +3,7 @@ pandas
 numpy
 plotly
 openpyxl
-reportlab
 matplotlib
+reportlab
+qrcode
+pillow
