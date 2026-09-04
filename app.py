@@ -6,7 +6,7 @@ import streamlit as st
 # 1. Page Configuration (MUST be first Streamlit command)
 st.set_page_config(
     page_title="ECP 203 Concrete Cube Verifier",
-    page_icon="🏗️",
+    page_icon="◮",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -145,7 +145,7 @@ st.subheader(
 st.markdown("---")
 
 # Sidebar Configuration
-st.sidebar.header("📋 Project Details")
+st.sidebar.header("Project Details")
 project_name = st.sidebar.text_input("Project Name", "New Capital Site Alpha")
 pour_location = st.sidebar.text_input(
     "Structural Element / Pour Location", "Slab Axis A1-C5"
@@ -178,7 +178,7 @@ def parse_input(text_str):
 
 
 if input_method == "Manual Entry":
-  st.info("💡 Enter strength values separated by commas.")
+  st.info(" Enter strength values separated by commas.")
 
   col_a, col_b, col_c = st.columns(3)
   with col_a:
@@ -205,7 +205,7 @@ if input_method == "Manual Entry":
 
 else:
   st.info(
-      "💡 Upload an Excel file. Select columns for each testing age from your"
+      " Upload an Excel file. Select columns for each testing age from your"
       " file."
   )
   uploaded_file = st.file_uploader(
@@ -217,7 +217,7 @@ else:
       excel_file = pd.ExcelFile(uploaded_file)
       sheet_selected = st.selectbox("Select Sheet:", excel_file.sheet_names)
       df = pd.read_excel(uploaded_file, sheet_name=sheet_selected)
-      st.write("📊 **Preview of Uploaded Data:**", df.head())
+      st.write(" **Preview of Uploaded Data:**", df.head())
 
       numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
       if not numeric_cols:
@@ -243,7 +243,7 @@ else:
       st.error(f"⚠️ Error reading Excel file: {e}")
       st.stop()
   else:
-    st.warning("👈 Please upload an Excel sheet to continue.")
+    st.warning(" Please upload an Excel sheet to continue.")
     st.stop()
 
 if not (cubes_7 or cubes_14 or cubes_28):
@@ -492,21 +492,21 @@ with st.expander(
 ):
   for stage_key in ["7 Days", "14 Days", "28 Days"]:
     res = stages_data[stage_key]
-    st.markdown(f"### **📌 {stage_key} Stage ECP 203 Evaluation**")
+    st.markdown(f"### ** {stage_key} Stage ECP 203 Evaluation**")
     if res is None:
       st.write(f"No sufficient data provided for {stage_key} stage.")
       st.markdown("---")
       continue
 
     st.latex(r"\text{Mean Strength: } f_m = \frac{\sum f_i}{n}")
-    st.write(f"👉 **Mean ($f_m$)** = `{res['mean']:.2f}` N/mm²")
+    st.write(f" **Mean ($f_m$)** = `{res['mean']:.2f}` N/mm²")
 
     st.latex(
         r"\text{Standard Deviation: } s = \sqrt{\frac{\sum (f_i - f_m)^2}{n -"
         r" 1}}"
     )
     st.write(
-        f"👉 **Std. Dev. ($s$)** = `{res['s']:.2f}` N/mm² | **Factor $k$** ="
+        f" **Std. Dev. ($s$)** = `{res['s']:.2f}` N/mm² | **Factor $k$** ="
         f" `{res['k']}` (Sample $n = {res['n']}$)"
     )
 
@@ -522,7 +522,7 @@ with st.expander(
         f" **`{res['fcu_calc_2']:.2f}` N/mm²**"
     )
     st.write(
-        f"👉 **Calculated Stage $f_{{cu}}$** = `{res['fcu_char']:.2f}` N/mm² |"
+        f" **Calculated Stage $f_{{cu}}$** = `{res['fcu_char']:.2f}` N/mm² |"
         f" **Stage Target:** `{res['stage_target_fcu']:.2f}` N/mm²"
     )
 
