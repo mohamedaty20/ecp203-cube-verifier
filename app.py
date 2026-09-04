@@ -136,6 +136,16 @@ div[data-testid="stDataFrame"] > div {
     background-color: #1B2A4A !important;
     color: #FFFFFF !important;
 }
+
+/* High-End Executive Footer Styling */
+.footer-container {
+    background: linear-gradient(135deg, #1B2A4A 0%, #031338 100%);
+    border: 1px solid #FF8C00;
+    border-radius: 10px;
+    padding: 25px;
+    margin-top: 4rem;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+}
 </style>
 """
 st.markdown(dark_style, unsafe_allow_html=True)
@@ -166,10 +176,10 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- APP SCREEN NAVIGATION SELECTOR ---
+# --- APP SCREEN NAVIGATION SELECTOR (Removed "calculator") ---
 app_mode = st.radio(
     "📱 App Screen Navigation:",
-    ["📊 Verifier & Calculator Dashboard", "📖 ECP 203 Official Formulas & Site Instructions Handbook"],
+    ["📊 Verifier Dashboard", "📖 ECP 203 Official Formulas & Site Instructions Handbook"],
     horizontal=True,
 )
 st.markdown("---")
@@ -705,7 +715,7 @@ def generate_pdf_report(logo_bytes=None):
 
 pdf_data = generate_pdf_report(company_logo_bytes)
 
-# Download Buttons
+# Download Buttons Section
 col_btn1, col_btn2 = st.columns(2)
 with col_btn1:
   st.download_button(
@@ -722,12 +732,29 @@ with col_btn2:
       mime="application/pdf",
   )
 
-# Contact Footer
+# --- LUXURY HIGH-END CORPORATE FOOTER SECTION ---
+st.markdown("---")
 st.markdown(
-    "<p style='text-align: center; color: #FFFFFF; font-size: 0.95rem; margin-top: 3rem;'><b>Contact me at:</b><br>Linkedin: <a href='https://www.linkedin.com/in/mohamed-abd-al-aty-a326a1214/' target='_blank' style='color: #00BFFF;'>Mohamed Abd Al Aty</a><br>Gmail: <a href='mailto:mohamedabdalaty63@gmail.com' style='color: #00BFFF;'>mohamedabdalaty63@gmail.com</a></p>",
-    unsafe_allow_html=True,
-)
-st.markdown(
-    "<p style='text-align: center; color: #888888; font-size: 0.85rem; margin-top: 1.5rem;'>© 2026 Eng. Mohamed Abd Al Aty. All rights reserved.</p>",
+    """
+    <div class="footer-container">
+      <div style="display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center;">
+        <div style="flex: 1; min-width: 250px; margin-bottom: 15px;">
+          <h4 style="color: #FF8C00; margin-bottom: 5px; font-size: 1.1rem;">🏗️ ECP 203 Quality Assurance Portal</h4>
+          <p style="color: #CCCCCC; font-size: 0.85rem; margin: 0;">Automated statistical compliance verification and rigorous structural mix design auditing platform built for elite civil engineering teams.</p>
+        </div>
+        <div style="flex: 1; min-width: 200px; text-align: right; margin-bottom: 15px;">
+          <p style="color: #FFFFFF; font-size: 0.9rem; margin-bottom: 5px;"><b>Official Direct Contacts:</b></p>
+          <p style="margin: 0; font-size: 0.85rem;">
+            Linkedin: <a href='https://www.linkedin.com/in/mohamed-abd-al-aty-a326a1214/' target='_blank' style='color: #00BFFF; text-decoration: none;'>Mohamed Abd Al Aty</a><br>
+            Gmail: <a href='mailto:mohamedabdalaty63@gmail.com' style='color: #00BFFF; text-decoration: none;'>mohamedabdalaty63@gmail.com</a>
+          </p>
+        </div>
+      </div>
+      <hr style="border-color: rgba(255,140,0,0.3); margin: 15px 0;">
+      <div style="text-align: center;">
+        <p style="color: #888888; font-size: 0.8rem; margin: 0;">© 2026 Eng. Mohamed Abd Al Aty. All rights reserved. Designed to Egyptian Code of Practice (ECP 203) standards.</p>
+      </div>
+    </div>
+    """,
     unsafe_allow_html=True,
 )
