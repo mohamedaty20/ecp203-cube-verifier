@@ -20,7 +20,7 @@ dark_style = """
     color: #FFFFFF !important;
 }
 
-/* Remove top padding for the main container */
+/* Remove default block-container padding so the banner can span edge-to-edge */
 .block-container {
     padding-top: 0rem !important;
     padding-bottom: 2rem !important;
@@ -34,10 +34,11 @@ dark_style = """
     width: 100% !important;
 }
 
-/* Add clear horizontal spacing between the sidebar and main body text */
+/* Add clear horizontal spacing and padding to the main text container */
 .main-content {
-    padding-left: 1.5rem !important;
-    padding-right: 1.5rem !important;
+    padding-left: 2.5rem !important;
+    padding-right: 2.5rem !important;
+    padding-top: 1rem !important;
 }
 
 /* Hide Streamlit default menu/footer but keep sidebar arrow visible */
@@ -126,10 +127,10 @@ hr {
 """
 st.markdown(dark_style, unsafe_allow_html=True)
 
-# 3. Top Banner / Cover Photo
+# 3. Top Banner / Cover Photo (Stretches edge-to-edge)
 st.image("logo.png", use_container_width=True)
 
-# 4. Main Body Content Wrapper
+# 4. Main Body Content Wrapper (Applies clean spacing from the sidebar)
 st.markdown('<div class="main-content">', unsafe_allow_html=True)
 
 # Main Title & Subtitle
@@ -539,7 +540,9 @@ with st.expander(
     if res["cond2"]:
       st.markdown("✔️ **Condition 2 Met:** Lowest cube meets the minimum limit.")
     else:
-      st.markdown("❌ **Condition 2 Failed:** Lowest cube is below the minimum limit.")
+      st.markdown(
+          "❌ **Condition 2 Failed:** Lowest cube is below the minimum limit."
+      )
 
     st.markdown("---")
 
