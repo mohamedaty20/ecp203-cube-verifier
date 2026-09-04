@@ -14,7 +14,7 @@ st.set_page_config(
 # 2. Custom Styling (Navy Blue Sidebar & Full-Width Layout)
 dark_style = """
 <style>
-/* Removes top/horizontal margins so cover image stretches full width */
+/* Remove top padding for the main container */
 .block-container {
     padding-top: 0rem !important;
     padding-bottom: 2rem !important;
@@ -23,21 +23,22 @@ dark_style = """
     max-width: 100% !important;
 }
 
-/* Inner padding for main body content */
+/* Ensure top banner/logo scales full width */
+[data-testid="stImage"] {
+    width: 100% !important;
+}
+
+/* Add clear horizontal spacing between the sidebar and main body text */
 .main-content {
-    padding-left: 3rem;
-    padding-right: 3rem;
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
 }
 
 /* Hide Streamlit default menu/footer but keep sidebar arrow visible */
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {background-color: transparent !important;}
-
-/* Main App Dark Background */
-.stApp {
-    background-color: #0E1117;
-    color: #FFFFFF;
+"""
 }
 
 /* Navy Blue Sidebar Styling */
