@@ -15,14 +15,23 @@ st.markdown(
 st.set_page_config(
     page_title="ECP 203 Concrete Cube Verifier",
     page_icon="🏗️",
-    layout="centered",
+    layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # Custom Dark & Navy Blue Styling
+# Custom Dark & Navy Blue Styling
 dark_style = """
     <style>
-    /* Hide Streamlit default footer/menu while keeping the sidebar toggle arrow visible */
+    /* Removes top and horizontal margins so the image touches the screen edges */
+    .block-container {
+        padding-top: 0rem !important;
+        padding-left: 0rem !important;
+        padding-right: 0rem !important;
+        max-width: 100% !important;
+    }
+
+    /* Hide Streamlit default menu/footer */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {background-color: transparent !important;}
@@ -31,6 +40,11 @@ dark_style = """
     .stApp {
         background-color: #0E1117;
         color: #FFFFFF;
+    }
+
+    /* Rest of your styles below... */
+    </style>
+"""
     }
     
     /* Navy Blue Sidebar Styling */
