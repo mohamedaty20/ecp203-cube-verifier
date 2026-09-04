@@ -124,12 +124,16 @@ hr {
     border-color: #262730 !important;
 }
 
-/* Force complete dark background removal for white table cards and wrappers */
-[data-testid="stDataFrame"] {
+/* Comprehensive override to completely eliminate white background containers on tables/dataframes */
+[data-testid="stDataFrame"], [data-testid="stTable"], div[data-baseweb="card"] {
     background-color: #1B2A4A !important;
 }
-div[data-baseweb="card"], div[data-testid="stTable"] {
+div[data-testid="stDataFrame"] > div {
     background-color: #1B2A4A !important;
+}
+.dataframe {
+    background-color: #1B2A4A !important;
+    color: #FFFFFF !important;
 }
 </style>
 """
@@ -377,7 +381,7 @@ with tabs[3]:
       cube_vals = cubes_7 if stage_name == "7 Days" else (cubes_14 if stage_name == "14 Days" else cubes_28)
       vals_str = ", ".join([str(v) for v in cube_vals])
       
-      # Fixed plain-text markdown strings to avoid raw python backslash interpretation bugs in st.markdown
+      # Fixed plain-text values using clean unicode instead of broken raw code
       cond_check_str = "PASS ✅" if res['cond1'] else "FAIL ❌"
       min_check_str = "PASS ✅" if res['cond2'] else "FAIL ❌"
       
@@ -393,7 +397,7 @@ with tabs[3]:
   - Final $f_{{cu}} = \\max({res['fcu_calc_1']:.2f}, {res['fcu_calc_2']:.2f}) = \\mathbf{{{res['fcu_char']:.2f}\\text{{ N/mm²}}}}$
 * **Step 4: Target & Compliance Check:**
   - Required Target ($f_{{target}}$): ${res['target_ratio']} \\times {fcu_spec} = {res['stage_target_fcu']:.2f}$ N/mm²
-  - Characteristic Check ($f_{{cu}} \\ge f_{{target}}$): `{res['fcu_char']:.2f} \\ge {res['stage_target_fcu']:.2f}` $\\rightarrow$ **{cond_check_str}**
+  - Characteristic Check ($f_{{cu}} \\ge f_{{target}}$): `{res['fcu_char']:.2f} ≥ {res['stage_target_fcu']:.2f}` $\\rightarrow$ **{cond_check_str}**
   - Min Individual Limit ($0.85 \\times f_{{target}}$): `{res['min_threshold']:.2f} N/mm²` (Minimum measured: `{res['min']} N/mm²`) $\\rightarrow$ **{min_check_str}**
       """)
       st.markdown("---")
