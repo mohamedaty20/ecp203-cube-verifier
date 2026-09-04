@@ -199,7 +199,6 @@ mix_audit_rows = [
 ]
 df_mix_audit = pd.DataFrame(mix_audit_rows)
 
-
 # Input Mode Selector for Cubes
 st.header("1. Input Cube Crushing Results (N/mm²)")
 input_method = st.radio("Choose Input Method:", ["Manual Entry", "Upload Excel File (.xlsx)"], horizontal=True)
@@ -263,7 +262,7 @@ if not (cubes_7 or cubes_14 or cubes_28):
   st.warning("⚠️ Please provide cube strength data for at least one testing age.")
   st.stop()
 
-# Statistical analysis function
+# Statistical analysis function with detailed formulas/steps tracked
 def analyze_stage(cube_list, age_name, target_ratio):
   if not cube_list or len(cube_list) < 3:
     return None
@@ -306,10 +305,10 @@ with col_mix2:
 
 # Results Display
 st.markdown("---")
-st.header("3. Cube Compliance Summaries (7, 14 & 28 Days)")
-tabs = st.tabs(["**7-Day Stage**", "**14-Day Stage**", "**28-Day Stage**"])
+st.header("3. Cube Compliance Summaries & Detailed Calculation Sheets")
+tabs = st.tabs(["**7-Day Stage**", "**14-Day Stage**", "**28-Day Stage**", "**📐 Detailed Calculation Formulas & Methodology**"])
 
-for idx, (stage_label, tab) in enumerate(zip(["7 Days", "14 Days", "28 Days"], tabs)):
+for idx, (stage_label, tab) in enumerate(zip(["7 Days", "14 Days", "28 Days"], tabs[:3])):
   with tab:
     res = stages_data[stage_label]
     if res is None:
@@ -326,6 +325,29 @@ for idx, (stage_label, tab) in enumerate(zip(["7 Days", "14 Days", "28 Days"], t
         st.success(f"✅ **PASS ({stage_label}):** Compliant with ECP 203.")
       else:
         st.error(f"❌ **FAIL ({stage_label}):** Non-compliant with ECP 203.")
+
+with tabs[3]:
+  st.subheader("📐 ECP 203 Statistical Evaluation Formulas & Calculation Sheet")
+  st.markdown("""
+  According to the **Egyptian Code of Practice (ECP 203)**, concrete cube results are evaluated statistically using the following equations:
+  
+  1. **Arithmetic Mean Strength ($f_m$):**
+     $$f_m = \\frac{\\sum x_i}{n}$$
+     *Where $x_i$ represents individual cube crushing values and $n$ is the total sample count.*
+
+  2. **Standard Deviation ($s$):**
+     $$s = \\sqrt{\\frac{\\sum (x_i - f_m)^2}{n - 1}}$$
+
+  3. **Characteristic Strength ($f_{cu}$):**
+     The characteristic strength is taken as the maximum value between:
+     - $f_{cu, 1} = f_m - (k \\cdot s)$ *(where $k = 1.91$ for $n < 30$, or $1.64$ for $n \\ge 30$)*
+     - $f_{cu, 2} = 0.85 \\cdot f_m$
+     $$f_{cu} = \\max(f_{cu, 1}, f_{cu, 2})$$
+
+  4. **Acceptance Criteria Conditions:**
+     - **Condition 1:** Characteristic strength $f_{cu} \\ge$ Required Specified Strength ($f_{cu,\text{target}}$).
+     - **Condition 2:** Every individual cube test result must satisfy: $x_i \\ge 0.85 \\cdot f_{cu,\text{target}}$.
+  """)
 
 # Visualizations Section
 st.markdown("---")
@@ -470,7 +492,7 @@ def generate_pdf_report(logo_bytes=None):
   story.append(Spacer(1, 4))
 
   # 3. Summary Results Table
-  story.append(Paragraph("<b>3. Cube Compliance Results Summary</b>", section_style))
+  story.append(Paragraph("<b>3. Cube Compliance Results Summary & Statistical Evaluation</b>", section_style))
   summary_headers = ["Stage", "n", "Target", "Req (MPa)", "Mean (MPa)", "StdDev", "fcu (MPa)", "Verdict"]
   summary_table_rows = [summary_headers]
   for r in summary_rows:
@@ -486,8 +508,20 @@ def generate_pdf_report(logo_bytes=None):
   story.append(t_summary)
   story.append(Spacer(1, 4))
 
-  # 4. Raw Individual Cubes Matrix Table (FIXED & INCLUDED)
-  story.append(Paragraph("<b>4. Raw Individual Cube Strengths Matrix & Sample Counts</b>", section_style))
+  # 4. Calculation Methodology Note
+  story.append(Paragraph("<b>4. ECP 203 Calculation Formulas & Methodology Sheet</b>", section_style))
+  calc_note_text = (
+      "<b>Formulas Applied:</b><br/>"
+      "• Mean Strength ($f_m$) = sum($x_i$) / n<br/>"
+      "• Standard Deviation ($s$) = sqrt( sum($x_i - f_m$)² / (n - 1) )<br/>"
+      "• Characteristic Strength ($f_{cu}$) = max( $f_m - k \\cdot s$, $0.85 \\cdot f_m$ ) [where $k = 1.91$ for $n < 30$]<br/>"
+      "• Acceptance Rule: $f_{cu} \\ge f_{cu,\text{target}}$ AND individual cube strength $x_i \\ge 0.85 \\cdot f_{cu,\text{target}}$."
+  )
+  story.append(Paragraph(calc_note_text, body_style))
+  story.append(Spacer(1, 4))
+
+  # 5. Raw Individual Cubes Matrix Table
+  story.append(Paragraph("<b>5. Raw Individual Cube Strengths Matrix & Sample Counts</b>", section_style))
   raw_headers = list(df_raw_cubes.columns)
   raw_table_rows = [raw_headers]
   for idx, row in df_raw_cubes.iterrows():
@@ -509,8 +543,8 @@ def generate_pdf_report(logo_bytes=None):
   story.append(t_raw)
   story.append(Spacer(1, 4))
 
-  # 5. Sign-Off Block
-  story.append(Paragraph("<b>5. Engineering Sign-Off & Approvals</b>", section_style))
+  # 6. Sign-Off Block
+  story.append(Paragraph("<b>6. Engineering Sign-Off & Approvals</b>", section_style))
   sign_cell_1 = Paragraph(f"<b>Prepared By:</b><br/>{display_engineer_name}<br/>Sign: _________", body_style)
   sign_cell_2 = Paragraph("<b>Checked By (QA/QC):</b><br/>Name: _________<br/>Sign: _________", body_style)
   sign_cell_3 = Paragraph("<b>Approved (Consultant):</b><br/>Name: _________<br/>Stamp: [ Seal ]", body_style)
