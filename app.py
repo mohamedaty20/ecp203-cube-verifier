@@ -30,7 +30,7 @@ from reportlab.platypus import (
     Image as ReportLabImage,
 )
 
-# FPDF for AI Lab Report Audit PDF exports (aliased to avoid collision with ReportLab Image)
+# FPDF for AI Lab Report Audit PDF exports
 from fpdf import FPDF
 
 # --- 1. PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
@@ -41,174 +41,12 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# --- APP SCREEN NAVIGATION SELECTOR ---
-app_mode = st.radio(
-    "📱 App Screen Navigation:",
-    [
-        "📊 Verifier Dashboard",
-        "🤖 AI General Engineering Auditor",
-        "🔍 Crack & Defect Diagnostic",
-        "📖 ECP 203 Official Formulas & Site Instructions Handbook",
-    ],
-    horizontal=True,
-)
-st.markdown("---")
-
-# --- AI AUDITOR PDF CLASS ---
-class AuditPDFReport(FPDF):
-    def header(self):
-        self.set_font('helvetica', 'B', 14)
-        self.cell(0, 10, 'ECP 203 General Engineering Audit & Compliance Review', 0, 1, 'C')
-        self.ln(5)
-
-    def footer(self):
-        self.set_y(-15)
-        self.set_font('helvetica', 'I', 8)
-        self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
-
-def run_ai_auditor_module():
-    st.subheader("🤖 ECP 203 General Engineering AI Auditor")
-    st.write("Upload any structural engineering document, drawing spec, mix design, inspection sheet, or photo/image. The AI will audit it comprehensively against Egyptian Code of Practice (ECP 203) standards.")
-    
-    # Sidebar parameter for AI audit focus
-    audit_focus = st.sidebar.selectbox("Engineering Audit Focus", [
-        "General Structural Compliance (ECP 203)",
-        "Reinforcement & Steel Detailing Specs",
-        "Mix Design, Admixtures & Batching Parameters",
-        "Site Pouring, Curing & Formwork Procedures",
-        "Non-Conformance Report (NCR) Technical Review"
-    ])
-
-    # File Uploader supporting PDFs and image formats
-    uploaded_file = st.file_uploader("Upload Engineering Document / Photo (PDF, PNG, JPG, JPEG)", type=["pdf", "png", "jpg", "jpeg"])
-
-    if uploaded_file is not None:
-        file_extension = uploaded_file.name.split('.')[-1].lower()
-        st.info(f"Uploaded File: {uploaded_file.name}")
-
-        if st.button("Run Comprehensive ECP 203 Audit"):
-            with st.spinner("Processing file and running engineering AI audit..."):
-                try:
-                    # Initialize Gemini Client using Streamlit secrets or environment variables
-                    api_key = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY"))
-                    if not api_key:
-                        st.error("⚠️ GEMINI_API_KEY is not configured in your Streamlit secrets or environment variables.")
-                        return
-
-                    client = genai.Client(api_key=api_key)
-                    
-                    # Broadened prompt requesting the 3-column structured compliance output
-                    prompt = f"""
-                    You are an expert senior civil quality control and structural consultant specialized in the Egyptian Code of Practice (ECP 203) for reinforced concrete structures.
-                    Analyze the provided engineering document, technical data sheet, specifications, or image with a focus on: {audit_focus}.
-                    
-                    Perform a rigorous technical audit checking:
-                    1. Compliance with ECP 203 clauses, limits, material specifications, and execution rules relevant to the submitted content.
-                    2. Identification of any technical discrepancies, code violations, potential structural risks, or missing data requirements.
-                    3. Detailed engineering feedback addressing the specific scope of the uploaded document or image.
-                    4. Professional recommendations, corrective actions, and required next steps for the site engineering/QC team.
-
-                    CRITICAL REQUIREMENT: In addition to your detailed text report, you MUST provide a structured markdown table at the very end of your response containing exactly 3 columns:
-                    Column 1: "Accepted / Within ECP 203 Limits" (Details of what matches code requirements).
-                    Column 2: "Not Accepted / Violations Found" (Exact corresponding non-compliant text, values, or findings from the review).
-                    Column 3: "Recommendations to Fix" (Specific corrective engineering steps required to make it fully compliant with ECP 203).
-                    """
-
-                    contents = []
-                    if file_extension == 'pdf':
-                        pdf_reader = pypdf.PdfReader(uploaded_file)
-                        extracted_text = ""
-                        for page in pdf_reader.pages:
-                            page_text = page.extract_text()
-                            if page_text:
-                                extracted_text += page_text + "\n"
-
-                        if not extracted_text.strip():
-                            st.error("⚠️ Could not extract text from this PDF. It might be scanned as an image. Please upload it directly as an image file (PNG/JPG) instead.")
-                            return
-                        contents = [prompt, f"Extracted PDF Text:\n{extracted_text}"]
-                    else:
-                        image_part = types.Part.from_bytes(
-                            data=uploaded_file.getvalue(),
-                            mime_type=uploaded_file.type
-                        )
-                        contents = [prompt, image_part]
-
-                    response = client.models.generate_content(
-                        model="gemini-3.5-flash-lite",
-                        contents=contents,
-                        config=types.GenerateContentConfig(
-                            thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW)
-                        )
-                    )
-                    
-                    audit_result = response.text
-                    st.success("Audit Completed Successfully!")
-                    st.markdown("### 📋 Engineering Audit Findings & Compliance Breakdown")
-                    st.markdown(audit_result)
-
-                    # Generate PDF Report for Audit
-                    pdf = AuditPDFReport()
-                    pdf.add_page()
-                    pdf.set_font("helvetica", size=10)
-                    
-                    clean_text = audit_result.encode('latin-1', 'replace').decode('latin-1')
-                    pdf.multi_cell(0, 8, clean_text)
-                    
-                    pdf_output_path = "ecp203_engineering_audit_report.pdf"
-                    pdf.output(pdf_output_path)
-
-                    with open(pdf_output_path, "rb") as pdf_file:
-                        st.download_button(
-                            label="📥 Download Audit Report (PDF)",
-                            data=pdf_file,
-                            file_name="ECP203_Engineering_Audit_Report.pdf",
-                            mime="application/pdf"
-                        )
-
-                except Exception as e:
-                    st.error(f"An error occurred during AI processing: {e}")
-
-# --- CRACK DEFECT ANALYZER MODULE ---
-def run_crack_defect_analyzer():
-    st.subheader("🔍 AI Concrete Crack & Surface Defect Diagnostic Tool")
-    st.write("Snap or upload a photo of site defects (cracks, honeycombing, spalling). The AI will diagnose structural severity and suggest ECP 203 compliant repairs.")
-    
-    defect_image = st.file_uploader("Upload Site Defect Photo", type=["png", "jpg", "jpeg"], key="crack_uploader")
-    
-    if defect_image is not None:
-        st.image(defect_image, caption="Uploaded Site Defect", use_container_width=True)
-        if st.button("Diagnose Defect & Get Repair Protocol"):
-            with st.spinner("Analyzing defect severity and ECP 203 repair guidelines..."):
-                try:
-                    api_key = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY"))
-                    client = genai.Client(api_key=api_key)
-                    
-                    prompt = """
-                    You are an expert structural forensic and concrete repair engineer. Analyze this site defect image.
-                    Provide a structured diagnostic report containing:
-                    1. **Defect Classification:** (e.g., Structural Crack, Plastic Shrinkage, Honeycombing, Corrosion Spalling)
-                    2. **Severity Assessment:** (Low, Medium, High Risk to Structural Integrity)
-                    3. **Root Cause Analysis:** (Why did this happen according to ECP execution rules?)
-                    4. **Repair Procedure:** (Step-by-step remediation method using approved materials like Sika/BASF products).
-                    """
-                    
-                    image_part = types.Part.from_bytes(data=defect_image.getvalue(), mime_type=defect_image.type)
-                    response = client.models.generate_content(
-                        model="gemini-3.5-flash-lite",
-                        contents=[prompt, image_part]
-                    )
-                    st.markdown("### 🛠️ Forensic Diagnosis & Repair Protocol")
-                    st.markdown(response.text)
-                except Exception as e:
-                    st.error(f"Error processing image: {e}")
-
 # --- 2. CUSTOM STYLING ---
 dark_style = """
 <style>
 .stApp {
     background-color: #031338 !important;
-    color: #121417 !important;
+    color: #FFFFFF !important;
 }
 .block-container {
     padding-top: 0rem !important;
@@ -245,18 +83,6 @@ section[data-testid="stSidebar"] h2,
 section[data-testid="stSidebar"] h3 {
     color: #FFFFFF !important;
     font-weight: bold !important;
-}
-button[aria-label="Close sidebar"], 
-button[aria-label="Open sidebar"] {
-    color: #FFFFFF !important;
-    background-color: #1B2A4A !important;
-}
-.author-credit {
-    color: #FFFFFF !important;
-    font-size: 1rem;
-    font-weight: bold;
-    margin-top: -15px;
-    margin-bottom: 15px;
 }
 p, span, label, div {
     color: #FFFFFF !important;
@@ -295,13 +121,6 @@ hr {
 [data-testid="stDataFrame"], [data-testid="stTable"], div[data-baseweb="card"] {
     background-color: #1B2A4A !important;
 }
-div[data-testid="stDataFrame"] > div {
-    background-color: #1B2A4A !important;
-}
-.dataframe {
-    background-color: #1B2A4A !important;
-    color: #FFFFFF !important;
-}
 .footer-container {
     background: linear-gradient(135deg, #1B2A4A 0%, #031338 100%);
     border: 1px solid #FF8C00;
@@ -312,7 +131,6 @@ div[data-testid="stDataFrame"] > div {
 }
 </style>
 """
-
 st.markdown(dark_style, unsafe_allow_html=True)
 
 # --- 3. TOP BANNER / COVER PHOTO ---
@@ -336,11 +154,24 @@ st.markdown(ticker_html, unsafe_allow_html=True)
 
 st.title("ECP 203 Concrete Acceptance & Mix Compliance Verifier")
 st.markdown(
-    '<p class="author-credit">Made by Eng. Mohamed Abd Al Aty</p>',
+    '<p style="color: #FFFFFF !important; font-size: 1rem; font-weight: bold; margin-top: -15px; margin-bottom: 15px;">Made by Eng. Mohamed Abd Al Aty</p>',
     unsafe_allow_html=True,
 )
 
-# Sidebar Configuration
+# --- APP SCREEN NAVIGATION SELECTOR ---
+app_mode = st.radio(
+    "📱 App Screen Navigation:",
+    [
+        "📊 Verifier Dashboard",
+        "🤖 AI General Engineering Auditor",
+        "🔍 Crack & Defect Diagnostic",
+        "📖 ECP 203 Official Formulas & Site Instructions Handbook",
+    ],
+    horizontal=True,
+)
+st.markdown("---")
+
+# --- SIDEBAR CONFIGURATION ---
 st.sidebar.header("PROJECT & BATCH DETAILS")
 project_name = st.sidebar.text_input("Project Name", value="", placeholder="Enter project name")
 pour_location = st.sidebar.text_input("Structural Element / Pour Location", "Slab Axis A1-C5")
@@ -368,7 +199,7 @@ st.sidebar.header("COMPANY BRANDING")
 company_logo_file = st.sidebar.file_uploader("Upload Company Logo (PNG/JPG)", type=["png", "jpg", "jpeg"])
 company_logo_bytes = company_logo_file.read() if company_logo_file else None
 
-# --- BATCH PLANT MIX DESIGN ECP 203 AUDIT LOGIC ---
+# --- MIX AUDIT CALCULATIONS ---
 max_allowed_wc = 0.45 if fcu_spec >= 30 else 0.50
 min_allowed_cement = 300.0
 max_allowed_temp = 35.0
@@ -400,17 +231,201 @@ mix_audit_rows = [
 ]
 df_mix_audit = pd.DataFrame(mix_audit_rows)
 
-# Input Mode Selector for Cubes (Used in Verifier Dashboard)
-cubes_7, cubes_14, cubes_28 = [], [], []
+# --- MODULE CLASSES & FUNCTIONS ---
+class AuditPDFReport(FPDF):
+    def header(self):
+        self.set_font('helvetica', 'B', 14)
+        self.cell(0, 10, 'ECP 203 General Engineering Audit & Compliance Review', 0, 1, 'C')
+        self.ln(5)
 
-def parse_input(text_str):
-    if not text_str.strip():
-        return []
-    return [float(x.strip()) for x in text_str.split(",") if x.strip() != ""]
+    def footer(self):
+        self.set_y(-15)
+        self.set_font('helvetica', 'I', 8)
+        self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
 
-if app_mode == "📊 Verifier Dashboard":
+def run_ai_auditor_module():
+    st.subheader("🤖 ECP 203 General Engineering AI Auditor")
+    st.write("Upload any structural engineering document, drawing spec, mix design, inspection sheet, or photo/image. The AI will audit it comprehensively against Egyptian Code of Practice (ECP 203) standards.")
+    
+    audit_focus = st.sidebar.selectbox("Engineering Audit Focus", [
+        "General Structural Compliance (ECP 203)",
+        "Reinforcement & Steel Detailing Specs",
+        "Mix Design, Admixtures & Batching Parameters",
+        "Site Pouring, Curing & Formwork Procedures",
+        "Non-Conformance Report (NCR) Technical Review"
+    ])
+
+    uploaded_file = st.file_uploader("Upload Engineering Document / Photo (PDF, PNG, JPG, JPEG)", type=["pdf", "png", "jpg", "jpeg"])
+
+    if uploaded_file is not None:
+        file_extension = uploaded_file.name.split('.')[-1].lower()
+        st.info(f"Uploaded File: {uploaded_file.name}")
+
+        if st.button("Run Comprehensive ECP 203 Audit"):
+            with st.spinner("Processing file and running engineering AI audit..."):
+                try:
+                    api_key = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY"))
+                    if not api_key:
+                        st.error("⚠️ GEMINI_API_KEY is not configured in your Streamlit secrets or environment variables.")
+                        return
+
+                    client = genai.Client(api_key=api_key)
+                    
+                    prompt = f"""
+                    You are an expert senior civil quality control and structural consultant specialized in the Egyptian Code of Practice (ECP 203) for reinforced concrete structures.
+                    Analyze the provided engineering document, technical data sheet, specifications, or image with a focus on: {audit_focus}.
+                    
+                    Perform a rigorous technical audit checking:
+                    1. Compliance with ECP 203 clauses, limits, material specifications, and execution rules relevant to the submitted content.
+                    2. Identification of any technical discrepancies, code violations, potential structural risks, or missing data requirements.
+                    3. Detailed engineering feedback addressing the specific scope of the uploaded document or image.
+                    4. Professional recommendations, corrective actions, and required next steps for the site engineering/QC team.
+
+                    CRITICAL REQUIREMENT: In addition to your detailed text report, you MUST provide a structured markdown table at the very end of your response containing exactly 3 columns:
+                    Column 1: "Accepted / Within ECP 203 Limits"
+                    Column 2: "Not Accepted / Violations Found"
+                    Column 3: "Recommendations to Fix"
+                    """
+
+                    contents = []
+                    if file_extension == 'pdf':
+                        pdf_reader = pypdf.PdfReader(uploaded_file)
+                        extracted_text = ""
+                        for page in pdf_reader.pages:
+                            page_text = page.extract_text()
+                            if page_text:
+                                extracted_text += page_text + "\n"
+
+                        if not extracted_text.strip():
+                            st.error("⚠️ Could not extract text from this PDF. Please upload it directly as an image file (PNG/JPG).")
+                            return
+                        contents = [prompt, f"Extracted PDF Text:\n{extracted_text}"]
+                    else:
+                        image_part = types.Part.from_bytes(
+                            data=uploaded_file.getvalue(),
+                            mime_type=uploaded_file.type
+                        )
+                        contents = [prompt, image_part]
+
+                    response = client.models.generate_content(
+                        model="gemini-3.5-flash-lite",
+                        contents=contents,
+                        config=types.GenerateContentConfig(
+                            thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW)
+                        )
+                    )
+                    
+                    audit_result = response.text
+                    st.success("Audit Completed Successfully!")
+                    st.markdown("### 📋 Engineering Audit Findings & Compliance Breakdown")
+                    st.markdown(audit_result)
+
+                    pdf = AuditPDFReport()
+                    pdf.add_page()
+                    pdf.set_font("helvetica", size=10)
+                    clean_text = audit_result.encode('latin-1', 'replace').decode('latin-1')
+                    pdf.multi_cell(0, 8, clean_text)
+                    
+                    pdf_output_path = "ecp203_engineering_audit_report.pdf"
+                    pdf.output(pdf_output_path)
+
+                    with open(pdf_output_path, "rb") as pdf_file:
+                        st.download_button(
+                            label="📥 Download Audit Report (PDF)",
+                            data=pdf_file,
+                            file_name="ECP203_Engineering_Audit_Report.pdf",
+                            mime="application/pdf"
+                        )
+
+                except Exception as e:
+                    st.error(f"An error occurred during AI processing: {e}")
+
+def run_crack_defect_analyzer():
+    st.subheader("🔍 AI Concrete Crack & Surface Defect Diagnostic Tool")
+    st.write("Snap or upload a photo of site defects (cracks, honeycombing, spalling). The AI will diagnose structural severity and suggest ECP 203 compliant repairs.")
+    
+    defect_image = st.file_uploader("Upload Site Defect Photo", type=["png", "jpg", "jpeg"], key="crack_uploader")
+    
+    if defect_image is not None:
+        st.image(defect_image, caption="Uploaded Site Defect", use_container_width=True)
+        if st.button("Diagnose Defect & Get Repair Protocol"):
+            with st.spinner("Analyzing defect severity and ECP 203 repair guidelines..."):
+                try:
+                    api_key = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY"))
+                    client = genai.Client(api_key=api_key)
+                    
+                    prompt = """
+                    You are an expert structural forensic and concrete repair engineer. Analyze this site defect image.
+                    Provide a structured diagnostic report containing:
+                    1. **Defect Classification:** (e.g., Structural Crack, Plastic Shrinkage, Honeycombing, Corrosion Spalling)
+                    2. **Severity Assessment:** (Low, Medium, High Risk to Structural Integrity)
+                    3. **Root Cause Analysis:** (Why did this happen according to ECP execution rules?)
+                    4. **Repair Procedure:** (Step-by-step remediation method using approved materials).
+                    """
+                    
+                    image_part = types.Part.from_bytes(data=defect_image.getvalue(), mime_type=defect_image.type)
+                    response = client.models.generate_content(
+                        model="gemini-3.5-flash-lite",
+                        contents=[prompt, image_part]
+                    )
+                    st.markdown("### 🛠️ Forensic Diagnosis & Repair Protocol")
+                    st.markdown(response.text)
+                except Exception as e:
+                    st.error(f"Error processing image: {e}")
+
+# --- CONDITIONAL ROUTING BASED ON APP NAVIGATION SELECTION ---
+if app_mode == "🤖 AI General Engineering Auditor":
+    run_ai_auditor_module()
+
+elif app_mode == "🔍 Crack & Defect Diagnostic":
+    run_crack_defect_analyzer()
+
+elif app_mode == "📖 ECP 203 Official Formulas & Site Instructions Handbook":
+    st.header("📖 Egyptian Code of Practice (ECP 203) - Technical Reference Handbook")
+    st.markdown("Professional guidance notes, acceptance criteria formulas, and site quality control protocols.")
+
+    tab_hb1, tab_hb2, tab_hb3 = st.tabs(["🏗️ 1. Characteristic Strength Formulas", "⚖️ 2. Mix Proportioning & Limits", "📋 3. Site Inspection Instructions"])
+
+    with tab_hb1:
+        st.subheader("Statistical Acceptance Criteria & Formulas (ECP 203)")
+        st.markdown("""
+        According to the Egyptian Code for Design and Construction of Reinforced Concrete Structures (**ECP 203**), structural concrete acceptance is evaluated based on standard cube crushing tests (150mm cubes tested at 28 days unless specified otherwise).
+
+        * **1. Arithmetic Mean Strength ($f_m$):**
+          $$f_m = \\frac{\\sum_{i=1}^{n} x_i}{n}$$
+        * **2. Standard Deviation ($s$):**
+          $$s = \\sqrt{\\frac{\\sum_{i=1}^{n} (x_i - f_m)^2}{n - 1}}$$
+        * **3. Characteristic Compressive Strength ($f_{cu}$):**
+          $$f_{cu} = \\max\\left(f_m - k \\cdot s,\\; 0.85 \\cdot f_m\\right)$$
+          *(Note: Factor $k = 1.91$ for $n < 30$, and $1.64$ for $n \\ge 30$)*
+        """)
+
+    with tab_hb2:
+        st.subheader("Mix Design Limits & Compliance Thresholds (ECP 203)")
+        st.markdown("""
+        * **Water-Cement Ratio (W/C):** Max 0.45 for grade $\\ge 30\\text{ N/mm}^2$; Max 0.50 for lower grades.
+        * **Minimum Cement Content:** At least $300\\text{ kg/m}^3$ for durability.
+        * **Fresh Concrete Temperature:** Must not exceed $35\\text{ °C}$ during placement.
+        """)
+
+    with tab_hb3:
+        st.subheader("Site Quality Control Guidelines")
+        st.markdown("""
+        1. **Sampling Frequency:** At least one set of 6 cubes per $100\\text{ m}^3$ or structural pour per shift.
+        2. **Curing:** Immediate water curing at $20 \\pm 2\\text{ °C}$ until testing age.
+        """)
+
+else:
+    # --- VERIFIER DASHBOARD MODE ---
     st.header("1. Input Cube Crushing Results (N/mm²)")
     input_method = st.radio("Choose Input Method:", ["Manual Entry", "Upload Excel File (.xlsx)"], horizontal=True)
+
+    cubes_7, cubes_14, cubes_28 = [], [], []
+
+    def parse_input(text_str):
+        if not text_str.strip():
+            return []
+        return [float(x.strip()) for x in text_str.split(",") if x.strip() != ""]
 
     if input_method == "Manual Entry":
         st.info("💡 Enter strength values separated by commas.")
@@ -460,86 +475,34 @@ if app_mode == "📊 Verifier Dashboard":
             st.warning("👈 Please upload an Excel sheet or switch to Manual Entry to continue.")
             st.stop()
 
-    if not (cubes_7 or cubes_14 or cubes_28):
-        st.warning("⚠️ Please provide cube strength data for at least one testing age.")
-        st.stop()
+    def analyze_stage(cube_list, age_name, target_ratio):
+        if not cube_list or len(cube_list) < 3:
+            return None
+        n_val = len(cube_list)
+        mean_val = float(np.mean(cube_list))
+        s_val = float(np.std(cube_list, ddof=1)) if n_val > 1 else 0.0
+        k_val = 1.91 if n_val < 30 else 1.64
+        fcu_calc_1 = mean_val - (k_val * s_val)
+        fcu_calc_2 = 0.85 * mean_val
+        fcu_char = max(fcu_calc_1, fcu_calc_2)
+        min_val = min(cube_list)
+        stage_target_fcu = target_ratio * fcu_spec
+        cond1 = fcu_char >= stage_target_fcu
+        cond2 = min_val >= (0.85 * stage_target_fcu)
+        is_compliant = cond1 and cond2
+        return {
+            "age_name": age_name, "n": n_val, "mean": mean_val, "s": s_val, "k": k_val,
+            "fcu_calc_1": fcu_calc_1, "fcu_calc_2": fcu_calc_2, "fcu_char": fcu_char,
+            "min": min_val, "target_ratio": target_ratio, "stage_target_fcu": stage_target_fcu,
+            "min_threshold": 0.85 * stage_target_fcu, "cond1": cond1, "cond2": cond2, "is_compliant": is_compliant
+        }
 
-# Statistical analysis function
-def analyze_stage(cube_list, age_name, target_ratio):
-    if not cube_list or len(cube_list) < 3:
-        return None
-    n_val = len(cube_list)
-    mean_val = float(np.mean(cube_list))
-    s_val = float(np.std(cube_list, ddof=1)) if n_val > 1 else 0.0
-    k_val = 1.91 if n_val < 30 else 1.64
-    fcu_calc_1 = mean_val - (k_val * s_val)
-    fcu_calc_2 = 0.85 * mean_val
-    fcu_char = max(fcu_calc_1, fcu_calc_2)
-    min_val = min(cube_list)
-    stage_target_fcu = target_ratio * fcu_spec
-    cond1 = fcu_char >= stage_target_fcu
-    cond2 = min_val >= (0.85 * stage_target_fcu)
-    is_compliant = cond1 and cond2
-    return {
-        "age_name": age_name, "n": n_val, "mean": mean_val, "s": s_val, "k": k_val,
-        "fcu_calc_1": fcu_calc_1, "fcu_calc_2": fcu_calc_2, "fcu_char": fcu_char,
-        "min": min_val, "target_ratio": target_ratio, "stage_target_fcu": stage_target_fcu,
-        "min_threshold": 0.85 * stage_target_fcu, "cond1": cond1, "cond2": cond2, "is_compliant": is_compliant
+    stages_data = {
+        "7 Days": analyze_stage(cubes_7, "7-Day Stage", 0.70),
+        "14 Days": analyze_stage(cubes_14, "14-Day Stage", 0.85),
+        "28 Days": analyze_stage(cubes_28, "28-Day Stage", 1.00),
     }
 
-stages_data = {
-    "7 Days": analyze_stage(cubes_7, "7-Day Stage", 0.70),
-    "14 Days": analyze_stage(cubes_14, "14-Day Stage", 0.85),
-    "28 Days": analyze_stage(cubes_28, "28-Day Stage", 1.00),
-}
-
-# --- ROUTING BASED ON SELECTED APP MODE ---
-if app_mode == "📖 ECP 203 Official Formulas & Site Instructions Handbook":
-    st.markdown("---")
-    st.header("📖 Egyptian Code of Practice (ECP 203) - Technical Reference Handbook")
-    st.markdown("Professional guidance notes, acceptance criteria formulas, and site quality control protocols.")
-
-    tab_hb1, tab_hb2, tab_hb3 = st.tabs(["🏗️ 1. Characteristic Strength Formulas", "⚖️ 2. Mix Proportioning & Limits", "📋 3. Site Inspection Instructions"])
-
-    with tab_hb1:
-        st.subheader("Statistical Acceptance Criteria & Formulas (ECP 203)")
-        st.markdown("""
-        According to the Egyptian Code for Design and Construction of Reinforced Concrete Structures (**ECP 203**), structural concrete acceptance is evaluated based on standard cube crushing tests (150mm cubes tested at 28 days unless specified otherwise).
-
-        * **1. Arithmetic Mean Strength ($f_m$):**
-          $$f_m = \\frac{\\sum_{i=1}^{n} x_i}{n}$$
-        * **2. Standard Deviation ($s$):**
-          $$s = \\sqrt{\\frac{\\sum_{i=1}^{n} (x_i - f_m)^2}{n - 1}}$$
-        * **3. Characteristic Compressive Strength ($f_{cu}$):**
-          $$f_{cu} = \\max\\left(f_m - k \\cdot s,\\; 0.85 \\cdot f_m\\right)$$
-          *(Note: Factor $k = 1.91$ for $n < 30$, and $1.64$ for $n \\ge 30$)*
-        """)
-
-    with tab_hb2:
-        st.subheader("Mix Design Limits & Compliance Thresholds (ECP 203)")
-        st.markdown("""
-        * **Water-Cement Ratio (W/C):** Max 0.45 for grade $\\ge 30\\text{ N/mm}^2$; Max 0.50 for lower grades.
-        * **Minimum Cement Content:** At least $300\\text{ kg/m}^3$ for durability.
-        * **Fresh Concrete Temperature:** Must not exceed $35\\text{ °C}$ during placement.
-        """)
-
-    with tab_hb3:
-        st.subheader("Site Quality Control Guidelines")
-        st.markdown("""
-        1. **Sampling Frequency:** At least one set of 6 cubes per $100\\text{ m}^3$ or structural pour per shift.
-        2. **Curing:** Immediate water curing at $20 \\pm 2\\text{ °C}$ until testing age.
-        """)
-
-elif app_mode == "🤖 AI General Engineering Auditor":
-    st.markdown("---")
-    run_ai_auditor_module()
-
-elif app_mode == "🔍 Crack & Defect Diagnostic":
-    st.markdown("---")
-    run_crack_defect_analyzer()
-
-else:
-    # --- VERIFIER DASHBOARD MODE ---
     st.markdown("---")
     st.header("2. Batch Plant Mix Design ECP 203 Compliance Audit")
 
@@ -654,191 +617,181 @@ else:
             fig_lines.update_layout(plot_bgcolor="#031338", paper_bgcolor="#1B2A4A", font=dict(color="#FFFFFF", size=10))
             st.plotly_chart(fig_lines, use_container_width=True)
 
-# DataFrames for Export
-display_project_name = project_name if project_name.strip() else "Unnamed Project"
-display_engineer_name = engineer_name if engineer_name.strip() else "Not Specified"
-formatted_report_date = report_date.strftime("%Y-%m-%d")
-formatted_casting_date = casting_date.strftime("%Y-%m-%d")
+    # DataFrames for Export
+    display_project_name = project_name if project_name.strip() else "Unnamed Project"
+    display_engineer_name = engineer_name if engineer_name.strip() else "Not Specified"
+    formatted_report_date = report_date.strftime("%Y-%m-%d")
+    formatted_casting_date = casting_date.strftime("%Y-%m-%d")
 
-overview_data = [
-    {"Parameter": "Project Name", "Details": display_project_name},
-    {"Parameter": "Structural Element / Pour Location", "Details": pour_location},
-    {"Parameter": "Specified 28-Day Grade (fcu)", "Details": f"{fcu_spec} N/mm²"},
-    {"Parameter": "Mixer Truck Number", "Details": mixer_truck_no},
-    {"Parameter": "Batch Ticket ID", "Details": batch_ticket_id},
-    {"Parameter": "Casting Date", "Details": formatted_casting_date},
-    {"Parameter": "Cement Content", "Details": f"{cement_content} kg/m³"},
-    {"Parameter": "Water Content", "Details": f"{water_content} kg/m³"},
-    {"Parameter": "Water-Cement Ratio (W/C)", "Details": f"{wc_ratio:.2f}"},
-    {"Parameter": "Fresh Concrete Slump", "Details": f"{slump_value} mm"},
-    {"Parameter": "Fresh Concrete Temperature", "Details": f"{concrete_temp} °C"},
-    {"Parameter": "Engineer Name", "Details": display_engineer_name},
-    {"Parameter": "Report Date", "Details": formatted_report_date},
-    {"Parameter": "Standard Specification", "Details": "Egyptian Code of Practice (ECP 203)"},
-]
-df_overview = pd.DataFrame(overview_data)
+    overview_data = [
+        {"Parameter": "Project Name", "Details": display_project_name},
+        {"Parameter": "Structural Element / Pour Location", "Details": pour_location},
+        {"Parameter": "Specified 28-Day Grade (fcu)", "Details": f"{fcu_spec} N/mm²"},
+        {"Parameter": "Mixer Truck Number", "Details": mixer_truck_no},
+        {"Parameter": "Batch Ticket ID", "Details": batch_ticket_id},
+        {"Parameter": "Casting Date", "Details": formatted_casting_date},
+        {"Parameter": "Cement Content", "Details": f"{cement_content} kg/m³"},
+        {"Parameter": "Water Content", "Details": f"{water_content} kg/m³"},
+        {"Parameter": "Water-Cement Ratio (W/C)", "Details": f"{wc_ratio:.2f}"},
+        {"Parameter": "Fresh Concrete Slump", "Details": f"{slump_value} mm"},
+        {"Parameter": "Fresh Concrete Temperature", "Details": f"{concrete_temp} °C"},
+        {"Parameter": "Engineer Name", "Details": display_engineer_name},
+        {"Parameter": "Report Date", "Details": formatted_report_date},
+        {"Parameter": "Standard Specification", "Details": "Egyptian Code of Practice (ECP 203)"},
+    ]
+    df_overview = pd.DataFrame(overview_data)
 
-max_len = max(len(cubes_7), len(cubes_14), len(cubes_28), 1)
-raw_matrix = {
-    "Cube Sample #": list(range(1, max_len + 1)),
-    "7-Day Strength (N/mm²)": cubes_7 + [None] * (max_len - len(cubes_7)),
-    "14-Day Strength (N/mm²)": cubes_14 + [None] * (max_len - len(cubes_14)),
-    "28-Day Strength (N/mm²)": cubes_28 + [None] * (max_len - len(cubes_28)),
-}
-df_raw_cubes = pd.DataFrame(raw_matrix)
+    max_len = max(len(cubes_7), len(cubes_14), len(cubes_28), 1)
+    raw_matrix = {
+        "Cube Sample #": list(range(1, max_len + 1)),
+        "7-Day Strength (N/mm²)": cubes_7 + [None] * (max_len - len(cubes_7)),
+        "14-Day Strength (N/mm²)": cubes_14 + [None] * (max_len - len(cubes_14)),
+        "28-Day Strength (N/mm²)": cubes_28 + [None] * (max_len - len(cubes_28)),
+    }
+    df_raw_cubes = pd.DataFrame(raw_matrix)
 
-summary_rows = []
-for stage_key in ["7 Days", "14 Days", "28 Days"]:
-    res = stages_data[stage_key]
-    if res:
-        summary_rows.append({
-            "Testing Stage": stage_key, "Sample Count (n)": res["n"], "Target Ratio": f"{int(res['target_ratio']*100)}%",
-            "Target Strength (N/mm²)": round(res["stage_target_fcu"], 2), "Mean Strength (N/mm²)": round(res["mean"], 2),
-            "Standard Deviation (N/mm²)": round(res["s"], 2), "Margin Factor (k)": res["k"],
-            "Calculated fcu (N/mm²)": round(res["fcu_char"], 2), "Min Individual Cube (N/mm²)": round(res["min"], 2),
-            "Compliance Verdict": "PASS" if res["is_compliant"] else "FAIL"
-        })
-df_summary_table = pd.DataFrame(summary_rows)
+    summary_rows = []
+    for stage_key in ["7 Days", "14 Days", "28 Days"]:
+        res = stages_data[stage_key]
+        if res:
+            summary_rows.append({
+                "Testing Stage": stage_key, "Sample Count (n)": res["n"], "Target Ratio": f"{int(res['target_ratio']*100)}%",
+                "Target Strength (N/mm²)": round(res["stage_target_fcu"], 2), "Mean Strength (N/mm²)": round(res["mean"], 2),
+                "Standard Deviation (N/mm²)": round(res["s"], 2), "Margin Factor (k)": res["k"],
+                "Calculated fcu (N/mm²)": round(res["fcu_char"], 2), "Min Individual Cube (N/mm²)": round(res["min"], 2),
+                "Compliance Verdict": "PASS" if res["is_compliant"] else "FAIL"
+            })
+    df_summary_table = pd.DataFrame(summary_rows)
 
-# Excel Export Buffer
-excel_buffer = io.BytesIO()
-with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
-    df_overview.to_excel(writer, sheet_name="Project Overview & Metadata", index=False)
-    df_mix_audit.to_excel(writer, sheet_name="Mix Design Audit", index=False)
-    df_summary_table.to_excel(writer, sheet_name="Multi-Stage Results Summary", index=False)
-    df_raw_cubes.to_excel(writer, sheet_name="Raw Individual Cubes", index=False)
-excel_buffer.seek(0)
+    excel_buffer = io.BytesIO()
+    with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
+        df_overview.to_excel(writer, sheet_name="Project Overview & Metadata", index=False)
+        df_mix_audit.to_excel(writer, sheet_name="Mix Design Audit", index=False)
+        df_summary_table.to_excel(writer, sheet_name="Multi-Stage Results Summary", index=False)
+        df_raw_cubes.to_excel(writer, sheet_name="Raw Individual Cubes", index=False)
+    excel_buffer.seek(0)
 
-# PDF Report Generation Function
-def generate_pdf_report(logo_bytes=None):
-    pdf_buffer = io.BytesIO()
-    doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
-    story = []
-    styles = getSampleStyleSheet()
+    def generate_pdf_report(logo_bytes=None):
+        pdf_buffer = io.BytesIO()
+        doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
+        story = []
+        styles = getSampleStyleSheet()
 
-    title_style = ParagraphStyle("DocTitle", parent=styles["Heading1"], fontSize=18, textColor=colors.HexColor("#1B2A4A"), spaceAfter=4, alignment=1)
-    subtitle_style = ParagraphStyle("DocSub", parent=styles["Normal"], fontSize=10, textColor=colors.HexColor("#000000"), spaceAfter=15, alignment=1)
-    section_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=11, textColor=colors.HexColor("#000000"), spaceBefore=8, spaceAfter=3)
-    body_style = ParagraphStyle("Body", parent=styles["Normal"], fontSize=8, textColor=colors.HexColor("#333333"), spaceAfter=3)
+        title_style = ParagraphStyle("DocTitle", parent=styles["Heading1"], fontSize=18, textColor=colors.HexColor("#1B2A4A"), spaceAfter=4, alignment=1)
+        subtitle_style = ParagraphStyle("DocSub", parent=styles["Normal"], fontSize=10, textColor=colors.HexColor("#000000"), spaceAfter=15, alignment=1)
+        section_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=11, textColor=colors.HexColor("#000000"), spaceBefore=8, spaceAfter=3)
+        body_style = ParagraphStyle("Body", parent=styles["Normal"], fontSize=8, textColor=colors.HexColor("#333333"), spaceAfter=3)
 
-    if logo_bytes:
-        try:
-            story.append(ReportLabImage(io.BytesIO(logo_bytes), width=120, height=45))
-            story.append(Spacer(1, 4))
-        except Exception:
-            pass
+        if logo_bytes:
+            try:
+                story.append(ReportLabImage(io.BytesIO(logo_bytes), width=120, height=45))
+                story.append(Spacer(1, 4))
+            except Exception:
+                pass
 
-    story.append(Paragraph("ECP 203 Concrete Acceptance & Mix Compliance Report", title_style))
-    story.append(Paragraph(f"Multi-Stage Verification & Mix Audit | Report Date: {formatted_report_date}", subtitle_style))
-    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#1B2A4A"), spaceAfter=6))
+        story.append(Paragraph("ECP 203 Concrete Acceptance & Mix Compliance Report", title_style))
+        story.append(Paragraph(f"Multi-Stage Verification & Mix Audit | Report Date: {formatted_report_date}", subtitle_style))
+        story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#1B2A4A"), spaceAfter=6))
 
-    # Overview Table
-    story.append(Paragraph("<b>1. Project Overview & Traceability Metadata</b>", section_style))
-    overview_data_list = [["Parameter", "Details"]] + df_overview.values.tolist()
-    t_overview = Table(overview_data_list, colWidths=[180, 360])
-    t_overview.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE", (0, 0), (-1, -1), 8),
-        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
-        ("BACKGROUND", (0, 1), (-1, -1), colors.HexColor("#F9F9F9")),
-    ]))
-    story.append(t_overview)
-    story.append(Spacer(1, 4))
+        story.append(Paragraph("<b>1. Project Overview & Traceability Metadata</b>", section_style))
+        overview_data_list = [["Parameter", "Details"]] + df_overview.values.tolist()
+        t_overview = Table(overview_data_list, colWidths=[180, 360])
+        t_overview.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, -1), 8),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
+            ("BACKGROUND", (0, 1), (-1, -1), colors.HexColor("#F9F9F9")),
+        ]))
+        story.append(t_overview)
+        story.append(Spacer(1, 4))
 
-    # Mix Audit Table
-    story.append(Paragraph("<b>2. Batch Plant Mix Design ECP 203 Compliance Audit</b>", section_style))
-    mix_table_rows = [list(df_mix_audit.columns)] + df_mix_audit.values.tolist()
-    t_mix = Table(mix_table_rows, colWidths=[180, 120, 120, 120])
-    t_mix.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE", (0, 0), (-1, -1), 8),
-        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
-    ]))
-    story.append(t_mix)
-    story.append(Spacer(1, 4))
+        story.append(Paragraph("<b>2. Batch Plant Mix Design ECP 203 Compliance Audit</b>", section_style))
+        mix_table_rows = [list(df_mix_audit.columns)] + df_mix_audit.values.tolist()
+        t_mix = Table(mix_table_rows, colWidths=[180, 120, 120, 120])
+        t_mix.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, -1), 8),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
+        ]))
+        story.append(t_mix)
+        story.append(Spacer(1, 4))
 
-    # Summary Table
-    story.append(Paragraph("<b>3. Cube Compliance Results Summary & Statistical Evaluation</b>", section_style))
-    summary_headers = ["Stage", "n", "Target", "Req (MPa)", "Mean (MPa)", "StdDev", "fcu (MPa)", "Verdict"]
-    summary_table_rows = [summary_headers]
-    for r in summary_rows:
-        summary_table_rows.append([str(r["Testing Stage"]), str(r["Sample Count (n)"]), str(r["Target Ratio"]), str(r["Target Strength (N/mm²)"]), str(r["Mean Strength (N/mm²)"]), str(r["Standard Deviation (N/mm²)"]), str(r["Calculated fcu (N/mm²)"]), str(r["Compliance Verdict"])])
-    t_summary = Table(summary_table_rows, colWidths=[65, 30, 45, 60, 65, 55, 65, 115])
-    t_summary.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE", (0, 0), (-1, -1), 8),
-        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
-    ]))
-    story.append(t_summary)
-    story.append(Spacer(1, 4))
+        story.append(Paragraph("<b>3. Cube Compliance Results Summary & Statistical Evaluation</b>", section_style))
+        summary_headers = ["Stage", "n", "Target", "Req (MPa)", "Mean (MPa)", "StdDev", "fcu (MPa)", "Verdict"]
+        summary_table_rows = [summary_headers]
+        for r in summary_rows:
+            summary_table_rows.append([str(r["Testing Stage"]), str(r["Sample Count (n)"]), str(r["Target Ratio"]), str(r["Target Strength (N/mm²)"]), str(r["Mean Strength (N/mm²)"]), str(r["Standard Deviation (N/mm²)"]), str(r["Calculated fcu (N/mm²)"]), str(r["Compliance Verdict"])])
+        t_summary = Table(summary_table_rows, colWidths=[65, 30, 45, 60, 65, 55, 65, 115])
+        t_summary.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, -1), 8),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
+        ]))
+        story.append(t_summary)
+        story.append(Spacer(1, 4))
 
-    # Raw Cubes Matrix
-    story.append(Paragraph("<b>4. Raw Individual Cube Strengths Matrix & Sample Counts</b>", section_style))
-    raw_headers = list(df_raw_cubes.columns)
-    raw_table_rows = [raw_headers]
-    for idx, row in df_raw_cubes.iterrows():
-        raw_table_rows.append([
-            str(row["Cube Sample #"]),
-            str(row["7-Day Strength (N/mm²)"]) if pd.notna(row["7-Day Strength (N/mm²)"]) else "-",
-            str(row["14-Day Strength (N/mm²)"]) if pd.notna(row["14-Day Strength (N/mm²)"]) else "-",
-            str(row["28-Day Strength (N/mm²)"]) if pd.notna(row["28-Day Strength (N/mm²)"]) else "-"
-        ])
-    t_raw = Table(raw_table_rows, colWidths=[100, 146, 146, 148])
-    t_raw.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE", (0, 0), (-1, -1), 8),
-        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
-        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-    ]))
-    story.append(t_raw)
-    story.append(Spacer(1, 4))
+        story.append(Paragraph("<b>4. Raw Individual Cube Strengths Matrix & Sample Counts</b>", section_style))
+        raw_headers = list(df_raw_cubes.columns)
+        raw_table_rows = [raw_headers]
+        for idx, row in df_raw_cubes.iterrows():
+            raw_table_rows.append([
+                str(row["Cube Sample #"]),
+                str(row["7-Day Strength (N/mm²)"]) if pd.notna(row["7-Day Strength (N/mm²)"]) else "-",
+                str(row["14-Day Strength (N/mm²)"]) if pd.notna(row["14-Day Strength (N/mm²)"]) else "-",
+                str(row["28-Day Strength (N/mm²)"]) if pd.notna(row["28-Day Strength (N/mm²)"]) else "-"
+            ])
+        t_raw = Table(raw_table_rows, colWidths=[100, 146, 146, 148])
+        t_raw.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, -1), 8),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
+            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ]))
+        story.append(t_raw)
+        story.append(Spacer(1, 4))
 
-    # QR Code Generation
-    qr_data_content = f"ECP203_VERIFIED | Project: {display_project_name} | Location: {pour_location} | Ticket: {batch_ticket_id} | Date: {formatted_report_date} | Engineer: {display_engineer_name}"
-    qr = qrcode.QRCode(version=1, box_size=5, border=1)
-    qr.add_data(qr_data_content)
-    qr.make(fit=True)
-    qr_img = qr.make_image(fill_color="black", back_color="white")
-    
-    qr_buffer = io.BytesIO()
-    qr_img.save(qr_buffer, format="PNG")
-    qr_buffer.seek(0)
-    reportlab_qr_image = ReportLabImage(qr_buffer, width=65, height=65)
+        qr_data_content = f"ECP203_VERIFIED | Project: {display_project_name} | Location: {pour_location} | Ticket: {batch_ticket_id} | Date: {formatted_report_date} | Engineer: {display_engineer_name}"
+        qr = qrcode.QRCode(version=1, box_size=5, border=1)
+        qr.add_data(qr_data_content)
+        qr.make(fit=True)
+        qr_img = qr.make_image(fill_color="black", back_color="white")
+        
+        qr_buffer = io.BytesIO()
+        qr_img.save(qr_buffer, format="PNG")
+        qr_buffer.seek(0)
+        reportlab_qr_image = ReportLabImage(qr_buffer, width=65, height=65)
 
-    # Sign-Off Block
-    story.append(Paragraph("<b>5. Engineering Sign-Off & Approvals & Digital Verification</b>", section_style))
-    sign_cell_1 = Paragraph(f"<b>Prepared By:</b><br/>{display_engineer_name}<br/>Sign: _________", body_style)
-    sign_cell_2 = Paragraph("<b>Checked By (QA/QC):</b><br/>Name: _________<br/>Sign: _________", body_style)
-    sign_cell_3 = Paragraph("<b>Approved (Consultant):</b><br/>Name: _________<br/>Sign: _________", body_style)
-    qr_cell = [Paragraph("<b>Scan to Verify:</b>", body_style), reportlab_qr_image]
-    
-    t_sign = Table([[sign_cell_1, sign_cell_2, sign_cell_3, qr_cell]], colWidths=[140, 140, 140, 100])
-    t_sign.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F9F9F9")),
-        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
-        ("TOPPADDING", (0, 0), (-1, -1), 4),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-        ("ALIGN", (3, 0), (3, 0), "CENTER"),
-    ]))
-    story.append(t_sign)
+        story.append(Paragraph("<b>5. Engineering Sign-Off & Approvals & Digital Verification</b>", section_style))
+        sign_cell_1 = Paragraph(f"<b>Prepared By:</b><br/>{display_engineer_name}<br/>Sign: _________", body_style)
+        sign_cell_2 = Paragraph("<b>Checked By (QA/QC):</b><br/>Name: _________<br/>Sign: _________", body_style)
+        sign_cell_3 = Paragraph("<b>Approved (Consultant):</b><br/>Name: _________<br/>Sign: _________", body_style)
+        qr_cell = [Paragraph("<b>Scan to Verify:</b>", body_style), reportlab_qr_image]
+        
+        t_sign = Table([[sign_cell_1, sign_cell_2, sign_cell_3, qr_cell]], colWidths=[140, 140, 140, 100])
+        t_sign.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F9F9F9")),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            ("ALIGN", (3, 0), (3, 0), "CENTER"),
+        ]))
+        story.append(t_sign)
 
-    doc.build(story)
-    pdf_buffer.seek(0)
-    return pdf_buffer
+        doc.build(story)
+        pdf_buffer.seek(0)
+        return pdf_buffer
 
-if app_mode == "📊 Verifier Dashboard":
     pdf_data = generate_pdf_report(company_logo_bytes)
 
-    # Download Buttons Section
     col_btn1, col_btn2 = st.columns(2)
     with col_btn1:
         st.download_button(
