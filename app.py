@@ -101,17 +101,26 @@ textarea, input {
     border: 1px solid #FF8C00 !important;
 }
 
-/* FIX POINT 2: Fix Date Input & General Inputs Half-White Background Bug */
-div[data-baseweb="input"], div[data-baseweb="base-input"], div[data-baseweb="select"], div[data-baseweb="calendar"] {
+/* FIX: Complete Overrides for Date Inputs, Selectboxes, Calendars & Base Inputs to Remove White Blocks */
+div[data-baseweb="input"], div[data-baseweb="base-input"], div[data-baseweb="select"], div[data-baseweb="calendar"], div[data-baseweb="popover"], div[data-baseweb="menu"] {
     background-color: #1E222D !important;
     color: #FFFFFF !important;
 }
-div[data-baseweb="input"] input, .stDateInput input {
+div[data-baseweb="input"] input, .stDateInput input, div[data-baseweb="select"] span {
+    background-color: #1E222D !important;
+    color: #FFFFFF !important;
+}
+div[data-baseweb="select"] > div {
+    background-color: #1E222D !important;
+    border: 1px solid #FF8C00 !important;
+    color: #FFFFFF !important;
+}
+.stDateInput div, .stDateInput div[data-baseweb="input"] {
     background-color: #1E222D !important;
     color: #FFFFFF !important;
 }
 
-/* FIX POINT 3: Compact File Uploader Box & Clean Border Styling */
+/* Compact File Uploader Box & Clean Border Styling */
 [data-testid="stFileUploader"], div[data-baseweb="file-uploader"] {
     background-color: #1E222D !important;
     border: 1px solid #FF8C00 !important;
@@ -146,7 +155,7 @@ div.stButton > button:hover, div.stDownloadButton > button:hover {
     border: 2px solid #00BFFF !important;
 }
 
-/* FIX POINT 1: Enhanced Navigation Radio Labels & Main Tabs Text Size & Readability */
+/* Enhanced Navigation Radio Labels & Main Tabs Text Size & Readability */
 div[row-widget="stRadio"] label p, .stRadio div[data-baseweb="radio"] label span {
     font-size: 18px !important;
     font-weight: 800 !important;
@@ -339,23 +348,7 @@ def build_professional_pdf_footer_and_signatures(story, qr_img_buffer):
     ]))
     story.append(t_sign)
 
-class AuditPDFReport(FPDF):
-    def header(self):
-        pass
-    def footer(self):
-        self.set_y(-15)
-        self.set_font('helvetica', 'I', 8)
-        self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
-
-class CrackPDFReport(FPDF):
-    def header(self):
-        pass
-    def footer(self):
-        self.set_y(-15)
-        self.set_font('helvetica', 'I', 8)
-        self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
-
-# --- FIX POINT 4: AI AUDITOR & CRACK DIAGNOSTIC MODULES WITH FULL FILE UPLOADER SUPPORT ---
+# --- AI AUDITOR & CRACK DIAGNOSTIC MODULES ---
 def run_ai_auditor_module():
     st.subheader("🤖 ECP 203 General Engineering AI Auditor")
     st.write("Upload any structural engineering document, drawing spec, mix design, inspection sheet, or photo/image. The AI will audit it comprehensively against Egyptian Code of Practice (ECP 203) standards.")
@@ -393,8 +386,6 @@ def run_ai_auditor_module():
                     2. Identification of any technical discrepancies, code violations, potential structural risks, or missing data requirements.
                     3. Detailed engineering feedback addressing the specific scope of the uploaded document or image.
                     4. Professional recommendations, corrective actions, and required next steps for the site engineering/QC team.
-
-                    CRITICAL REQUIREMENT: In addition to your detailed text report, provide a clean text summary table at the end with your findings. Do NOT use markdown pipe tables that break PDF parsing.
                     """
 
                     contents = []
@@ -450,7 +441,6 @@ def run_ai_auditor_module():
                             clean_p = clean_for_pdf(para).replace('\n', '<br/>')
                             story.append(Paragraph(clean_p, body_style))
 
-                    # Generate QR Code
                     qr_data = f"ECP203_AUDIT | Project: {disp_proj} | Date: {rep_date_str} | Eng: {disp_eng}"
                     qr = qrcode.QRCode(version=1, box_size=4, border=1)
                     qr.add_data(qr_data)
@@ -507,7 +497,6 @@ def run_crack_defect_analyzer():
                     2. Severity Assessment & Structural Risk.
                     3. Egyptian Market Materials Required (Sika, CMB, Fosroc).
                     4. Step-by-Step Remediation Procedure compliant with ECP 203.
-                    Provide clear text formatting without breaking tables.
                     """
                     
                     image_part = types.Part.from_bytes(data=defect_image.getvalue(), mime_type=defect_image.type)
@@ -520,7 +509,7 @@ def run_crack_defect_analyzer():
                     st.markdown("### 🛠️ Forensic Diagnosis & Repair Protocol")
                     st.markdown(diagnostic_text)
 
-                    # Generate Professional PDF Report for Crack Diagnosis
+                    # Generate Professional PDF Report for Crack Diagnosis using io.BytesIO directly (No disk writing required)
                     pdf_buffer = io.BytesIO()
                     doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
                     story = []
@@ -533,13 +522,8 @@ def run_crack_defect_analyzer():
                     build_professional_pdf_header(story, "ECP 203 Concrete Crack & Defect Diagnostic Report", "Forensic Engineering Assessment & Egyptian Market Repair Protocol", company_logo_bytes, disp_eng, disp_proj, disp_loc, rep_date_str)
 
                     try:
-                        img_temp_path = "temp_defect_img.jpg"
-                        with open(img_temp_path, "wb") as f:
-                            f.write(defect_image.getvalue())
-                        story.append(ReportLabImage(img_temp_path, width=140, height=100))
+                        story.append(ReportLabImage(io.BytesIO(defect_image.getvalue()), width=140, height=100))
                         story.append(Spacer(1, 6))
-                        if os.path.exists(img_temp_path):
-                            os.remove(img_temp_path)
                     except Exception:
                         pass
 
