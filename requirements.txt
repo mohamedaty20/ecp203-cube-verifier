@@ -7,3 +7,4 @@ matplotlib
 reportlab
 qrcode
 pillow
+google-genai
