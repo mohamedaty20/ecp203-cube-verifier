@@ -86,16 +86,18 @@ def run_ai_auditor_module():
                     Provide a detailed, professional audit report with clear headings, findings, and recommendations.
                     """
 
-                    from google.genai import types
-
-# Send text with thinking_level set to LOW for instant generation
-response = client.models.generate_content(
-    model='gemini-3.7-flash',
-    contents=prompt,
-    config=types.GenerateContentConfig(
-        thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW)
-    )
-)
+                    try:
+                    # Send text with thinking_level set to LOW for instant generation
+                    response = client.models.generate_content(
+                        model='gemini-3.7-flash',
+                        contents=prompt,
+                        config=types.GenerateContentConfig(
+                            thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW)
+                        )
+                    )
+                except Exception as e:
+                    st.error(f"An error occurred during AI processing: {e}")
+                    return
                      
                     
                     audit_result = response.text
