@@ -1,6 +1,7 @@
 import io
 import datetime
 import os
+import re
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -29,9 +30,6 @@ from reportlab.platypus import (
     TableStyle,
     Image as ReportLabImage,
 )
-
-# FPDF for AI Lab Report Audit PDF exports
-from fpdf import FPDF
 
 # --- 1. PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
 st.set_page_config(
@@ -243,9 +241,19 @@ batch_ticket_id = st.sidebar.text_input("Batch Ticket ID", value="BT-99482")
 casting_date = st.sidebar.date_input("Casting Date", value=datetime.date.today() - datetime.timedelta(days=7))
 
 st.sidebar.subheader("⚖️ Mix Design Specifications")
-cement_content = st.sidebar.number_input("Cement Content (kg/m³)", min_value=200.0, max_value=600.0, value=350.0, step=10.0)
-water_content = st.sidebar.number_input("Free Water Content (kg/m³)", min_value=100.0, max_value=300.0, value=150.0, step=5.0)
-wc_ratio = water_content / cement_content if cement_content > 0 else 0.0
+cement_content = st.sidebar.text_input("Cement Content (kg/m³)", value="350.0")
+try:
+    cement_content_val = float(cement_content)
+except ValueError:
+    cement_content_val = 350.0
+
+water_content = st.sidebar.text_input("Free Water Content (kg/m³)", value="150.0")
+try:
+    water_content_val = float(water_content)
+except ValueError:
+    water_content_val = 150.0
+
+wc_ratio = water_content_val / cement_content_val if cement_content_val > 0 else 0.0
 st.sidebar.write(f"• **Calculated W/C Ratio:** `{wc_ratio:.2f}`")
 
 slump_value = st.sidebar.number_input("Slump Test Value (mm)", min_value=0.0, max_value=300.0, value=150.0, step=5.0)
@@ -265,7 +273,7 @@ min_allowed_cement = 300.0
 max_allowed_temp = 35.0
 
 wc_compliant = wc_ratio <= max_allowed_wc
-cement_compliant = cement_content >= min_allowed_cement
+cement_compliant = cement_content_val >= min_allowed_cement
 temp_compliant = concrete_temp <= max_allowed_temp
 mix_overall_pass = wc_compliant and cement_compliant and temp_compliant
 
@@ -278,7 +286,7 @@ mix_audit_rows = [
     },
     {
         "Mix Parameter": "Minimum Cement Content",
-        "Actual Value": f"{cement_content} kg/m³",
+        "Actual Value": f"{cement_content_val} kg/m³",
         "ECP 203 Limit": f"≥ {min_allowed_cement} kg/m³",
         "Status": "PASS" if cement_compliant else "FAIL"
     },
@@ -291,13 +299,26 @@ mix_audit_rows = [
 ]
 df_mix_audit = pd.DataFrame(mix_audit_rows)
 
-# --- MODULE CLASSES & FUNCTIONS FOR PROFESSIONAL PDFS WITH ENHANCED HIERARCHY ---
-def clean_for_pdf(text):
+# --- MODULE CLASSES & FUNCTIONS FOR PROFESSIONAL PDFS WITH ENHANCED HIERARCHY & MARKDOWN CLEANING ---
+def format_markdown_for_reportlab(text):
     if not text:
         return ""
+    # XML escape
     cleaned = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-    cleaned = cleaned.replace("•", "-").replace("—", "-")
+    # Remove markdown table borders/pipes
+    cleaned = re.sub(r'\|', '   ', cleaned)
+    # Remove markdown headers like ### or ##
+    cleaned = re.sub(r'#{1,6}\s*', '', cleaned)
+    # Convert **bold** to ReportLab <b>bold</b>
+    cleaned = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', cleaned)
+    # Convert *italic* to <i>italic</i>
+    cleaned = re.sub(r'\*(.*?)\*', r'<i>\1</i>', cleaned)
+    # Clean up leading bullet points (* or -) into clean bullet symbols
+    cleaned = re.sub(r'^\s*[\*\-]\s+', '&bull; ', cleaned, flags=re.MULTILINE)
     return cleaned
+
+def clean_for_pdf(text):
+    return format_markdown_for_reportlab(text)
 
 def build_professional_pdf_header(story, doc_title, subtitle, logo_bytes, engineer, project, location, rep_date):
     styles = getSampleStyleSheet()
@@ -421,7 +442,7 @@ def run_ai_auditor_module():
                     st.markdown("### 📋 Engineering Audit Findings & Compliance Breakdown")
                     st.markdown(audit_result)
 
-                    # Professional ReportLab PDF Generation with Bold Subheadings
+                    # Professional ReportLab PDF Generation with Cleaned Formatting
                     pdf_buffer = io.BytesIO()
                     doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
                     story = []
@@ -439,13 +460,12 @@ def run_ai_auditor_module():
                     
                     for para in audit_result.split("\n\n"):
                         if para.strip():
-                            clean_p = clean_for_pdf(para)
-                            # Render bold titles if paragraph looks like a header/section title
-                            if clean_p.startswith("###") or clean_p.startswith("**") or (len(clean_p) < 80 and not clean_p.endswith(".")):
-                                clean_p = clean_p.replace("###", "").replace("**", "").strip()
-                                story.append(Paragraph(f"<b>{clean_p}</b>", heading_style))
+                            cleaned_para = clean_for_pdf(para)
+                            if para.strip().startswith("###") or para.strip().startswith("**") or (len(para.strip()) < 80 and not para.strip().endswith(".")):
+                                title_text = re.sub(r'#{1,6}\s*', '', para.strip()).replace("**", "")
+                                story.append(Paragraph(f"<b>{clean_for_pdf(title_text)}</b>", heading_style))
                             else:
-                                story.append(Paragraph(clean_p.replace('\n', '<br/>'), body_style))
+                                story.append(Paragraph(cleaned_para.replace('\n', '<br/>'), body_style))
 
                     qr_data = f"ECP203_AUDIT | Project: {disp_proj} | Date: {rep_date_str} | Eng: {disp_eng}"
                     qr = qrcode.QRCode(version=1, box_size=4, border=1)
@@ -515,7 +535,7 @@ def run_crack_defect_analyzer():
                     st.markdown("### 🛠️ Forensic Diagnosis & Repair Protocol")
                     st.markdown(diagnostic_text)
 
-                    # Generate Professional PDF Report for Crack Diagnosis with distinct bold headers
+                    # Generate Professional PDF Report for Crack Diagnosis with Cleaned Formatting
                     pdf_buffer = io.BytesIO()
                     doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
                     story = []
@@ -539,12 +559,12 @@ def run_crack_defect_analyzer():
 
                     for para in diagnostic_text.split("\n\n"):
                         if para.strip():
-                            clean_p = clean_for_pdf(para)
-                            if clean_p.startswith("###") or clean_p.startswith("**") or (len(clean_p) < 80 and not clean_p.endswith(".")):
-                                clean_p = clean_p.replace("###", "").replace("**", "").strip()
-                                story.append(Paragraph(f"<b>{clean_p}</b>", heading_style))
+                            cleaned_para = clean_for_pdf(para)
+                            if para.strip().startswith("###") or para.strip().startswith("**") or (len(para.strip()) < 80 and not para.strip().endswith(".")):
+                                title_text = re.sub(r'#{1,6}\s*', '', para.strip()).replace("**", "")
+                                story.append(Paragraph(f"<b>{clean_for_pdf(title_text)}</b>", heading_style))
                             else:
-                                story.append(Paragraph(clean_p.replace('\n', '<br/>'), body_style))
+                                story.append(Paragraph(cleaned_para.replace('\n', '<br/>'), body_style))
 
                     qr_data = f"ECP203_CRACK_REPORT | Project: {disp_proj} | Location: {disp_loc} | Date: {rep_date_str}"
                     qr = qrcode.QRCode(version=1, box_size=4, border=1)
@@ -807,8 +827,8 @@ else:
         {"Parameter": "Mixer Truck Number", "Details": mixer_truck_no},
         {"Parameter": "Batch Ticket ID", "Details": batch_ticket_id},
         {"Parameter": "Casting Date", "Details": formatted_casting_date},
-        {"Parameter": "Cement Content", "Details": f"{cement_content} kg/m³"},
-        {"Parameter": "Water Content", "Details": f"{water_content} kg/m³"},
+        {"Parameter": "Cement Content", "Details": f"{cement_content_val} kg/m³"},
+        {"Parameter": "Water Content", "Details": f"{water_content_val} kg/m³"},
         {"Parameter": "Water-Cement Ratio (W/C)", "Details": f"{wc_ratio:.2f}"},
         {"Parameter": "Engineer Name", "Details": display_engineer_name},
         {"Parameter": "Report Date", "Details": formatted_report_date},
