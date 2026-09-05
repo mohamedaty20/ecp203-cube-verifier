@@ -84,7 +84,7 @@ def run_ai_auditor_module():
 
                     client = genai.Client(api_key=api_key)
                     
-                    # Broadened prompt covering any engineering element against ECP 203
+                    # Broadened prompt requesting the 3-column structured compliance output
                     prompt = f"""
                     You are an expert senior civil quality control and structural consultant specialized in the Egyptian Code of Practice (ECP 203) for reinforced concrete structures.
                     Analyze the provided engineering document, technical data sheet, specifications, or image with a focus on: {audit_focus}.
@@ -94,8 +94,11 @@ def run_ai_auditor_module():
                     2. Identification of any technical discrepancies, code violations, potential structural risks, or missing data requirements.
                     3. Detailed engineering feedback addressing the specific scope of the uploaded document or image.
                     4. Professional recommendations, corrective actions, and required next steps for the site engineering/QC team.
-                    
-                    Provide a structured, thorough, and professional engineering audit report using clear headings and technical terminology.
+
+                    CRITICAL REQUIREMENT: In addition to your detailed text report, you MUST provide a structured markdown table at the very end of your response containing exactly 3 columns:
+                    Column 1: "Accepted / Within ECP 203 Limits" (Details of what matches code requirements).
+                    Column 2: "Not Accepted / Violations Found" (Exact corresponding non-compliant text, values, or findings from the review).
+                    Column 3: "Recommendations to Fix" (Specific corrective engineering steps required to make it fully compliant with ECP 203).
                     """
 
                     contents = []
@@ -119,7 +122,7 @@ def run_ai_auditor_module():
                         contents = [prompt, image_part]
 
                     response = client.models.generate_content(
-                        model="gemini-3.5-flash-lite",
+                        model="gemini-3.5-flash",
                         contents=contents,
                         config=types.GenerateContentConfig(
                             thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW)
@@ -128,7 +131,7 @@ def run_ai_auditor_module():
                     
                     audit_result = response.text
                     st.success("Audit Completed Successfully!")
-                    st.markdown("### 📋 Engineering Audit Findings")
+                    st.markdown("### 📋 Engineering Audit Findings & Compliance Breakdown")
                     st.markdown(audit_result)
 
                     # Generate PDF Report for Audit
