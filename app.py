@@ -110,7 +110,7 @@ def run_ai_auditor_module():
 
                     # Send to Gemini (using gemini-2.5-flash for robust multi-modal and text processing)
                     response = client.models.generate_content(
-                        model="Gemini 3.5 Flash-Lite",
+                        model="gemini-3.5-flash-lite",
                         contents=contents,
                         config=types.GenerateContentConfig(
                             thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW)
