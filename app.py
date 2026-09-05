@@ -277,9 +277,9 @@ app_mode = st.radio(
     "📱 App Screen Navigation:",
     [
         "📊 Concrete Verifier Dashboard",
-        "🤖 AI Multi-Standard Engineering Auditor (Powered by Gemini AI)",
-        "🔍 Crack, Pavement & Geotechnical Defect Diagnostic (Powered by Gemini AI)",
-        "💬 Core-Code Intelligent Assistant Chatbot (Powered by Gemini AI)",
+        "🤖 AI Multi-Standard Engineering Auditor (AI-Powered)",
+        "🔍 Crack, Pavement & Geotechnical Defect Diagnostic (AI-Powered)",
+        "💬 Core-Code Intelligent Assistant Chatbot (AI-Powered)",
         "📖 Multi-Standard Technical Codes Handbook (ECP, ASTM, AASHTO, BS, EN, ISO)",
     ],
     horizontal=True,
@@ -287,7 +287,6 @@ app_mode = st.radio(
 st.markdown("---")
 
 # --- SIDEBAR CONFIGURATION ---
-# 3. Clean, unboxed, unbolded, left-aligned sidebar guide at the top far-left
 st.sidebar.markdown(
     """
     <div style="text-align: left; padding: 0px 0px 12px 0px; margin: 0;">
@@ -452,7 +451,7 @@ def build_professional_pdf_footer_and_signatures(story, qr_img_buffer):
 
 # --- AI MODULES & CHATBOT ---
 def run_ai_auditor_module():
-    st.subheader("🤖 AI Multi-Standard Engineering Auditor")
+    st.subheader("🤖 AI Multi-Standard Engineering Auditor (AI-Powered)")
     st.write("Upload any structural, geotechnical, pavement, or material testing document, drawing spec, mix design, or photo. The AI will audit it against **ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN, and ISO** standards.")
     
     audit_focus = st.sidebar.selectbox("Engineering Audit Focus", [
@@ -569,7 +568,7 @@ def run_ai_auditor_module():
                     st.error(f"An error occurred during AI processing: {e}")
 
 def run_crack_defect_analyzer():
-    st.subheader("🔍 AI Crack, Pavement & Geotechnical Defect Diagnostic")
+    st.subheader("🔍 AI Crack, Pavement & Geotechnical Defect Diagnostic (AI-Powered)")
     st.write("Snap or upload a photo of site defects. The AI automatically distinguishes between **Structural Concrete Members (ECP 203 / ACI / BS EN)**, **Road Pavements & Subbase Layers (ECP 104 / AASHTO)**, and **Geotechnical Soils / Subgrades (ECP 202 / ASTM / ISO)** to provide accurate, context-specific repair protocols.")
     
     defect_image = st.file_uploader("Upload Site Defect Photo (Pavement, Soil, Subgrade, or Concrete)", type=["png", "jpg", "jpeg"], key="crack_uploader")
@@ -670,7 +669,7 @@ def run_crack_defect_analyzer():
 
 # --- CHATBOT MODULE ---
 def run_core_code_chatbot():
-    st.subheader("💬 Core-Code Intelligent Assistant Chatbot")
+    st.subheader("💬 Core-Code Intelligent Assistant Chatbot (AI-Powered)")
     st.markdown("Ask any engineering, quality control, mix design, geotechnical, or pavement question. The AI answers strictly from our core codes (**ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN, ISO**) unless you have selected a specific supplementary code in the sidebar.")
 
     # Initialize chat history in session state
@@ -723,13 +722,13 @@ def run_core_code_chatbot():
                     st.session_state.chatbot_messages.append({"role": "assistant", "content": err_msg})
 
 # --- CONDITIONAL ROUTING BASED ON APP NAVIGATION SELECTION ---
-if app_mode == "🤖 AI Multi-Standard Engineering Auditor (Powered by Gemini AI)":
+if app_mode == "🤖 AI Multi-Standard Engineering Auditor (AI-Powered)":
     run_ai_auditor_module()
 
-elif app_mode == "🔍 Crack, Pavement & Geotechnical Defect Diagnostic (Powered by Gemini AI)":
+elif app_mode == "🔍 Crack, Pavement & Geotechnical Defect Diagnostic (AI-Powered)":
     run_crack_defect_analyzer()
 
-elif app_mode == "💬 Core-Code Intelligent Assistant Chatbot (Powered by Gemini AI)":
+elif app_mode == "💬 Core-Code Intelligent Assistant Chatbot (AI-Powered)":
     run_core_code_chatbot()
 
 elif app_mode == "📖 Multi-Standard Technical Codes Handbook (ECP, ASTM, AASHTO, BS, EN, ISO)":
@@ -1141,7 +1140,7 @@ footer_html = """
   </div>
   <div class="corporate-footer-bottom">
     <div>© 2026 Eng. Mohamed Abd Al Aty. All rights reserved.</div>
-    <div>Powered by Google Gemini AI (gemini-3.5-flash-lite)</div>
+    <div>AI-Powered Civil Engineering Assistant</div>
   </div>
 </div>
 """
