@@ -39,7 +39,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# --- 2. CUSTOM STYLING (FIXING UI, CHATBOX, & NAV FONT SIZES) ---
+# --- 2. CUSTOM STYLING (FIXING DROPDOWNS & UI ELEMENTS) ---
 dark_style = """
 <style>
 .stApp {
@@ -48,15 +48,15 @@ dark_style = """
 }
 .block-container {
     padding-top: 0rem !important;
-    padding-bottom: 1.5rem !important;
-    padding-left: 2rem !important;
-    padding-right: 2rem !important;
+    padding-bottom: 2rem !important;
+    padding-left: 2.5rem !important;
+    padding-right: 2.5rem !important;
     max-width: 100% !important;
 }
 [data-testid="stImage"] {
     width: 100% !important;
     position: relative !important;
-    margin-bottom: 0.5rem !important;
+    margin-bottom: 1rem !important;
 }
 [data-testid="stImage"] img {
     max-width: 100% !important;
@@ -99,23 +99,6 @@ textarea, input {
     border: 1px solid #FF8C00 !important;
 }
 
-/* CHATBOT BOX & INPUT FIXES (COMPACT & DARK) */
-[data-testid="stChatInput"] {
-    background-color: #1E222D !important;
-    border: 1px solid #FF8C00 !important;
-    border-radius: 8px !important;
-}
-[data-testid="stChatInput"] textarea {
-    background-color: #1E222D !important;
-    color: #FFFFFF !important;
-}
-div[data-testid="stChatMessage"] {
-    background-color: #1B2A4A !important;
-    border: 1px solid #262730;
-    border-radius: 8px;
-    padding: 8px;
-}
-
 /* FIX DROPDOWN AND SELECTBOX TEXT & BACKGROUND ISSUES */
 div[data-baseweb="input"], div[data-baseweb="base-input"], div[data-baseweb="select"], div[data-baseweb="calendar"], div[data-baseweb="popover"], div[data-baseweb="menu"] {
     background-color: #1E222D !important;
@@ -147,13 +130,13 @@ ul[role="listbox"] li:hover {
     background-color: #1E222D !important;
     border: 1px solid #FF8C00 !important;
     border-radius: 8px !important;
-    padding: 8px !important;
-    margin-bottom: 8px !important;
+    padding: 10px !important;
+    margin-bottom: 10px !important;
 }
 [data-testid="stFileUploader"] section {
     background-color: #1E222D !important;
     border: none !important;
-    padding: 4px !important;
+    padding: 5px !important;
 }
 [data-testid="stFileUploader"] span, [data-testid="stFileUploader"] small, [data-testid="stFileUploader"] div {
     color: #FFFFFF !important;
@@ -164,11 +147,11 @@ div.stButton > button, div.stDownloadButton > button, button[kind="secondary"], 
     color: #FFFFFF !important;
     border: 2px solid #FF8C00 !important;
     font-family: 'Segoe UI', Arial, sans-serif !important;
-    font-size: 15px !important;
+    font-size: 16px !important;
     font-weight: 700 !important;
     border-radius: 6px !important;
-    padding: 0.4rem 0.8rem !important;
-    box-shadow: 0 3px 5px rgba(0,0,0,0.4) !important;
+    padding: 0.5rem 1rem !important;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.4) !important;
 }
 div.stButton > button:hover, div.stDownloadButton > button:hover {
     background-color: #1E222D !important;
@@ -176,23 +159,17 @@ div.stButton > button:hover, div.stDownloadButton > button:hover {
     border: 2px solid #00BFFF !important;
 }
 
-/* ENLARGED, CLEAR NAVIGATION & TOOL LABELS */
 div[row-widget="stRadio"] label p, .stRadio div[data-baseweb="radio"] label span {
-    font-size: 19px !important;
-    font-weight: 900 !important;
-    color: #FFFFFF !important;
-}
-.stRadio label {
-    font-size: 19px !important;
-    font-weight: 900 !important;
-}
-
-.stTabs [data-baseweb="tab"] {
     font-size: 18px !important;
     font-weight: 800 !important;
     color: #FFFFFF !important;
-    padding-top: 10px !important;
-    padding-bottom: 10px !important;
+}
+.stTabs [data-baseweb="tab"] {
+    font-size: 20px !important;
+    font-weight: 800 !important;
+    color: #FFFFFF !important;
+    padding-top: 14px !important;
+    padding-bottom: 14px !important;
 }
 .stTabs [data-baseweb="tab"]:hover {
     color: #00BFFF !important;
@@ -200,21 +177,19 @@ div[row-widget="stRadio"] label p, .stRadio div[data-baseweb="radio"] label span
 
 hr {
     border-color: #262730 !important;
-    margin: 1rem 0 !important;
 }
 [data-testid="stDataFrame"], [data-testid="stTable"], div[data-baseweb="card"] {
     background-color: #1B2A4A !important;
 }
 
-/* COMPACT FOOTER DESIGN */
 .footer-container {
     background: linear-gradient(135deg, #1B2A4A 0%, #031338 100%);
     border: 1px solid #FF8C00;
-    border-radius: 6px;
-    padding: 8px 15px;
-    margin-top: 1rem;
-    margin-bottom: 0.5rem;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    border-radius: 8px;
+    padding: 12px 20px;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 </style>
 """
@@ -225,7 +200,7 @@ if os.path.exists("logo.png"):
     st.image("logo.png")
 
 ticker_html = """
-<div style="overflow: hidden; white-space: nowrap; background-color: #FF8C00; color: #031338; padding: 5px 0; font-weight: bold; font-size: 13px; margin-bottom: 10px; border-radius: 4px;">
+<div style="overflow: hidden; white-space: nowrap; background-color: #FF8C00; color: #031338; padding: 6px 0; font-weight: bold; font-size: 14px; margin-bottom: 15px; border-radius: 4px;">
   <div style="display: inline-block; padding-left: 100%; animation: marquee 25s linear infinite;">
     🚀 Core Compliance Active: ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN, ISO &nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp; ⚠️ Multi-Disciplinary Engineering & Geotechnical QA/QC Verifier &nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp; 🏗️ Active Site Inspection Portal
   </div>
@@ -241,11 +216,11 @@ st.markdown(ticker_html, unsafe_allow_html=True)
 
 st.title("Multi-Disciplinary Civil, Geotechnical & Pavement Engineering Auditor")
 st.markdown(
-    '<p style="color: #FFFFFF !important; font-size: 0.95rem; font-weight: bold; margin-top: -10px; margin-bottom: 10px;">Made by Eng. Mohamed Abd Al Aty</p>',
+    '<p style="color: #FFFFFF !important; font-size: 1rem; font-weight: bold; margin-top: -15px; margin-bottom: 15px;">Made by Eng. Mohamed Abd Al Aty</p>',
     unsafe_allow_html=True,
 )
 
-# --- MAIN APP NAVIGATION (LARGE CLEAR LABELS) ---
+# --- MAIN APP NAVIGATION ---
 app_mode = st.radio(
     "📱 App Screen Navigation:",
     [
@@ -262,9 +237,9 @@ st.markdown("---")
 # --- SIDEBAR CONFIGURATION ---
 st.sidebar.markdown(
     """
-    <div style="background-color: #121E36; border: 1px solid #00BFFF; border-radius: 6px; padding: 8px; margin-bottom: 10px;">
-      <p style="color: #00BFFF !important; font-size: 0.8rem; font-weight: bold; margin-bottom: 4px;">💡 Portal Navigation Guide:</p>
-      <ul style="color: #E2E8F0 !important; font-size: 0.75rem; padding-left: 12px; margin: 0; line-height: 1.3;">
+    <div style="background-color: #121E36; border: 1px solid #00BFFF; border-radius: 6px; padding: 10px; margin-bottom: 12px;">
+      <p style="color: #00BFFF !important; font-size: 0.82rem; font-weight: bold; margin-bottom: 6px;">💡 Portal Navigation Guide:</p>
+      <ul style="color: #E2E8F0 !important; font-size: 0.78rem; padding-left: 15px; margin: 0; line-height: 1.4;">
         <li>Select governing standards & input site metadata.</li>
         <li>Audit test results against ECP & international codes.</li>
         <li>Inspect structural, soil & highway compliance instantly.</li>
@@ -375,37 +350,37 @@ def clean_for_pdf(text):
 
 def build_professional_pdf_header(story, doc_title, subtitle, logo_bytes, engineer, project, location, rep_date):
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle("DocTitle", parent=styles["Heading1"], fontSize=15, textColor=colors.HexColor("#1B2A4A"), spaceAfter=3, alignment=1, fontName="Helvetica-Bold")
-    sub_style = ParagraphStyle("DocSub", parent=styles["Normal"], fontSize=9, textColor=colors.HexColor("#444444"), spaceAfter=8, alignment=1, fontName="Helvetica-Bold")
-    meta_style = ParagraphStyle("MetaStyle", parent=styles["Normal"], fontSize=8, textColor=colors.HexColor("#222222"), leading=11, fontName="Helvetica")
+    title_style = ParagraphStyle("DocTitle", parent=styles["Heading1"], fontSize=16, textColor=colors.HexColor("#1B2A4A"), spaceAfter=4, alignment=1, fontName="Helvetica-Bold")
+    sub_style = ParagraphStyle("DocSub", parent=styles["Normal"], fontSize=9.5, textColor=colors.HexColor("#444444"), spaceAfter=10, alignment=1, fontName="Helvetica-Bold")
+    meta_style = ParagraphStyle("MetaStyle", parent=styles["Normal"], fontSize=8.5, textColor=colors.HexColor("#222222"), leading=12, fontName="Helvetica")
 
     if logo_bytes:
         try:
-            story.append(ReportLabImage(io.BytesIO(logo_bytes), width=80, height=30))
-            story.append(Spacer(1, 3))
+            story.append(ReportLabImage(io.BytesIO(logo_bytes), width=90, height=34))
+            story.append(Spacer(1, 4))
         except Exception:
             pass
 
     story.append(Paragraph(clean_for_pdf(doc_title), title_style))
     story.append(Paragraph(clean_for_pdf(subtitle), sub_style))
-    story.append(HRFlowable(width="100%", thickness=1.2, color=colors.HexColor("#1B2A4A"), spaceAfter=6))
+    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#1B2A4A"), spaceAfter=8))
 
     meta_html = f"""
     <b>Project:</b> {clean_for_pdf(project)} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Location/Chainage:</b> {clean_for_pdf(location)}<br/>
     <b>Engineer:</b> {clean_for_pdf(engineer)} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Date:</b> {rep_date} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Governing Codes:</b> ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN, ISO
     """
     story.append(Paragraph(meta_html, meta_style))
-    story.append(Spacer(1, 8))
+    story.append(Spacer(1, 10))
 
 def build_professional_pdf_footer_and_signatures(story, qr_img_buffer):
     styles = getSampleStyleSheet()
-    body_style = ParagraphStyle("BodyStyle", parent=styles["Normal"], fontSize=8, textColor=colors.HexColor("#222222"), leading=10, fontName="Helvetica")
-    sec_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=10, textColor=colors.HexColor("#1B2A4A"), spaceBefore=8, spaceAfter=3, fontName="Helvetica-Bold")
+    body_style = ParagraphStyle("BodyStyle", parent=styles["Normal"], fontSize=8.5, textColor=colors.HexColor("#222222"), leading=11, fontName="Helvetica")
+    sec_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=11, textColor=colors.HexColor("#1B2A4A"), spaceBefore=10, spaceAfter=4, fontName="Helvetica-Bold")
 
-    story.append(Spacer(1, 8))
+    story.append(Spacer(1, 10))
     story.append(Paragraph("<b>Engineering Approvals & Multi-Standard Compliance Sign-Off</b>", sec_style))
     
-    qr_lab_img = ReportLabImage(qr_img_buffer, width=45, height=45)
+    qr_lab_img = ReportLabImage(qr_img_buffer, width=50, height=50)
     sign_cell_1 = Paragraph("<b>Prepared By:</b><br/>Engineer Sign:<br/>___________________", body_style)
     sign_cell_2 = Paragraph("<b>QA/QC Checked:</b><br/>Inspector Sign:<br/>___________________", body_style)
     sign_cell_3 = Paragraph("<b>Consultant Approved:</b><br/>Stamp & Sign:<br/>___________________", body_style)
@@ -416,8 +391,8 @@ def build_professional_pdf_footer_and_signatures(story, qr_img_buffer):
         ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F5F7FA")),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
-        ("TOPPADDING", (0, 0), (-1, -1), 4),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
         ("ALIGN", (3, 0), (3, 0), "CENTER"),
     ]))
     story.append(t_sign)
@@ -483,7 +458,7 @@ def run_ai_auditor_module():
                         contents = [prompt, image_part]
 
                     response = client.models.generate_content(
-                        model="gemini-3.5-flash-lite",
+                        model="gemini-2.5-flash",
                         contents=contents,
                     )
                     
@@ -505,8 +480,8 @@ def run_ai_auditor_module():
                     build_professional_pdf_header(story, "Multi-Standard Engineering Audit Report", f"Audit Focus: {audit_focus}", company_logo_bytes, disp_eng, disp_proj, disp_loc, rep_date_str)
 
                     styles = getSampleStyleSheet()
-                    body_style = ParagraphStyle("Body", parent=styles["Normal"], fontSize=9, textColor=colors.HexColor("#222222"), leading=13, spaceAfter=5)
-                    heading_style = ParagraphStyle("CustomHeading", parent=styles["Heading3"], fontSize=11, textColor=colors.HexColor("#1B2A4A"), spaceBefore=8, spaceAfter=3, fontName="Helvetica-Bold")
+                    body_style = ParagraphStyle("Body", parent=styles["Normal"], fontSize=9.5, textColor=colors.HexColor("#222222"), leading=14, spaceAfter=6)
+                    heading_style = ParagraphStyle("CustomHeading", parent=styles["Heading3"], fontSize=11.5, textColor=colors.HexColor("#1B2A4A"), spaceBefore=10, spaceAfter=4, fontName="Helvetica-Bold")
                     
                     for para in audit_result.split("\n\n"):
                         if para.strip():
@@ -578,7 +553,7 @@ def run_crack_defect_analyzer():
                     
                     image_part = types.Part.from_bytes(data=defect_image.getvalue(), mime_type=defect_image.type)
                     response = client.models.generate_content(
-                        model="gemini-3.5-flash-lite",
+                        model="gemini-2.5-flash",
                         contents=[prompt, image_part]
                     )
                     
@@ -599,14 +574,14 @@ def run_crack_defect_analyzer():
                     build_professional_pdf_header(story, "Multi-Standard Defect & Forensic Diagnostic Report", "Geotechnical, Pavement & Concrete Engineering Assessment", company_logo_bytes, disp_eng, disp_proj, disp_loc, rep_date_str)
 
                     try:
-                        story.append(ReportLabImage(io.BytesIO(defect_image.getvalue()), width=130, height=90))
-                        story.append(Spacer(1, 5))
+                        story.append(ReportLabImage(io.BytesIO(defect_image.getvalue()), width=140, height=100))
+                        story.append(Spacer(1, 6))
                     except Exception:
                         pass
 
                     styles = getSampleStyleSheet()
-                    body_style = ParagraphStyle("Body", parent=styles["Normal"], fontSize=9, textColor=colors.HexColor("#222222"), leading=13, spaceAfter=5)
-                    heading_style = ParagraphStyle("CustomHeading", parent=styles["Heading3"], fontSize=11, textColor=colors.HexColor("#1B2A4A"), spaceBefore=8, spaceAfter=3, fontName="Helvetica-Bold")
+                    body_style = ParagraphStyle("Body", parent=styles["Normal"], fontSize=9.5, textColor=colors.HexColor("#222222"), leading=14, spaceAfter=6)
+                    heading_style = ParagraphStyle("CustomHeading", parent=styles["Heading3"], fontSize=11.5, textColor=colors.HexColor("#1B2A4A"), spaceBefore=10, spaceAfter=4, fontName="Helvetica-Bold")
 
                     for para in diagnostic_text.split("\n\n"):
                         if para.strip():
@@ -640,23 +615,20 @@ def run_crack_defect_analyzer():
                 except Exception as e:
                     st.error(f"Error processing image: {e}")
 
-# --- CHATBOT MODULE (USING GEMINI-3.5-FLASH-LITE & DARK UI) ---
+# --- CHATBOT MODULE ---
 def run_core_code_chatbot():
     st.subheader("💬 Core-Code Intelligent Assistant Chatbot")
     st.markdown("Ask any engineering, quality control, mix design, geotechnical, or pavement question. The AI answers strictly from our core codes (**ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN, ISO**) unless you have selected a specific supplementary code in the sidebar.")
 
-    # Initialize chat history in session state
     if "chatbot_messages" not in st.session_state:
         st.session_state.chatbot_messages = [
             {"role": "assistant", "content": "Hello! I am your Multi-Standard Engineering Assistant. How can I assist you with your civil, geotechnical, pavement, or concrete queries today?"}
         ]
 
-    # Display chat history
     for message in st.session_state.chatbot_messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # Chat input box
     if user_query := st.chat_input("Ask about ECP, ASTM, AASHTO, mix design, soil compaction, or structural standards..."):
         st.session_state.chatbot_messages.append({"role": "user", "content": user_query})
         with st.chat_message("user"):
@@ -682,7 +654,7 @@ def run_core_code_chatbot():
                         full_prompt = f"{system_context}\n\nUser Question: {user_query}"
                         
                         response = client.models.generate_content(
-                            model="gemini-3.5-flash-lite",
+                            model="gemini-2.5-flash",
                             contents=full_prompt,
                         )
                         response_text = response.text
@@ -694,7 +666,7 @@ def run_core_code_chatbot():
                     st.error(err_msg)
                     st.session_state.chatbot_messages.append({"role": "assistant", "content": err_msg})
 
-# --- CONDITIONAL ROUTING BASED ON APP NAVIGATION SELECTION ---
+# --- CONDITIONAL ROUTING ---
 if app_mode == "🤖 AI Multi-Standard Engineering Auditor (AI Featured)":
     run_ai_auditor_module()
 
@@ -721,7 +693,7 @@ elif app_mode == "📖 Multi-Standard Technical Codes Handbook (ECP, ASTM, AASHT
         * **Scope:** Design and construction of reinforced concrete structures, materials, mixing, placing, and acceptance criteria.
         * **Characteristic Strength ($f_{cu}$):** Evaluated via 150mm cube crushing tests at 28 days.
         * **Statistical Acceptance:** $f_{cu} \\ge \\max(f_m - k \\cdot s, 0.85 f_m)$.
-        * **Durability Limits:** Max W/C ratio 0.45 for high grades ($\ge 30\text{ N/mm}^2$), minimum cement content $300\text{ kg/m}^3$.
+        * **Durability Limits:** Max W/C ratio 0.45 for high grades ($\ge 30\\text{ N/mm}^2$), minimum cement content $300\\text{ kg/m}^3$.
         """)
 
     with tab_hb2:
@@ -990,7 +962,7 @@ else:
         story = []
         styles = getSampleStyleSheet()
 
-        section_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=10, textColor=colors.HexColor("#1B2A4A"), spaceBefore=10, spaceAfter=3, fontName="Helvetica-Bold")
+        section_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=11, textColor=colors.HexColor("#1B2A4A"), spaceBefore=12, spaceAfter=4, fontName="Helvetica-Bold")
 
         build_professional_pdf_header(story, "Multi-Standard Concrete Acceptance & Mix Compliance Report", "Multi-Stage Verification & Statistical Audit", logo_bytes, display_engineer_name, display_project_name, pour_location, formatted_report_date)
 
@@ -1001,12 +973,12 @@ else:
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
             ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
             ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("FONTSIZE", (0, 0), (-1, -1), 8),
+            ("FONTSIZE", (0, 0), (-1, -1), 8.5),
             ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
             ("BACKGROUND", (0, 1), (-1, -1), colors.HexColor("#F9F9F9")),
         ]))
         story.append(t_overview)
-        story.append(Spacer(1, 5))
+        story.append(Spacer(1, 6))
 
         story.append(Paragraph("<b>2. Batch Plant Mix Design Compliance Audit</b>", section_style))
         mix_table_rows = [list(df_mix_audit.columns)] + df_mix_audit.values.tolist()
@@ -1015,11 +987,11 @@ else:
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
             ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
             ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("FONTSIZE", (0, 0), (-1, -1), 8),
+            ("FONTSIZE", (0, 0), (-1, -1), 8.5),
             ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
         ]))
         story.append(t_mix)
-        story.append(Spacer(1, 5))
+        story.append(Spacer(1, 6))
 
         story.append(Paragraph("<b>3. Cube Compliance Results Summary & Statistical Evaluation</b>", section_style))
         summary_headers = ["Stage", "n", "Target", "Req (MPa)", "Mean (MPa)", "StdDev", "fcu (MPa)", "Verdict"]
@@ -1031,11 +1003,11 @@ else:
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
             ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
             ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("FONTSIZE", (0, 0), (-1, -1), 8),
+            ("FONTSIZE", (0, 0), (-1, -1), 8.5),
             ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
         ]))
         story.append(t_summary)
-        story.append(Spacer(1, 5))
+        story.append(Spacer(1, 6))
 
         story.append(Paragraph("<b>4. Raw Individual Cube Strengths Matrix & Sample Counts</b>", section_style))
         raw_headers = list(df_raw_cubes.columns)
@@ -1052,12 +1024,12 @@ else:
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
             ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
             ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("FONTSIZE", (0, 0), (-1, -1), 8),
+            ("FONTSIZE", (0, 0), (-1, -1), 8.5),
             ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
             ("ALIGN", (0, 0), (-1, -1), "CENTER"),
         ]))
         story.append(t_raw)
-        story.append(Spacer(1, 5))
+        story.append(Spacer(1, 6))
 
         qr_data_content = f"MULTI_CODE_VERIFIED | Project: {display_project_name} | Location: {pour_location} | Ticket: {batch_ticket_id} | Date: {formatted_report_date} | Engineer: {display_engineer_name}"
         qr = qrcode.QRCode(version=1, box_size=4, border=1)
@@ -1093,28 +1065,28 @@ else:
             mime="application/pdf",
         )
 
-# --- LUXURY CORPORATE FOOTER SECTION (COMPACT & SLEEK) ---
+# --- LUXURY CORPORATE FOOTER SECTION ---
 st.markdown("---")
 st.markdown(
     """
     <div class="footer-container">
       <div style="display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center;">
         <div style="flex: 1; min-width: 250px;">
-          <h4 style="color: #FF8C00; margin-bottom: 2px; font-size: 0.95rem;">🏗️ Multi-Standard Engineering Quality Assurance Portal</h4>
-          <p style="color: #CCCCCC; font-size: 0.75rem; margin: 0;">Automated compliance verification across ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN, and ISO standards.</p>
+          <h4 style="color: #FF8C00; margin-bottom: 2px; font-size: 1rem;">🏗️ Multi-Standard Engineering Quality Assurance Portal</h4>
+          <p style="color: #CCCCCC; font-size: 0.8rem; margin: 0;">Automated compliance verification across ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN, and ISO standards.</p>
         </div>
         <div style="flex: 1; min-width: 200px; text-align: right;">
-          <p style="color: #FFFFFF; font-size: 0.8rem; margin-bottom: 2px;"><b>Official Direct Contacts & Professional Network:</b></p>
-          <p style="margin: 0; font-size: 0.75rem; line-height: 1.3;">
+          <p style="color: #FFFFFF; font-size: 0.85rem; margin-bottom: 2px;"><b>Official Direct Contacts & Professional Network:</b></p>
+          <p style="margin: 0; font-size: 0.8rem; line-height: 1.4;">
             Connect on LinkedIn: <a href='https://www.linkedin.com/in/mohamed-abd-al-aty-a326a1214/' target='_blank' style='color: #00BFFF; text-decoration: none;'>Mohamed Abd Al Aty</a><br/>
             Direct Email Inquiries: <a href='mailto:mohamedabdalaty63@gmail.com' style='color: #00BFFF; text-decoration: none;'>mohamedabdalaty63@gmail.com</a><br/>
-            <span style="color: #A0AEC0; font-size: 0.7rem;">Specialized in Geotechnical QA/QC, Civil Engineering Standards & Automated Compliance.</span>
+            <span style="color: #A0AEC0; font-size: 0.75rem;">Specialized in Geotechnical QA/QC, Civil Engineering Standards & Automated Compliance.</span>
           </p>
         </div>
       </div>
-      <hr style="border-color: rgba(255,140,0,0.3); margin: 6px 0;">
+      <hr style="border-color: rgba(255,140,0,0.3); margin: 8px 0;">
       <div style="text-align: center;">
-        <p style="color: #888888; font-size: 0.7rem; margin: 0;">© 2026 Eng. Mohamed Abd Al Aty. All rights reserved. Designed for ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN & ISO compliance.</p>
+        <p style="color: #888888; font-size: 0.75rem; margin: 0;">© 2026 Eng. Mohamed Abd Al Aty. All rights reserved. Designed for ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN & ISO compliance.</p>
       </div>
     </div>
     """,
