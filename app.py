@@ -86,11 +86,16 @@ def run_ai_auditor_module():
                     Provide a detailed, professional audit report with clear headings, findings, and recommendations.
                     """
 
+                    from google.genai import types
+
                     response = client.models.generate_content(
                         model='gemini-2.5-flash',
                         contents=[
                             prompt,
-                            {"mime_type": uploaded_file.type, "data": bytes_data}
+                            types.Part.from_bytes(
+                                data=bytes_data,
+                                mime_type=uploaded_file.type,
+                            )
                         ]
                     )
                     
