@@ -192,9 +192,6 @@ def run_crack_defect_analyzer():
 
 # --- 2. CUSTOM STYLING ---
 dark_style = """
-
-# --- 2. CUSTOM STYLING ---
-dark_style = """
 <style>
 .stApp {
     background-color: #031338 !important;
@@ -207,13 +204,6 @@ dark_style = """
     padding-right: 2.5rem !important;
     max-width: 100% !important;
 }
-
-/* ... rest of your CSS styles ... */
-</style>
-"""  # <--- Make sure this closing triple quote is here!
-
-st.markdown(dark_style, unsafe_allow_html=True)
-
 [data-testid="stImage"] {
     width: 100vw !important;
     position: relative !important;
@@ -309,8 +299,8 @@ div[data-testid="stDataFrame"] > div {
 }
 </style>
 """
-st.markdown(dark_style, unsafe_allow_html=True)
 
+st.markdown(dark_style, unsafe_allow_html=True)
 # --- 3. TOP BANNER / COVER PHOTO ---
 if os.path.exists("logo.png"):
     st.image("logo.png")
