@@ -207,6 +207,13 @@ dark_style = """
     padding-right: 2.5rem !important;
     max-width: 100% !important;
 }
+
+/* ... rest of your CSS styles ... */
+</style>
+"""  # <--- Make sure this closing triple quote is here!
+
+st.markdown(dark_style, unsafe_allow_html=True)
+
 [data-testid="stImage"] {
     width: 100vw !important;
     position: relative !important;
