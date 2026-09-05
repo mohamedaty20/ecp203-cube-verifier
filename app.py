@@ -326,35 +326,24 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- APP SCREEN NAVIGATION SELECTOR ---
-app_mode = st.radio(
-    "📱 App Screen Navigation:",
-    [
-        "📊 Verifier Dashboard",
-        "🤖 AI General Engineering Auditor",
-        "🔍 Crack & Defect Diagnostic",  # <--- Added option here
-        "📖 ECP 203 Official Formulas & Site Instructions Handbook",
-    ],
-    horizontal=True,
-)
-st.markdown("---")
-
 if app_mode == "📊 Verifier Dashboard":
-  # ... existing verifier dashboard code ...
+    # Ensure your dashboard code is properly indented here, 
+    # or leave 'pass' if your code follows separately:
+    pass
 
 elif app_mode == "🤖 AI General Engineering Auditor":
-  st.markdown("---")
-  run_ai_auditor_module()
+    st.markdown("---")
+    run_ai_auditor_module()
 
-elif app_mode == "🔍 Crack & Defect Diagnostic":  # <--- Added routing here
-  st.markdown("---")
-  run_crack_defect_analyzer()
+elif app_mode == "🔍 Crack & Defect Diagnostic":
+    st.markdown("---")
+    run_crack_defect_analyzer()
 
 elif app_mode == "📖 ECP 203 Official Formulas & Site Instructions Handbook":
-  # ... existing handbook code ...
+    pass
 
 else:
-  # ... existing fallback code ...
+    pass
 
 # Sidebar Configuration
 st.sidebar.header("PROJECT & BATCH DETAILS")
