@@ -182,14 +182,66 @@ hr {
     background-color: #1B2A4A !important;
 }
 
-.footer-container {
-    background: linear-gradient(135deg, #1B2A4A 0%, #031338 100%);
-    border: 1px solid #FF8C00;
-    border-radius: 8px;
-    padding: 12px 20px;
-    margin-top: 2rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+/* FIX CHAT INPUT CONTAINER WHITE BOX & PADDING */
+[data-testid="stChatInput"] {
+    background-color: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+}
+[data-testid="stChatInput"] > div {
+    background-color: #1E222D !important;
+    border: 1px solid #FF8C00 !important;
+    border-radius: 8px !important;
+}
+
+/* BIG COMPANY FOOTER FORMAT */
+.corporate-footer {
+    background-color: #121E36;
+    border-top: 2px solid #FF8C00;
+    padding: 30px 40px;
+    margin-top: 3rem;
+    color: #E2E8F0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    border-radius: 6px;
+}
+.corporate-footer-grid {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 30px;
+}
+.corporate-footer-col {
+    flex: 1;
+    min-width: 250px;
+}
+.corporate-footer h4 {
+    color: #00BFFF;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+.corporate-footer p, .corporate-footer li, .corporate-footer a {
+    color: #CBD5E1;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    text-decoration: none;
+}
+.corporate-footer a:hover {
+    color: #FF8C00;
+    text-decoration: underline;
+}
+.corporate-footer-bottom {
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 0.8rem;
+    color: #94A3B8;
 }
 </style>
 """
@@ -220,14 +272,14 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- MAIN APP NAVIGATION (LARGER FONT & AI-FEATURED LABELS) ---
+# --- MAIN APP NAVIGATION (WELL ORGANIZED & CLEARLY AI-POWERED) ---
 app_mode = st.radio(
     "📱 App Screen Navigation:",
     [
         "📊 Concrete Verifier Dashboard",
-        "🤖 AI Multi-Standard Engineering Auditor (AI Featured)",
-        "🔍 Crack, Pavement & Geotechnical Defect Diagnostic (AI Featured)",
-        "💬 Core-Code Intelligent Assistant Chatbot (AI Featured)",
+        "🤖 AI Multi-Standard Engineering Auditor (Powered by Gemini AI)",
+        "🔍 Crack, Pavement & Geotechnical Defect Diagnostic (Powered by Gemini AI)",
+        "💬 Core-Code Intelligent Assistant Chatbot (Powered by Gemini AI)",
         "📖 Multi-Standard Technical Codes Handbook (ECP, ASTM, AASHTO, BS, EN, ISO)",
     ],
     horizontal=True,
@@ -235,12 +287,12 @@ app_mode = st.radio(
 st.markdown("---")
 
 # --- SIDEBAR CONFIGURATION ---
-# 1. Professional introductory phrases in the free space above the title
+# 3. Clean, unboxed, unbolded, left-aligned sidebar guide at the top far-left
 st.sidebar.markdown(
     """
-    <div style="background-color: #121E36; border: 1px solid #00BFFF; border-radius: 6px; padding: 10px; margin-bottom: 12px;">
-      <p style="color: #00BFFF !important; font-size: 0.82rem; font-weight: bold; margin-bottom: 6px;">💡 Portal Navigation Guide:</p>
-      <ul style="color: #E2E8F0 !important; font-size: 0.78rem; padding-left: 15px; margin: 0; line-height: 1.4;">
+    <div style="text-align: left; padding: 0px 0px 12px 0px; margin: 0;">
+      <p style="color: #00BFFF !important; font-size: 0.78rem; font-weight: normal; margin-bottom: 4px;">Portal Navigation Guide:</p>
+      <ul style="color: #CBD5E1 !important; font-size: 0.74rem; padding-left: 14px; margin: 0; line-height: 1.35; font-weight: normal;">
         <li>Select governing standards & input site metadata.</li>
         <li>Audit test results against ECP & international codes.</li>
         <li>Inspect structural, soil & highway compliance instantly.</li>
@@ -616,7 +668,7 @@ def run_crack_defect_analyzer():
                 except Exception as e:
                     st.error(f"Error processing image: {e}")
 
-# --- NEW CHATBOT MODULE ---
+# --- CHATBOT MODULE ---
 def run_core_code_chatbot():
     st.subheader("💬 Core-Code Intelligent Assistant Chatbot")
     st.markdown("Ask any engineering, quality control, mix design, geotechnical, or pavement question. The AI answers strictly from our core codes (**ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN, ISO**) unless you have selected a specific supplementary code in the sidebar.")
@@ -671,13 +723,13 @@ def run_core_code_chatbot():
                     st.session_state.chatbot_messages.append({"role": "assistant", "content": err_msg})
 
 # --- CONDITIONAL ROUTING BASED ON APP NAVIGATION SELECTION ---
-if app_mode == "🤖 AI Multi-Standard Engineering Auditor (AI Featured)":
+if app_mode == "🤖 AI Multi-Standard Engineering Auditor (Powered by Gemini AI)":
     run_ai_auditor_module()
 
-elif app_mode == "🔍 Crack, Pavement & Geotechnical Defect Diagnostic (AI Featured)":
+elif app_mode == "🔍 Crack, Pavement & Geotechnical Defect Diagnostic (Powered by Gemini AI)":
     run_crack_defect_analyzer()
 
-elif app_mode == "💬 Core-Code Intelligent Assistant Chatbot (AI Featured)":
+elif app_mode == "💬 Core-Code Intelligent Assistant Chatbot (Powered by Gemini AI)":
     run_core_code_chatbot()
 
 elif app_mode == "📖 Multi-Standard Technical Codes Handbook (ECP, ASTM, AASHTO, BS, EN, ISO)":
@@ -1069,30 +1121,28 @@ else:
             mime="application/pdf",
         )
 
-# --- LUXURY CORPORATE FOOTER SECTION (ENHANCED CONTACTS & PHRASES) ---
+# --- LUXURY CORPORATE FOOTER SECTION (BIG COMPANY FORMAT) ---
 st.markdown("---")
-st.markdown(
-    """
-    <div class="footer-container">
-      <div style="display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center;">
-        <div style="flex: 1; min-width: 250px;">
-          <h4 style="color: #FF8C00; margin-bottom: 2px; font-size: 1rem;">🏗️ Multi-Standard Engineering Quality Assurance Portal</h4>
-          <p style="color: #CCCCCC; font-size: 0.8rem; margin: 0;">Automated compliance verification across ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN, and ISO standards.</p>
-        </div>
-        <div style="flex: 1; min-width: 200px; text-align: right;">
-          <p style="color: #FFFFFF; font-size: 0.85rem; margin-bottom: 2px;"><b>Official Direct Contacts & Professional Network:</b></p>
-          <p style="margin: 0; font-size: 0.8rem; line-height: 1.4;">
-            Connect on LinkedIn: <a href='https://www.linkedin.com/in/mohamed-abd-al-aty-a326a1214/' target='_blank' style='color: #00BFFF; text-decoration: none;'>Mohamed Abd Al Aty</a><br/>
-            Direct Email Inquiries: <a href='mailto:mohamedabdalaty63@gmail.com' style='color: #00BFFF; text-decoration: none;'>mohamedabdalaty63@gmail.com</a><br/>
-            <span style="color: #A0AEC0; font-size: 0.75rem;">Specialized in Geotechnical QA/QC, Civil Engineering Standards & Automated Compliance.</span>
-          </p>
-        </div>
-      </div>
-      <hr style="border-color: rgba(255,140,0,0.3); margin: 8px 0;">
-      <div style="text-align: center;">
-        <p style="color: #888888; font-size: 0.75rem; margin: 0;">© 2026 Eng. Mohamed Abd Al Aty. All rights reserved. Designed for ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN & ISO compliance.</p>
-      </div>
+footer_html = """
+<div class="corporate-footer">
+  <div class="corporate-footer-grid">
+    <div class="corporate-footer-col">
+      <h4>🏗️ Multi-Standard Engineering QA Portal</h4>
+      <p>Automated compliance verification platform across ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN, and ISO standards.</p>
     </div>
-    """,
-    unsafe_allow_html=True,
-)
+    <div class="corporate-footer-col" style="text-align: right;">
+      <h4>Professional Contacts</h4>
+      <p>
+        LinkedIn: <a href="https://www.linkedin.com/in/mohamed-abd-al-aty-a326a1214/" target="_blank">Mohamed Abd Al Aty</a><br/>
+        Email: <a href="mailto:mohamedabdalaty63@gmail.com">mohamedabdalaty63@gmail.com</a><br/>
+        <span>Specialized in Geotechnical QA/QC & Civil Engineering Standards.</span>
+      </p>
+    </div>
+  </div>
+  <div class="corporate-footer-bottom">
+    <div>© 2026 Eng. Mohamed Abd Al Aty. All rights reserved.</div>
+    <div>Powered by Google Gemini AI (gemini-3.5-flash-lite)</div>
+  </div>
+</div>
+"""
+st.markdown(footer_html, unsafe_allow_html=True)
