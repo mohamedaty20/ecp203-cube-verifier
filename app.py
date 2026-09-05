@@ -90,7 +90,7 @@ def run_ai_auditor_module():
 
                     # Fixed: Switched from gemini-3.7-flash to fast, stable production gemini-3.6-flash
                     response = client.models.generate_content(
-                        model='gemini-2.0-flash',
+                        model='gemini-3.8-flash',
                         contents=[
                             prompt,
                             types.Part.from_bytes(
