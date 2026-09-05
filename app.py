@@ -99,7 +99,6 @@ textarea, input {
     border: 1px solid #FF8C00 !important;
 }
 
-/* Complete Overrides for Date Inputs, Selectboxes, Calendars & Base Inputs to Remove White Blocks */
 div[data-baseweb="input"], div[data-baseweb="base-input"], div[data-baseweb="select"], div[data-baseweb="calendar"], div[data-baseweb="popover"], div[data-baseweb="menu"] {
     background-color: #1E222D !important;
     color: #FFFFFF !important;
@@ -118,7 +117,6 @@ div[data-baseweb="select"] > div {
     color: #FFFFFF !important;
 }
 
-/* Compact File Uploader Box & Clean Border Styling */
 [data-testid="stFileUploader"], div[data-baseweb="file-uploader"] {
     background-color: #1E222D !important;
     border: 1px solid #FF8C00 !important;
@@ -135,7 +133,6 @@ div[data-baseweb="select"] > div {
     color: #FFFFFF !important;
 }
 
-/* Force ALL buttons (StButton and DownloadButton) to be solid black with pure white bold text */
 div.stButton > button, div.stDownloadButton > button, button[kind="secondary"], button[kind="primary"] {
     background-color: #000000 !important;
     color: #FFFFFF !important;
@@ -153,7 +150,6 @@ div.stButton > button:hover, div.stDownloadButton > button:hover {
     border: 2px solid #00BFFF !important;
 }
 
-/* Enhanced Navigation Radio Labels & Main Tabs Text Size & Readability (Enlarged and Bolded) */
 div[row-widget="stRadio"] label p, .stRadio div[data-baseweb="radio"] label span {
     font-size: 18px !important;
     font-weight: 800 !important;
@@ -177,7 +173,6 @@ hr {
     background-color: #1B2A4A !important;
 }
 
-/* Compact Low-Profile Footer Design */
 .footer-container {
     background: linear-gradient(135deg, #1B2A4A 0%, #031338 100%);
     border: 1px solid #FF8C00;
@@ -216,7 +211,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- APP SCREEN NAVIGATION SELECTOR ---
 app_mode = st.radio(
     "📱 App Screen Navigation:",
     [
@@ -299,21 +293,23 @@ mix_audit_rows = [
 ]
 df_mix_audit = pd.DataFrame(mix_audit_rows)
 
-# --- MODULE CLASSES & FUNCTIONS FOR PROFESSIONAL PDFS WITH ENHANCED HIERARCHY & MARKDOWN CLEANING ---
+# --- ADVANCED TEXT CLEANER FOR PDF EXPORTS (REMOVES ALL MARKDOWN, TABLES, & DOLLAR SIGNS) ---
 def format_markdown_for_reportlab(text):
     if not text:
         return ""
+    # Strip out LaTeX math dollar signs completely
+    cleaned = re.sub(r'\$(.*?)\$', r'\1', text)
     # XML escape
-    cleaned = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-    # Remove markdown table borders/pipes
-    cleaned = re.sub(r'\|', '   ', cleaned)
+    cleaned = cleaned.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    # Strip markdown table formatting rows (---|---|---)
+    cleaned = re.sub(r'[\-\|\:]+', ' ', cleaned)
     # Remove markdown headers like ### or ##
     cleaned = re.sub(r'#{1,6}\s*', '', cleaned)
     # Convert **bold** to ReportLab <b>bold</b>
     cleaned = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', cleaned)
     # Convert *italic* to <i>italic</i>
     cleaned = re.sub(r'\*(.*?)\*', r'<i>\1</i>', cleaned)
-    # Clean up leading bullet points (* or -) into clean bullet symbols
+    # Clean up leading bullet points into bullet symbols
     cleaned = re.sub(r'^\s*[\*\-]\s+', '&bull; ', cleaned, flags=re.MULTILINE)
     return cleaned
 
@@ -607,27 +603,27 @@ elif app_mode == "📖 ECP 203 Official Formulas & Site Instructions Handbook":
         st.markdown("""
         According to the Egyptian Code for Design and Construction of Reinforced Concrete Structures (**ECP 203**), structural concrete acceptance is evaluated based on standard cube crushing tests (150mm cubes tested at 28 days unless specified otherwise).
 
-        * **1. Arithmetic Mean Strength ($f_m$):**
-          $$f_m = \\frac{\\sum_{i=1}^{n} x_i}{n}$$
-        * **2. Standard Deviation ($s$):**
-          $$s = \\sqrt{\\frac{\\sum_{i=1}^{n} (x_i - f_m)^2}{n - 1}}$$
-        * **3. Characteristic Compressive Strength ($f_{cu}$):**
-          $$f_{cu} = \\max\\left(f_m - k \\cdot s,\\; 0.85 \\cdot f_m\\right)$$
+        * **1. Arithmetic Mean Strength (f_m):**
+          f_m = (Sum of x_i) / n
+        * **2. Standard Deviation (s):**
+          s = sqrt(Sum((x_i - f_m)^2) / (n - 1))
+        * **3. Characteristic Compressive Strength (f_cu):**
+          f_cu = max(f_m - k * s, 0.85 * f_m)
         """)
 
     with tab_hb2:
         st.subheader("Mix Design Limits & Compliance Thresholds (ECP 203)")
         st.markdown("""
-        * **Water-Cement Ratio (W/C):** Max 0.45 for grade $\\ge 30\\text{ N/mm}^2$; Max 0.50 for lower grades.
-        * **Minimum Cement Content:** At least $300\\text{ kg/m}^3$ for durability.
-        * **Fresh Concrete Temperature:** Must not exceed $35\\text{ °C}$ during placement.
+        * **Water-Cement Ratio (W/C):** Max 0.45 for grade >= 30 N/mm²; Max 0.50 for lower grades.
+        * **Minimum Cement Content:** At least 300 kg/m³ for durability.
+        * **Fresh Concrete Temperature:** Must not exceed 35 °C during placement.
         """)
 
     with tab_hb3:
         st.subheader("Site Quality Control Guidelines")
         st.markdown("""
-        1. **Sampling Frequency:** At least one set of 6 cubes per $100\\text{ m}^3$ or structural pour per shift.
-        2. **Curing:** Immediate water curing at $20 \\pm 2\\text{ °C}$ until testing age.
+        1. **Sampling Frequency:** At least one set of 6 cubes per 100 m³ or structural pour per shift.
+        2. **Curing:** Immediate water curing at 20 ± 2 °C until testing age.
         """)
 
 else:
@@ -775,9 +771,9 @@ else:
                 st.markdown(f"### 🔹 {stage_name} Evaluation Breakdown")
                 cube_vals = cubes_7 if stage_name == "7 Days" else (cubes_14 if stage_name == "14 Days" else cubes_28)
                 vals_str = ", ".join([str(v) for v in cube_vals])
-                st.markdown(f"• **Input Samples:** `[{vals_str}]` ($n = {res['n']}$)")
-                st.markdown(f"• **Mean ($f_m$):** {res['mean']:.2f} N/mm² | **StdDev ($s$):** {res['s']:.2f} N/mm²")
-                st.markdown(f"• **Characteristic Strength ($f_{{cu}}$):** {res['fcu_char']:.2f} N/mm²")
+                st.markdown(f"• **Input Samples:** `[{vals_str}]` (n = {res['n']})")
+                st.markdown(f"• **Mean (f_m):** {res['mean']:.2f} N/mm² | **StdDev (s):** {res['s']:.2f} N/mm²")
+                st.markdown(f"• **Characteristic Strength (f_cu):** {res['fcu_char']:.2f} N/mm²")
                 st.markdown("---")
 
     # Visualizations Section
