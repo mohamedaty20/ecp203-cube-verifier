@@ -334,12 +334,30 @@ app_mode = st.radio(
     "📱 App Screen Navigation:",
     [
         "📊 Verifier Dashboard",
-        "🤖 **AI General Engineering Auditor**",
+        "🤖 AI General Engineering Auditor",
+        "🔍 Crack & Defect Diagnostic",  # <--- Added option here
         "📖 ECP 203 Official Formulas & Site Instructions Handbook",
     ],
     horizontal=True,
 )
 st.markdown("---")
+
+if app_mode == "📊 Verifier Dashboard":
+  # ... existing verifier dashboard code ...
+
+elif app_mode == "🤖 AI General Engineering Auditor":
+  st.markdown("---")
+  run_ai_auditor_module()
+
+elif app_mode == "🔍 Crack & Defect Diagnostic":  # <--- Added routing here
+  st.markdown("---")
+  run_crack_defect_analyzer()
+
+elif app_mode == "📖 ECP 203 Official Formulas & Site Instructions Handbook":
+  # ... existing handbook code ...
+
+else:
+  # ... existing fallback code ...
 
 # Sidebar Configuration
 st.sidebar.header("PROJECT & BATCH DETAILS")
