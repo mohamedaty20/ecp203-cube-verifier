@@ -101,7 +101,7 @@ def run_ai_auditor_module():
 
                     # 3. Send text with thinking_level set to LOW for instant generation on 3.7-flash
                     response = client.models.generate_content(
-                        model='Gemini 3 Flash',
+                        model="gemini-2.5-flash-lite",
                         contents=prompt,
                         config=types.GenerateContentConfig(
                             thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW)
