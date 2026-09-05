@@ -55,30 +55,19 @@ class AuditPDFReport(FPDF):
 
 def run_ai_auditor_module():
     st.subheader("🤖 AI Lab Report & ECP 203 Auditor")
-    st.write("Upload a PDF lab report. Python will instantly extract the text locally and audit it against ECP 203 standards.")
+    st.write("Upload a PDF document or a photo/image of a lab report or test sheet. The AI will instantly analyze and audit it against ECP 203 standards.")
 
-    # File Uploader focused on PDFs for local text extraction
-    uploaded_file = st.file_uploader("Upload Lab Report (PDF)", type=["pdf"])
+    # File Uploader supporting both PDFs and image formats (PNG, JPG, JPEG)
+    uploaded_file = st.file_uploader("Upload Lab Report / Data Sheet (PDF, PNG, JPG, JPEG)", type=["pdf", "png", "jpg", "jpeg"])
 
     if uploaded_file is not None:
-        st.info(f"Uploaded Document: {uploaded_file.name}")
+        file_extension = uploaded_file.name.split('.')[-1].lower()
+        st.info(f"Uploaded File: {uploaded_file.name}")
 
         if st.button("Run Fast ECP 203 Audit"):
-            with st.spinner("Extracting text and running audit..."):
+            with st.spinner("Processing file and running AI audit..."):
                 try:
-                    # 1. Locally extract text from the PDF using Python (Super fast, zero API lag)
-                    pdf_reader = pypdf.PdfReader(uploaded_file)
-                    extracted_text = ""
-                    for page in pdf_reader.pages:
-                        page_text = page.extract_text()
-                        if page_text:
-                            extracted_text += page_text + "\n"
-
-                    if not extracted_text.strip():
-                        st.error("⚠️ Could not extract text from this PDF. It might be scanned as an image. Please ensure it's a text-based PDF.")
-                        return
-
-                    # 2. Initialize Gemini Client using Streamlit secrets or environment variables
+                    # Initialize Gemini Client using Streamlit secrets or environment variables
                     api_key = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY"))
                     if not api_key:
                         st.error("⚠️ GEMINI_API_KEY is not configured in your Streamlit secrets or environment variables.")
@@ -86,11 +75,9 @@ def run_ai_auditor_module():
 
                     client = genai.Client(api_key=api_key)
                     
-                    prompt = f"""
+                    prompt = """
                     You are an expert civil quality control engineer specialized in the Egyptian Code of Practice (ECP 203) for reinforced concrete structures.
-                    Analyze the following extracted text from a concrete cube test report or data sheet:
-                    
-                    {extracted_text}
+                    Analyze the provided lab report document or image of concrete cube test results:
                     
                     Verify the following:
                     1. Check if characteristic compressive strength (fcu) meets the specified design grade.
@@ -99,10 +86,32 @@ def run_ai_auditor_module():
                     Provide a detailed, professional audit report with clear headings, findings, and recommendations.
                     """
 
-                    # 3. Send text with thinking_level set to LOW for instant generation on 3.7-flash
+                    contents = []
+                    if file_extension == 'pdf':
+                        # Locally extract text from the PDF using Python
+                        pdf_reader = pypdf.PdfReader(uploaded_file)
+                        extracted_text = ""
+                        for page in pdf_reader.pages:
+                            page_text = page.extract_text()
+                            if page_text:
+                                extracted_text += page_text + "\n"
+
+                        if not extracted_text.strip():
+                            st.error("⚠️ Could not extract text from this PDF. It might be scanned as an image. Please upload it directly as an image file (PNG/JPG) instead.")
+                            return
+                        contents = [prompt, f"Extracted PDF Text:\n{extracted_text}"]
+                    else:
+                        # Handle image uploads (PNG, JPG, JPEG)
+                        image_part = types.Part.from_bytes(
+                            data=uploaded_file.getvalue(),
+                            mime_type=uploaded_file.type
+                        )
+                        contents = [prompt, image_part]
+
+                    # Send to Gemini (using gemini-2.5-flash for robust multi-modal and text processing)
                     response = client.models.generate_content(
-                        model="gemini-3.5-flash-lite",
-                        contents=prompt,
+                        model="Gemini 3.5 Flash-Lite",
+                        contents=contents,
                         config=types.GenerateContentConfig(
                             thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW)
                         )
