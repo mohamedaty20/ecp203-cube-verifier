@@ -56,17 +56,14 @@ dark_style = """
     max-width: 100% !important;
 }
 [data-testid="stImage"] {
-    width: 100vw !important;
+    width: 100% !important;
     position: relative !important;
-    left: 50% !important;
-    right: 50% !important;
-    margin-left: -50vw !important;
-    margin-right: -50vw !important;
     margin-bottom: 2rem !important;
 }
 [data-testid="stImage"] img {
-    width: 100% !important;
-    object-fit: cover;
+    max-width: 100% !important;
+    border-radius: 6px;
+    border: 1px solid #FF8C00;
 }
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
@@ -103,21 +100,40 @@ textarea, input {
     color: #FFFFFF !important;
     border: 1px solid #FF8C00 !important;
 }
-/* Force ALL buttons (StButton and DownloadButton) to be black with white text */
-.stButton>button, .stDownloadButton>button {
+
+/* Force ALL buttons (StButton and DownloadButton) to be solid black with pure white bold text */
+div.stButton > button, div.stDownloadButton > button, button[kind="secondary"], button[kind="primary"] {
     background-color: #000000 !important;
     color: #FFFFFF !important;
-    border: 1px solid #FF8C00 !important;
+    border: 2px solid #FF8C00 !important;
     font-family: 'Segoe UI', Arial, sans-serif !important;
-    font-size: 15px !important;
-    font-weight: 600 !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
     border-radius: 6px !important;
+    padding: 0.5rem 1rem !important;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.4) !important;
 }
-.stButton>button:hover, .stDownloadButton>button:hover {
+div.stButton > button:hover, div.stDownloadButton > button:hover {
     background-color: #1E222D !important;
     color: #FF8C00 !important;
-    border: 1px solid #00BFFF !important;
+    border: 2px solid #00BFFF !important;
 }
+
+/* Fix main navigation radio labels and tabs font size & weight */
+div[row-widget="stRadio"] label p, .stRadio div[data-baseweb="radio"] label span {
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    color: #FFFFFF !important;
+}
+.stTabs [data-baseweb="tab"] {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: #FFFFFF !important;
+}
+.stTabs [data-baseweb="tab"]:hover {
+    color: #00BFFF !important;
+}
+
 hr {
     border-color: #262730 !important;
 }
@@ -234,13 +250,60 @@ mix_audit_rows = [
 ]
 df_mix_audit = pd.DataFrame(mix_audit_rows)
 
-# --- MODULE CLASSES & FUNCTIONS ---
+# --- MODULE CLASSES & FUNCTIONS FOR PROFESSIONAL PDFS ---
+def build_professional_pdf_header(story, doc_title, subtitle, logo_bytes, engineer, project, location, rep_date):
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle("DocTitle", parent=styles["Heading1"], fontSize=16, textColor=colors.HexColor("#1B2A4A"), spaceAfter=4, alignment=1, fontName="Helvetica-Bold")
+    sub_style = ParagraphStyle("DocSub", parent=styles["Normal"], fontSize=10, textColor=colors.HexColor("#444444"), spaceAfter=10, alignment=1, fontName="Helvetica-Bold")
+    meta_style = ParagraphStyle("MetaStyle", parent=styles["Normal"], fontSize=9, textColor=colors.HexColor("#222222"), leading=12, fontName="Helvetica")
+
+    if logo_bytes:
+        try:
+            story.append(ReportLabImage(io.BytesIO(logo_bytes), width=100, height=38))
+            story.append(Spacer(1, 4))
+        except Exception:
+            pass
+
+    story.append(Paragraph(doc_title, title_style))
+    story.append(Paragraph(subtitle, sub_style))
+    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#1B2A4A"), spaceAfter=8))
+
+    # Metadata Block with explicit spaces for time & signatures
+    meta_html = f"""
+    <b>Project Name:</b> {project} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Location:</b> {location}<br/>
+    <b>Engineer Name:</b> {engineer} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Report Date:</b> {rep_date} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Time:</b> ____________
+    """
+    story.append(Paragraph(meta_html, meta_style))
+    story.append(Spacer(1, 10))
+
+def build_professional_pdf_footer_and_signatures(story, qr_img_buffer):
+    styles = getSampleStyleSheet()
+    body_style = ParagraphStyle("BodyStyle", parent=styles["Normal"], fontSize=8, textColor=colors.HexColor("#222222"), leading=10, fontName="Helvetica")
+    sec_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=11, textColor=colors.HexColor("#1B2A4A"), spaceBefore=10, spaceAfter=4, fontName="Helvetica-Bold")
+
+    story.append(Spacer(1, 10))
+    story.append(Paragraph("<b>Engineering Approvals & Verification Sign-Off</b>", sec_style))
+    
+    qr_lab_img = ReportLabImage(qr_img_buffer, width=55, height=55)
+    sign_cell_1 = Paragraph("<b>Prepared By:</b><br/>Engineer Sign:<br/>___________________", body_style)
+    sign_cell_2 = Paragraph("<b>QA/QC Checked:</b><br/>Inspector Sign:<br/>___________________", body_style)
+    sign_cell_3 = Paragraph("<b>Consultant Approved:</b><br/>Stamp & Sign:<br/>___________________", body_style)
+    qr_cell = [Paragraph("<b>QR Verify:</b>", body_style), qr_lab_img]
+
+    t_sign = Table([[sign_cell_1, sign_cell_2, sign_cell_3, qr_cell]], colWidths=[130, 130, 130, 110])
+    t_sign.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F5F7FA")),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("ALIGN", (3, 0), (3, 0), "CENTER"),
+    ]))
+    story.append(t_sign)
+
 class AuditPDFReport(FPDF):
     def header(self):
-        self.set_font('helvetica', 'B', 14)
-        self.cell(0, 10, 'ECP 203 General Engineering Audit & Compliance Review', 0, 1, 'C')
-        self.ln(5)
-
+        pass
     def footer(self):
         self.set_y(-15)
         self.set_font('helvetica', 'I', 8)
@@ -248,10 +311,7 @@ class AuditPDFReport(FPDF):
 
 class CrackPDFReport(FPDF):
     def header(self):
-        self.set_font('helvetica', 'B', 14)
-        self.cell(0, 10, 'ECP 203 Concrete Crack & Defect Diagnostic Report', 0, 1, 'C')
-        self.ln(5)
-
+        pass
     def footer(self):
         self.set_y(-15)
         self.set_font('helvetica', 'I', 8)
@@ -334,22 +394,47 @@ def run_ai_auditor_module():
                     st.markdown("### 📋 Engineering Audit Findings & Compliance Breakdown")
                     st.markdown(audit_result)
 
-                    pdf = AuditPDFReport()
-                    pdf.add_page()
-                    pdf.set_font("helvetica", size=10)
-                    clean_text = audit_result.encode('latin-1', 'replace').decode('latin-1')
-                    pdf.multi_cell(0, 8, clean_text)
+                    # Professional ReportLab PDF Generation
+                    pdf_buffer = io.BytesIO()
+                    doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
+                    story = []
                     
-                    pdf_output_path = "ecp203_engineering_audit_report.pdf"
-                    pdf.output(pdf_output_path)
+                    disp_proj = project_name if project_name.strip() else "Unnamed Project"
+                    disp_eng = engineer_name if engineer_name.strip() else "Site Engineer"
+                    disp_loc = pour_location if pour_location.strip() else "General Site"
+                    rep_date_str = report_date.strftime("%Y-%m-%d")
 
-                    with open(pdf_output_path, "rb") as pdf_file:
-                        st.download_button(
-                            label="📥 Download Audit Report (PDF)",
-                            data=pdf_file,
-                            file_name="ECP203_Engineering_Audit_Report.pdf",
-                            mime="application/pdf"
-                        )
+                    build_professional_pdf_header(story, "ECP 203 General Engineering Audit Report", f"Audit Focus: {audit_focus}", company_logo_bytes, disp_eng, disp_proj, disp_loc, rep_date_str)
+
+                    styles = getSampleStyleSheet()
+                    body_style = ParagraphStyle("Body", parent=styles["Normal"], fontSize=9, textColor=colors.HexColor("#222222"), leading=13, spaceAfter=6)
+                    
+                    # Clean text and split into paragraphs
+                    for para in audit_result.split("\n\n"):
+                        if para.strip():
+                            clean_p = para.encode('latin-1', 'replace').decode('latin-1').replace('\n', '<br/>')
+                            story.append(Paragraph(clean_p, body_style))
+
+                    # Generate QR Code
+                    qr_data = f"ECP203_AUDIT | Project: {disp_proj} | Date: {rep_date_str} | Eng: {disp_eng}"
+                    qr = qrcode.QRCode(version=1, box_size=4, border=1)
+                    qr.add_data(qr_data)
+                    qr.make(fit=True)
+                    qr_img = qr.make_image(fill_color="black", back_color="white")
+                    qr_buf = io.BytesIO()
+                    qr_img.save(qr_buf, format="PNG")
+                    qr_buf.seek(0)
+
+                    build_professional_pdf_footer_and_signatures(story, qr_buf)
+                    doc.build(story)
+                    pdf_buffer.seek(0)
+
+                    st.download_button(
+                        label="📥 Download Audit Report (PDF)",
+                        data=pdf_buffer,
+                        file_name="ECP203_Engineering_Audit_Report.pdf",
+                        mime="application/pdf"
+                    )
 
                 except Exception as e:
                     st.error(f"An error occurred during AI processing: {e}")
@@ -361,8 +446,15 @@ def run_crack_defect_analyzer():
     defect_image = st.file_uploader("Upload Site Defect Photo", type=["png", "jpg", "jpeg"], key="crack_uploader")
     
     if defect_image is not None:
-        # Fixed image container styling to avoid vertical text bugs
-        st.image(defect_image, caption="Uploaded Site Defect", use_container_width=True)
+        # Fixed image container layout to prevent vertical string rendering bugs
+        col_img1, col_img2 = st.columns([1, 2])
+        with col_img1:
+            st.image(defect_image, caption="Uploaded Defect Sample", use_container_width=True)
+        with col_img2:
+            st.markdown("### 📌 Defect Inspection Ready")
+            st.write(f"• **Project:** {project_name if project_name.strip() else 'N/A'}")
+            st.write(f"• **Location:** {pour_location}")
+            st.write(f"• **Inspection Date:** {report_date.strftime('%Y-%m-%d')}")
         
         if st.button("Diagnose Defect & Get Egyptian Market Repair Protocol"):
             with st.spinner("Analyzing defect severity and ECP 203 repair guidelines..."):
@@ -396,37 +488,58 @@ def run_crack_defect_analyzer():
                     st.markdown("### 🛠️ Forensic Diagnosis & Repair Protocol")
                     st.markdown(diagnostic_text)
 
-                    # Generate PDF Report for Crack Diagnosis
-                    pdf = CrackPDFReport()
-                    pdf.add_page()
-                    
-                    # Embed image in PDF report if possible
+                    # Generate Professional PDF Report for Crack Diagnosis
+                    pdf_buffer = io.BytesIO()
+                    doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
+                    story = []
+
+                    disp_proj = project_name if project_name.strip() else "Unnamed Project"
+                    disp_eng = engineer_name if engineer_name.strip() else "Site Engineer"
+                    disp_loc = pour_location if pour_location.strip() else "General Site"
+                    rep_date_str = report_date.strftime("%Y-%m-%d")
+
+                    build_professional_pdf_header(story, "ECP 203 Concrete Crack & Defect Diagnostic Report", "Forensic Engineering Assessment & Egyptian Market Repair Protocol", company_logo_bytes, disp_eng, disp_proj, disp_loc, rep_date_str)
+
+                    # Embed defect photo in PDF
                     try:
                         img_temp_path = "temp_defect_img.jpg"
-                        # Convert/save image bytes temporarily for ReportLab
                         with open(img_temp_path, "wb") as f:
                             f.write(defect_image.getvalue())
-                        pdf.image(img_temp_path, x=15, y=25, w=80)
-                        pdf.ln(70)
+                        story.append(ReportLabImage(img_temp_path, width=150, height=110))
+                        story.append(Spacer(1, 8))
                         if os.path.exists(img_temp_path):
                             os.remove(img_temp_path)
                     except Exception:
-                        pdf.ln(10)
+                        pass
 
-                    pdf.set_font("helvetica", size=9)
-                    clean_diag_text = diagnostic_text.encode('latin-1', 'replace').decode('latin-1')
-                    pdf.multi_cell(0, 6, clean_diag_text)
-                    
-                    crack_pdf_path = "ecp203_crack_diagnostic_report.pdf"
-                    pdf.output(crack_pdf_path)
+                    styles = getSampleStyleSheet()
+                    body_style = ParagraphStyle("Body", parent=styles["Normal"], fontSize=9, textColor=colors.HexColor("#222222"), leading=13, spaceAfter=6)
 
-                    with open(crack_pdf_path, "rb") as crack_pdf_file:
-                        st.download_button(
-                            label="📥 Download Defect Report (PDF)",
-                            data=crack_pdf_file,
-                            file_name="ECP203_Crack_Diagnostic_Report.pdf",
-                            mime="application/pdf"
-                        )
+                    for para in diagnostic_text.split("\n\n"):
+                        if para.strip():
+                            clean_p = para.encode('latin-1', 'replace').decode('latin-1').replace('\n', '<br/>')
+                            story.append(Paragraph(clean_p, body_style))
+
+                    # QR Code verification for Crack Report
+                    qr_data = f"ECP203_CRACK_REPORT | Project: {disp_proj} | Location: {disp_loc} | Date: {rep_date_str}"
+                    qr = qrcode.QRCode(version=1, box_size=4, border=1)
+                    qr.add_data(qr_data)
+                    qr.make(fit=True)
+                    qr_img = qr.make_image(fill_color="black", back_color="white")
+                    qr_buf = io.BytesIO()
+                    qr_img.save(qr_buf, format="PNG")
+                    qr_buf.seek(0)
+
+                    build_professional_pdf_footer_and_signatures(story, qr_buf)
+                    doc.build(story)
+                    pdf_buffer.seek(0)
+
+                    st.download_button(
+                        label="📥 Download Defect Report (PDF)",
+                        data=pdf_buffer,
+                        file_name="ECP203_Crack_Diagnostic_Report.pdf",
+                        mime="application/pdf"
+                    )
 
                 except Exception as e:
                     st.error(f"Error processing image: {e}")
@@ -735,21 +848,9 @@ else:
         story = []
         styles = getSampleStyleSheet()
 
-        title_style = ParagraphStyle("DocTitle", parent=styles["Heading1"], fontSize=18, textColor=colors.HexColor("#1B2A4A"), spaceAfter=4, alignment=1)
-        subtitle_style = ParagraphStyle("DocSub", parent=styles["Normal"], fontSize=10, textColor=colors.HexColor("#000000"), spaceAfter=15, alignment=1)
-        section_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=11, textColor=colors.HexColor("#000000"), spaceBefore=8, spaceAfter=3)
-        body_style = ParagraphStyle("Body", parent=styles["Normal"], fontSize=8, textColor=colors.HexColor("#333333"), spaceAfter=3)
+        section_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=11, textColor=colors.HexColor("#1B2A4A"), spaceBefore=10, spaceAfter=4, fontName="Helvetica-Bold")
 
-        if logo_bytes:
-            try:
-                story.append(ReportLabImage(io.BytesIO(logo_bytes), width=120, height=45))
-                story.append(Spacer(1, 4))
-            except Exception:
-                pass
-
-        story.append(Paragraph("ECP 203 Concrete Acceptance & Mix Compliance Report", title_style))
-        story.append(Paragraph(f"Multi-Stage Verification & Mix Audit | Report Date: {formatted_report_date}", subtitle_style))
-        story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#1B2A4A"), spaceAfter=6))
+        build_professional_pdf_header(story, "ECP 203 Concrete Acceptance & Mix Compliance Report", "Multi-Stage Verification & Statistical Mix Audit", logo_bytes, display_engineer_name, display_project_name, pour_location, formatted_report_date)
 
         story.append(Paragraph("<b>1. Project Overview & Traceability Metadata</b>", section_style))
         overview_data_list = [["Parameter", "Details"]] + df_overview.values.tolist()
@@ -763,7 +864,7 @@ else:
             ("BACKGROUND", (0, 1), (-1, -1), colors.HexColor("#F9F9F9")),
         ]))
         story.append(t_overview)
-        story.append(Spacer(1, 4))
+        story.append(Spacer(1, 6))
 
         story.append(Paragraph("<b>2. Batch Plant Mix Design ECP 203 Compliance Audit</b>", section_style))
         mix_table_rows = [list(df_mix_audit.columns)] + df_mix_audit.values.tolist()
@@ -776,7 +877,7 @@ else:
             ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
         ]))
         story.append(t_mix)
-        story.append(Spacer(1, 4))
+        story.append(Spacer(1, 6))
 
         story.append(Paragraph("<b>3. Cube Compliance Results Summary & Statistical Evaluation</b>", section_style))
         summary_headers = ["Stage", "n", "Target", "Req (MPa)", "Mean (MPa)", "StdDev", "fcu (MPa)", "Verdict"]
@@ -792,7 +893,7 @@ else:
             ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
         ]))
         story.append(t_summary)
-        story.append(Spacer(1, 4))
+        story.append(Spacer(1, 6))
 
         story.append(Paragraph("<b>4. Raw Individual Cube Strengths Matrix & Sample Counts</b>", section_style))
         raw_headers = list(df_raw_cubes.columns)
@@ -814,10 +915,10 @@ else:
             ("ALIGN", (0, 0), (-1, -1), "CENTER"),
         ]))
         story.append(t_raw)
-        story.append(Spacer(1, 4))
+        story.append(Spacer(1, 6))
 
         qr_data_content = f"ECP203_VERIFIED | Project: {display_project_name} | Location: {pour_location} | Ticket: {batch_ticket_id} | Date: {formatted_report_date} | Engineer: {display_engineer_name}"
-        qr = qrcode.QRCode(version=1, box_size=5, border=1)
+        qr = qrcode.QRCode(version=1, box_size=4, border=1)
         qr.add_data(qr_data_content)
         qr.make(fit=True)
         qr_img = qr.make_image(fill_color="black", back_color="white")
@@ -825,24 +926,8 @@ else:
         qr_buffer = io.BytesIO()
         qr_img.save(qr_buffer, format="PNG")
         qr_buffer.seek(0)
-        reportlab_qr_image = ReportLabImage(qr_buffer, width=65, height=65)
 
-        story.append(Paragraph("<b>5. Engineering Sign-Off & Approvals & Digital Verification</b>", section_style))
-        sign_cell_1 = Paragraph(f"<b>Prepared By:</b><br/>{display_engineer_name}<br/>Sign: _________", body_style)
-        sign_cell_2 = Paragraph("<b>Checked By (QA/QC):</b><br/>Name: _________<br/>Sign: _________", body_style)
-        sign_cell_3 = Paragraph("<b>Approved (Consultant):</b><br/>Name: _________<br/>Sign: _________", body_style)
-        qr_cell = [Paragraph("<b>Scan to Verify:</b>", body_style), reportlab_qr_image]
-        
-        t_sign = Table([[sign_cell_1, sign_cell_2, sign_cell_3, qr_cell]], colWidths=[140, 140, 140, 100])
-        t_sign.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F9F9F9")),
-            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
-            ("TOPPADDING", (0, 0), (-1, -1), 4),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-            ("ALIGN", (3, 0), (3, 0), "CENTER"),
-        ]))
-        story.append(t_sign)
+        build_professional_pdf_footer_and_signatures(story, qr_buffer)
 
         doc.build(story)
         pdf_buffer.seek(0)
