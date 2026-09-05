@@ -101,15 +101,28 @@ textarea, input {
     border: 1px solid #FF8C00 !important;
 }
 
-/* Force File Uploader Box & Buttons to be Solid Black with White Text */
+/* FIX POINT 2: Fix Date Input & General Inputs Half-White Background Bug */
+div[data-baseweb="input"], div[data-baseweb="base-input"], div[data-baseweb="select"], div[data-baseweb="calendar"] {
+    background-color: #1E222D !important;
+    color: #FFFFFF !important;
+}
+div[data-baseweb="input"] input, .stDateInput input {
+    background-color: #1E222D !important;
+    color: #FFFFFF !important;
+}
+
+/* FIX POINT 3: Compact File Uploader Box & Clean Border Styling */
 [data-testid="stFileUploader"], div[data-baseweb="file-uploader"] {
-    background-color: #000000 !important;
-    border: 2px dashed #FF8C00 !important;
+    background-color: #1E222D !important;
+    border: 1px solid #FF8C00 !important;
     border-radius: 8px !important;
     padding: 10px !important;
+    margin-bottom: 10px !important;
 }
 [data-testid="stFileUploader"] section {
-    background-color: #000000 !important;
+    background-color: #1E222D !important;
+    border: none !important;
+    padding: 5px !important;
 }
 [data-testid="stFileUploader"] span, [data-testid="stFileUploader"] small, [data-testid="stFileUploader"] div {
     color: #FFFFFF !important;
@@ -133,18 +146,18 @@ div.stButton > button:hover, div.stDownloadButton > button:hover {
     border: 2px solid #00BFFF !important;
 }
 
-/* Enhanced Navigation Radio Labels & Main Tabs */
+/* FIX POINT 1: Enhanced Navigation Radio Labels & Main Tabs Text Size & Readability */
 div[row-widget="stRadio"] label p, .stRadio div[data-baseweb="radio"] label span {
-    font-size: 17px !important;
+    font-size: 18px !important;
     font-weight: 800 !important;
     color: #FFFFFF !important;
 }
 .stTabs [data-baseweb="tab"] {
-    font-size: 16px !important;
+    font-size: 18px !important;
     font-weight: 800 !important;
     color: #FFFFFF !important;
-    padding-top: 10px !important;
-    padding-bottom: 10px !important;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
 }
 .stTabs [data-baseweb="tab"]:hover {
     color: #00BFFF !important;
@@ -273,7 +286,6 @@ df_mix_audit = pd.DataFrame(mix_audit_rows)
 def clean_for_pdf(text):
     if not text:
         return ""
-    # Clean markdown and problematic characters for ReportLab Paragraphs
     cleaned = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     cleaned = cleaned.replace("•", "-").replace("—", "-")
     return cleaned
@@ -343,6 +355,7 @@ class CrackPDFReport(FPDF):
         self.set_font('helvetica', 'I', 8)
         self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
 
+# --- FIX POINT 4: AI AUDITOR & CRACK DIAGNOSTIC MODULES WITH FULL FILE UPLOADER SUPPORT ---
 def run_ai_auditor_module():
     st.subheader("🤖 ECP 203 General Engineering AI Auditor")
     st.write("Upload any structural engineering document, drawing spec, mix design, inspection sheet, or photo/image. The AI will audit it comprehensively against Egyptian Code of Practice (ECP 203) standards.")
@@ -355,7 +368,7 @@ def run_ai_auditor_module():
         "Non-Conformance Report (NCR) Technical Review"
     ])
 
-    uploaded_file = st.file_uploader("Upload Engineering Document / Photo (PDF, PNG, JPG, JPEG)", type=["pdf", "png", "jpg", "jpeg"])
+    uploaded_file = st.file_uploader("Upload Engineering Document / Photo (PDF, PNG, JPG, JPEG)", type=["pdf", "png", "jpg", "jpeg"], key="ai_auditor_file_uploader")
 
     if uploaded_file is not None:
         file_extension = uploaded_file.name.split('.')[-1].lower()
