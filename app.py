@@ -1,5 +1,6 @@
 import io
 import datetime
+import os
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -8,10 +9,10 @@ import plotly.graph_objects as go
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import qrcode  # <--- Added for unique QR code generation
+import qrcode
 
-from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-from openpyxl.drawing.image import Image as OpenpyxlImage
+# Google GenAI for AI Auditor
+from google import genai
 
 # ReportLab imports for professional PDF generation
 from reportlab.lib import colors
@@ -27,7 +28,10 @@ from reportlab.platypus import (
     Image as ReportLabImage,
 )
 
-# 1. Page Configuration (MUST be first Streamlit command)
+# FPDF for AI Lab Report Audit PDF exports (aliased to avoid collision with ReportLab Image)
+from fpdf import FPDF
+
+# --- 1. PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
 st.set_page_config(
     page_title="ECP 203 Concrete Cube & Mix Verifier",
     page_icon="🏗️",
@@ -35,7 +39,89 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# 2. Custom Styling (Navy Blue Sidebar & Complete Dark Table Theme Overrides)
+# --- AI AUDITOR PDF CLASS ---
+class AuditPDFReport(FPDF):
+    def header(self):
+        self.set_font('helvetica', 'B', 14)
+        self.cell(0, 10, 'ECP 203 Lab Report Audit & Cube Verification', 0, 1, 'C')
+        self.ln(5)
+
+    def footer(self):
+        self.set_y(-15)
+        self.set_font('helvetica', 'I', 8)
+        self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
+
+def run_ai_auditor_module():
+    st.subheader("🤖 AI Lab Report & ECP 203 Auditor")
+    st.write("Upload a lab report photo or PDF to automatically audit it against Egyptian Code (ECP 203) concrete quality requirements.")
+
+    # File Uploader for Images and PDFs
+    uploaded_file = st.file_uploader("Upload Lab Report (Image or PDF)", type=["png", "jpg", "jpeg", "pdf"])
+
+    if uploaded_file is not None:
+        if uploaded_file.type.startswith("image/"):
+            st.image(uploaded_file, caption="Uploaded Lab Report", use_container_width=True)
+        else:
+            st.info(f"Uploaded Document: {uploaded_file.name}")
+
+        if st.button("Run ECP 203 Audit"):
+            with st.spinner("Analyzing report against ECP 203 standards..."):
+                try:
+                    # Initialize Gemini Client using Streamlit secrets or environment variables
+                    api_key = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY"))
+                    if not api_key:
+                        st.error("⚠️ GEMINI_API_KEY is not configured in your Streamlit secrets or environment variables.")
+                        return
+
+                    client = genai.Client(api_key=api_key)
+                    bytes_data = uploaded_file.getvalue()
+                    
+                    prompt = """
+                    You are an expert civil quality control engineer specialized in the Egyptian Code of Practice (ECP 203) for reinforced concrete structures.
+                    Analyze the uploaded concrete cube test report or data sheet. 
+                    Verify the following:
+                    1. Check if characteristic compressive strength (fcu) meets the specified design grade.
+                    2. Check testing ages (7-day and 28-day strength criteria and progression).
+                    3. Identify any non-conformances (NCR), outliers, or failures to meet ECP 203 compliance tolerances.
+                    Provide a detailed, professional audit report with clear headings, findings, and recommendations.
+                    """
+
+                    response = client.models.generate_content(
+                        model='gemini-2.5-flash',
+                        contents=[
+                            prompt,
+                            {"mime_type": uploaded_file.type, "data": bytes_data}
+                        ]
+                    )
+                    
+                    audit_result = response.text
+                    st.success("Audit Completed Successfully!")
+                    st.markdown("### 📋 Audit Findings")
+                    st.markdown(audit_result)
+
+                    # PDF Report Generation for Audit
+                    pdf = AuditPDFReport()
+                    pdf.add_page()
+                    pdf.set_font("helvetica", size=10)
+                    
+                    clean_text = audit_result.encode('latin-1', 'replace').decode('latin-1')
+                    pdf.multi_cell(0, 8, clean_text)
+                    
+                    pdf_output_path = "ecp203_audit_report.pdf"
+                    pdf.output(pdf_output_path)
+
+                    with open(pdf_output_path, "rb") as pdf_file:
+                        st.download_button(
+                            label="📥 Download Audit Report (PDF)",
+                            data=pdf_file,
+                            file_name="ECP203_Lab_Audit_Report.pdf",
+                            mime="application/pdf"
+                        )
+
+                except Exception as e:
+                    st.error(f"An error occurred during AI processing: {e}")
+
+# --- 2. CUSTOM STYLING ---
 dark_style = """
 <style>
 .stApp {
@@ -124,8 +210,6 @@ textarea, input {
 hr {
     border-color: #262730 !important;
 }
-
-/* Comprehensive override to completely eliminate white background containers on tables/dataframes */
 [data-testid="stDataFrame"], [data-testid="stTable"], div[data-baseweb="card"] {
     background-color: #1B2A4A !important;
 }
@@ -136,8 +220,6 @@ div[data-testid="stDataFrame"] > div {
     background-color: #1B2A4A !important;
     color: #FFFFFF !important;
 }
-
-/* High-End Executive Footer Styling */
 .footer-container {
     background: linear-gradient(135deg, #1B2A4A 0%, #031338 100%);
     border: 1px solid #FF8C00;
@@ -150,17 +232,15 @@ div[data-testid="stDataFrame"] > div {
 """
 st.markdown(dark_style, unsafe_allow_html=True)
 
-# 3. Top Banner / Cover Photo
+# --- 3. TOP BANNER / COVER PHOTO ---
 st.image("logo.png")
 
-# Moving Ticker Banner
 ticker_html = """
 <div style="overflow: hidden; white-space: nowrap; background-color: #FF8C00; color: #031338; padding: 8px 0; font-weight: bold; font-size: 15px; margin-bottom: 20px; border-radius: 4px;">
   <div style="display: inline-block; padding-left: 100%; animation: marquee 25s linear infinite;">
     🚀 ECP 203 Concrete Quality Control Active &nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp; ⚠️ Ensure all cube crushing results and batch tickets are verified daily &nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp; 🏗️ Current Project Inspection in Progress
   </div>
 </div>
-
 <style>
 @keyframes marquee {
   0% { transform: translate(0, 0); }
@@ -176,10 +256,14 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- APP SCREEN NAVIGATION SELECTOR (Removed "calculator") ---
+# --- APP SCREEN NAVIGATION SELECTOR (Including AI Auditor) ---
 app_mode = st.radio(
     "📱 App Screen Navigation:",
-    ["📊 Verifier Dashboard", "📖 ECP 203 Official Formulas & Site Instructions Handbook"],
+    [
+        "📊 Verifier Dashboard",
+        "🤖 AI Lab Report Auditor",
+        "📖 ECP 203 Official Formulas & Site Instructions Handbook",
+    ],
     horizontal=True,
 )
 st.markdown("---")
@@ -195,7 +279,6 @@ mixer_truck_no = st.sidebar.text_input("Mixer Truck No.", value="TRK-104")
 batch_ticket_id = st.sidebar.text_input("Batch Ticket ID", value="BT-99482")
 casting_date = st.sidebar.date_input("Casting Date", value=datetime.date.today() - datetime.timedelta(days=7))
 
-# Mix Design Parameters for ECP 203 Compliance Check
 st.sidebar.subheader("⚖️ Mix Design Specifications")
 cement_content = st.sidebar.number_input("Cement Content (kg/m³)", min_value=200.0, max_value=600.0, value=350.0, step=10.0)
 water_content = st.sidebar.number_input("Free Water Content (kg/m³)", min_value=100.0, max_value=300.0, value=150.0, step=5.0)
@@ -278,12 +361,12 @@ if input_method == "Manual Entry":
     st.stop()
 else:
   st.info("💡 Upload an Excel file containing cube crushing test data.")
-  uploaded_file = st.file_uploader("Choose an Excel file", type=["xlsx", "xls"])
-  if uploaded_file is not None:
+  uploaded_excel = st.file_uploader("Choose an Excel file", type=["xlsx", "xls"], key="excel_uploader")
+  if uploaded_excel is not None:
     try:
-      excel_file = pd.ExcelFile(uploaded_file)
+      excel_file = pd.ExcelFile(uploaded_excel)
       sheet_selected = st.selectbox("Select Sheet:", excel_file.sheet_names)
-      df = pd.read_excel(uploaded_file, sheet_name=sheet_selected)
+      df = pd.read_excel(uploaded_excel, sheet_name=sheet_selected)
       numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
       
       col_1, col_2, col_3 = st.columns(3)
@@ -301,14 +384,14 @@ else:
       st.error(f"⚠️ Error reading file: {e}")
       st.stop()
   else:
-    st.warning("👈 Please upload an Excel sheet to continue.")
+    st.warning("👈 Please upload an Excel sheet or switch to Manual Entry to continue.")
     st.stop()
 
 if not (cubes_7 or cubes_14 or cubes_28):
   st.warning("⚠️ Please provide cube strength data for at least one testing age.")
   st.stop()
 
-# Statistical analysis function with detailed calculations
+# Statistical analysis function
 def analyze_stage(cube_list, age_name, target_ratio):
   if not cube_list or len(cube_list) < 3:
     return None
@@ -352,52 +435,39 @@ if app_mode == "📖 ECP 203 Official Formulas & Site Instructions Handbook":
 
     * **1. Arithmetic Mean Strength ($f_m$):**
       $$f_m = \\frac{\\sum_{i=1}^{n} x_i}{n}$$
-      Where $x_i$ represents individual cube test results and $n$ is the total sample count.
-
     * **2. Standard Deviation ($s$):**
       $$s = \\sqrt{\\frac{\\sum_{i=1}^{n} (x_i - f_m)^2}{n - 1}}$$
-      Measures the dispersion and consistency of batch plant production quality.
-
     * **3. Characteristic Compressive Strength ($f_{cu}$):**
-      The characteristic strength must satisfy the statistical lower bound condition:
       $$f_{cu} = \\max\\left(f_m - k \\cdot s,\\; 0.85 \\cdot f_m\\right)$$
-      * **Factor $k$:** Equal to **1.91** for small sample batches ($n < 30$) and **1.64** for large production lots ($n \\ge 30$).
-
-    * **4. Individual Specimen Verification Rule:**
-      No single individual cube test result $x_i$ shall fall below:
-      $$\\text{Minimum Allowable Individual Strength} = 0.85 \\times f_{cu,\\text{target}}$$
+      *(Note: Factor $k = 1.91$ for $n < 30$, and $1.64$ for $n \\ge 30$)*
     """)
 
   with tab_hb2:
     st.subheader("Mix Design Limits & Compliance Thresholds (ECP 203)")
     st.markdown("""
-    * **Water-Cement Ratio (W/C):**
-      * For grades $f_{cu} \\ge 30\\text{ N/mm}^2$: Maximum allowed W/C ratio is **0.45**.
-      * For lower grades ($f_{cu} < 30\\text{ N/mm}^2$): Maximum allowed W/C ratio is **0.50**.
-    * **Minimum Cement Content:**
-      * Standard structural elements require a minimum cement content of **300 kg/m³** to guarantee durability, alkalinity, and adequate paste volume.
-    * **Fresh Concrete Temperature:**
-      * Fresh concrete temperature at time of placement must not exceed **35 °C** (especially in hot weather concreting) to prevent rapid slump loss and thermal cracking.
+    * **Water-Cement Ratio (W/C):** Max 0.45 for grade $\\ge 30\\text{ N/mm}^2$; Max 0.50 for lower grades.
+    * **Minimum Cement Content:** At least $300\\text{ kg/m}^3$ for durability.
+    * **Fresh Concrete Temperature:** Must not exceed $35\\text{ °C}$ during placement.
     """)
 
   with tab_hb3:
-    st.subheader("Site Quality Control & QA/QC Inspection Guidelines")
+    st.subheader("Site Quality Control Guidelines")
     st.markdown("""
-    1. **Sampling Frequency:** Take at least one set of 6 cubes (3 for 7-day testing, 3 for 28-day testing) for every $100\\text{ m}^3$ of concrete poured, or for each structural pour per shift.
-    2. **Curing Conditions:** Cubes must be demolded after $24 \\pm 4$ hours and immediately immersed in water curing tanks maintained at $20 \\pm 2 °C$ until testing age.
-    3. **Testing Procedure:** Compression testing machines must be calibrated annually. Apply load at a uniform stress rate of $0.4$ to $0.6\\text{ N/mm}^2$ per second without shock.
-    4. **Non-Conformance Action:** If a batch fails 28-day compliance criteria, immediate non-conformance report (NCR) procedures must be initiated, followed by non-destructive testing (Rebound Hammer / Ultrasonic Pulse Velocity) or core drilling as directed by the structural consultant.
+    1. **Sampling Frequency:** At least one set of 6 cubes per $100\\text{ m}^3$ or structural pour per shift.
+    2. **Curing:** Immediate water curing at $20 \\pm 2\\text{ °C}$ until testing age.
     """)
 
+elif app_mode == "🤖 AI Lab Report Auditor":
+  st.markdown("---")
+  run_ai_auditor_module()
+
 else:
-  # --- BATCH PLANT MIX DESIGN AUDIT SECTION ---
+  # --- VERIFIER DASHBOARD MODE ---
   st.markdown("---")
   st.header("2. Batch Plant Mix Design ECP 203 Compliance Audit")
 
   with st.container():
     st.markdown("### 🚚 Batch Plant Mix Design Audit Summary")
-    st.write("Review of fresh concrete and mix proportioning limits set by ECP 203:")
-    
     st.dataframe(df_mix_audit, use_container_width=True)
     
     mix_overall_text = "PASS - All site mix parameters comply with ECP 203 limits." if mix_overall_pass else "FAIL - One or more parameters exceed ECP 203 allowable limits."
@@ -406,7 +476,6 @@ else:
     else:
       st.error(f"**Overall Mix Verdict:** {mix_overall_text}")
 
-  # Results Display with Sample-by-Sample Calculation Sheets
   st.markdown("---")
   st.header("3. Cube Compliance Summaries & Detailed Calculation Sheets")
   tabs = st.tabs(["**7-Day Stage**", "**14-Day Stage**", "**28-Day Stage**", "**📐 Worked Calculation Sheet**"])
@@ -426,17 +495,12 @@ else:
         st.markdown(f"#### 🔍 Detailed Sample-by-Sample & Statistical Breakdown ({stage_label})")
         
         st.markdown(
-            f"* **Arithmetic Mean ($f_m$):** $\\frac{{\\sum x_i}}{{n}} ="
-            f" {res['mean']:.2f}$ N/mm²\n* **Standard Deviation ($s$):**"
-            f" {res['s']:.2f} N/mm²\n* **Factor ($k$):** {res['k']} (for $n ="
-            f" {res['n']}$)\n* **Characteristic Strength ($f_{{cu}}$):**"
-            f" $\\max(f_m - k \\cdot s,\\ 0.85 \\cdot f_m) ="
-            f" \\max({res['mean']:.2f} - {res['k']} \\cdot {res['s']:.2f},\\ 0.85"
-            f" \\cdot {res['mean']:.2f}) = $ **{res['fcu_char']:.2f} N/mm²**\n*"
-            f" **Target Required Strength ($f_{{cu,\\text{{target}}}}$):**"
-            f" {res['stage_target_fcu']:.2f} N/mm²\n* **Minimum Individual Cube"
-            f" Limit ($0.85 \\cdot f_{{cu,\\text{{target}}}}$):**"
-            f" {res['min_threshold']:.2f} N/mm²"
+            f"* **Arithmetic Mean ($f_m$):** {res['mean']:.2f} N/mm²\n"
+            f"* **Standard Deviation ($s$):** {res['s']:.2f} N/mm²\n"
+            f"* **Factor ($k$):** {res['k']} (for $n = {res['n']}$)\n"
+            f"* **Characteristic Strength ($f_{{cu}}$):** **{res['fcu_char']:.2f} N/mm²**\n"
+            f"* **Target Required Strength ($f_{{cu,\\text{{target}}}}$):** {res['stage_target_fcu']:.2f} N/mm²\n"
+            f"* **Minimum Individual Cube Limit ($0.85 \\cdot f_{{cu,\\text{{target}}}}$):** {res['min_threshold']:.2f} N/mm²"
         )
         
         cube_vals = cubes_7 if stage_label == "7 Days" else (cubes_14 if stage_label == "14 Days" else cubes_28)
@@ -448,43 +512,29 @@ else:
               "Sample #": i + 1,
               "Measured Strength (x_i) N/mm²": val,
               "Min Individual Limit (N/mm²)": round(min_lim, 2),
-              "Individual Check (x_i >= 0.85 * f_target)": "PASS ✅" if ind_pass else "FAIL ❌"
+              "Individual Check": "PASS ✅" if ind_pass else "FAIL ❌"
           })
         df_sb = pd.DataFrame(sample_breakdown)
         st.dataframe(df_sb, use_container_width=True)
         
         if res["is_compliant"]:
-          st.success(f"✅ **STAGE PASS ({stage_label}):** Both statistical characteristic strength condition and individual sample limits are fully satisfied according to ECP 203.")
+          st.success(f"✅ **STAGE PASS ({stage_label}):** Fully satisfied according to ECP 203.")
         else:
-          st.error(f"❌ **STAGE FAIL ({stage_label}):** Non-compliant with ECP 203 (Characteristic strength or individual sample falling below the 85% limit).")
+          st.error(f"❌ **STAGE FAIL ({stage_label}):** Non-compliant with ECP 203 limits.")
 
   with tabs[3]:
     st.subheader("📐 Fully Worked Numerical Calculation Sheet (ECP 203)")
-    st.write("Below are the fully plugged-in numerical steps and formulas calculated automatically from your entered cube test data across all testing stages:")
-    
     for stage_name, res in stages_data.items():
       if res is not None:
         st.markdown(f"### 🔹 {stage_name} Evaluation Breakdown")
         cube_vals = cubes_7 if stage_name == "7 Days" else (cubes_14 if stage_name == "14 Days" else cubes_28)
         vals_str = ", ".join([str(v) for v in cube_vals])
         
-        cond_check_str = "PASS ✅" if res['cond1'] else "FAIL ❌"
-        min_check_str = "PASS ✅" if res['cond2'] else "FAIL ❌"
-        
         st.markdown(f"""
-  * **Input Samples ($x_i$):** `[{vals_str}]` ($n = {res['n']}$)
-  * **Step 1: Arithmetic Mean ($f_m$):**
-    $f_m = \\frac{{\\sum x_i}}{{n}} = \\frac{{{sum(cube_vals)}}}{{{res['n']}}} = \\mathbf{{{res['mean']:.2f}\\text{{ N/mm²}}}}$
-  * **Step 2: Standard Deviation ($s$):**
-    $s = \\sqrt{{\\frac{{\\sum (x_i - f_m)^2}}{{n - 1}}}} = \\mathbf{{{res['s']:.2f}\\text{{ N/mm²}}}}$
-  * **Step 3: Characteristic Strength ($f_{{cu}}$):**
-    - Condition A ($f_m - k \\cdot s$): ${res['mean']:.2f} - ({res['k']} \\cdot {res['s']:.2f}) = {res['fcu_calc_1']:.2f}$ N/mm²
-    - Condition B ($0.85 \\cdot f_m$): $0.85 \\cdot {res['mean']:.2f} = {res['fcu_calc_2']:.2f}$ N/mm²
-    - Final $f_{{cu}} = \\max({res['fcu_calc_1']:.2f}, {res['fcu_calc_2']:.2f}) = \\mathbf{{{res['fcu_char']:.2f}\\text{{ N/mm²}}}}$
-  * **Step 4: Target & Compliance Check:**
-    - Required Target ($f_{{target}}$): ${res['target_ratio']} \\times {fcu_spec} = {res['stage_target_fcu']:.2f}$ N/mm²
-    - Characteristic Check ($f_{{cu}} \\ge f_{{target}}$): `{res['fcu_char']:.2f} ≥ {res['stage_target_fcu']:.2f}` $\\rightarrow$ **{cond_check_str}**
-    - Min Individual Limit ($0.85 \\times f_{{target}}$): `{res['min_threshold']:.2f} N/mm²` (Minimum measured: `{res['min']} N/mm²`) $\\rightarrow$ **{min_check_str}**
+        * **Input Samples ($x_i$):** `[{vals_str}]` ($n = {res['n']}$)
+        * **Arithmetic Mean ($f_m$):** {res['mean']:.2f} N/mm²
+        * **Standard Deviation ($s$):** {res['s']:.2f} N/mm²
+        * **Characteristic Strength ($f_{{cu}}$):** {res['fcu_char']:.2f} N/mm²
         """)
         st.markdown("---")
       else:
@@ -573,7 +623,7 @@ for stage_key in ["7 Days", "14 Days", "28 Days"]:
     })
 df_summary_table = pd.DataFrame(summary_rows)
 
-# Excel Buffer Construction
+# Excel Export Buffer
 excel_buffer = io.BytesIO()
 with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
   df_overview.to_excel(writer, sheet_name="Project Overview & Metadata", index=False)
@@ -605,7 +655,7 @@ def generate_pdf_report(logo_bytes=None):
   story.append(Paragraph(f"Multi-Stage Verification & Mix Audit | Report Date: {formatted_report_date}", subtitle_style))
   story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#1B2A4A"), spaceAfter=6))
 
-  # 1. Overview Table
+  # Overview Table
   story.append(Paragraph("<b>1. Project Overview & Traceability Metadata</b>", section_style))
   overview_data_list = [["Parameter", "Details"]] + df_overview.values.tolist()
   t_overview = Table(overview_data_list, colWidths=[180, 360])
@@ -620,7 +670,7 @@ def generate_pdf_report(logo_bytes=None):
   story.append(t_overview)
   story.append(Spacer(1, 4))
 
-  # 2. Mix Design Audit Table
+  # Mix Audit Table
   story.append(Paragraph("<b>2. Batch Plant Mix Design ECP 203 Compliance Audit</b>", section_style))
   mix_table_rows = [list(df_mix_audit.columns)] + df_mix_audit.values.tolist()
   t_mix = Table(mix_table_rows, colWidths=[180, 120, 120, 120])
@@ -634,7 +684,7 @@ def generate_pdf_report(logo_bytes=None):
   story.append(t_mix)
   story.append(Spacer(1, 4))
 
-  # 3. Summary Results Table
+  # Summary Table
   story.append(Paragraph("<b>3. Cube Compliance Results Summary & Statistical Evaluation</b>", section_style))
   summary_headers = ["Stage", "n", "Target", "Req (MPa)", "Mean (MPa)", "StdDev", "fcu (MPa)", "Verdict"]
   summary_table_rows = [summary_headers]
@@ -651,7 +701,7 @@ def generate_pdf_report(logo_bytes=None):
   story.append(t_summary)
   story.append(Spacer(1, 4))
 
-  # 4. Raw Individual Cubes Matrix Table
+  # Raw Cubes Matrix
   story.append(Paragraph("<b>4. Raw Individual Cube Strengths Matrix & Sample Counts</b>", section_style))
   raw_headers = list(df_raw_cubes.columns)
   raw_table_rows = [raw_headers]
@@ -674,7 +724,7 @@ def generate_pdf_report(logo_bytes=None):
   story.append(t_raw)
   story.append(Spacer(1, 4))
 
-  # --- UNIQUE QR CODE GENERATION FOR THIS EXPORT ---
+  # QR Code Generation
   qr_data_content = f"ECP203_VERIFIED | Project: {display_project_name} | Location: {pour_location} | Ticket: {batch_ticket_id} | Date: {formatted_report_date} | Engineer: {display_engineer_name}"
   qr = qrcode.QRCode(version=1, box_size=5, border=1)
   qr.add_data(qr_data_content)
@@ -684,19 +734,14 @@ def generate_pdf_report(logo_bytes=None):
   qr_buffer = io.BytesIO()
   qr_img.save(qr_buffer, format="PNG")
   qr_buffer.seek(0)
-  
   reportlab_qr_image = ReportLabImage(qr_buffer, width=65, height=65)
 
-  # 5. Sign-Off Block with Unique QR Code Verification Seal
+  # Sign-Off Block
   story.append(Paragraph("<b>5. Engineering Sign-Off & Approvals & Digital Verification</b>", section_style))
   sign_cell_1 = Paragraph(f"<b>Prepared By:</b><br/>{display_engineer_name}<br/>Sign: _________", body_style)
   sign_cell_2 = Paragraph("<b>Checked By (QA/QC):</b><br/>Name: _________<br/>Sign: _________", body_style)
   sign_cell_3 = Paragraph("<b>Approved (Consultant):</b><br/>Name: _________<br/>Sign: _________", body_style)
-  
-  qr_cell = [
-      Paragraph("<b>Scan to Verify:</b>", body_style),
-      reportlab_qr_image
-  ]
+  qr_cell = [Paragraph("<b>Scan to Verify:</b>", body_style), reportlab_qr_image]
   
   t_sign = Table([[sign_cell_1, sign_cell_2, sign_cell_3, qr_cell]], colWidths=[140, 140, 140, 100])
   t_sign.setStyle(TableStyle([
@@ -732,7 +777,7 @@ with col_btn2:
       mime="application/pdf",
   )
 
-# --- LUXURY HIGH-END CORPORATE FOOTER SECTION ---
+# --- LUXURY CORPORATE FOOTER SECTION ---
 st.markdown("---")
 st.markdown(
     """
