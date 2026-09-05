@@ -156,6 +156,43 @@ def run_ai_auditor_module():
                 except Exception as e:
                     st.error(f"An error occurred during AI processing: {e}")
 
+# --- NEW: PASTE CRACK DEFECT ANALYZER HERE ---
+def run_crack_defect_analyzer():
+    st.subheader("🔍 AI Concrete Crack & Surface Defect Diagnostic Tool")
+    st.write("Snap or upload a photo of site defects (cracks, honeycombing, spalling). The AI will diagnose structural severity and suggest ECP 203 compliant repairs.")
+    
+    defect_image = st.file_uploader("Upload Site Defect Photo", type=["png", "jpg", "jpeg"], key="crack_uploader")
+    
+    if defect_image is not None:
+        st.image(defect_image, caption="Uploaded Site Defect", use_column_width=True)
+        if st.button("Diagnose Defect & Get Repair Protocol"):
+            with st.spinner("Analyzing defect severity and ECP 203 repair guidelines..."):
+                try:
+                    api_key = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY"))
+                    client = genai.Client(api_key=api_key)
+                    
+                    prompt = """
+                    You are an expert structural forensic and concrete repair engineer. Analyze this site defect image.
+                    Provide a structured diagnostic report containing:
+                    1. **Defect Classification:** (e.g., Structural Crack, Plastic Shrinkage, Honeycombing, Corrosion Spalling)
+                    2. **Severity Assessment:** (Low, Medium, High Risk to Structural Integrity)
+                    3. **Root Cause Analysis:** (Why did this happen according to ECP execution rules?)
+                    4. **Repair Procedure:** (Step-by-step remediation method using approved materials like Sika/BASF products).
+                    """
+                    
+                    image_part = types.Part.from_bytes(data=defect_image.getvalue(), mime_type=defect_image.type)
+                    response = client.models.generate_content(
+                        model="gemini-2.5-flash",
+                        contents=[prompt, image_part]
+                    )
+                    st.markdown("### 🛠️ Forensic Diagnosis & Repair Protocol")
+                    st.markdown(response.text)
+                except Exception as e:
+                    st.error(f"Error processing image: {e}")
+
+# --- 2. CUSTOM STYLING ---
+dark_style = """
+
 # --- 2. CUSTOM STYLING ---
 dark_style = """
 <style>
@@ -297,7 +334,7 @@ app_mode = st.radio(
     "📱 App Screen Navigation:",
     [
         "📊 Verifier Dashboard",
-        "🤖 AI General Engineering Auditor",
+        "🤖 **AI General Engineering Auditor**",
         "📖 ECP 203 Official Formulas & Site Instructions Handbook",
     ],
     horizontal=True,
