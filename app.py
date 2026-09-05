@@ -50,7 +50,7 @@ dark_style = """
 }
 .block-container {
     padding-top: 0rem !important;
-    padding-bottom: 3rem !important;
+    padding-bottom: 2rem !important;
     padding-left: 2.5rem !important;
     padding-right: 2.5rem !important;
     max-width: 100% !important;
@@ -58,7 +58,7 @@ dark_style = """
 [data-testid="stImage"] {
     width: 100% !important;
     position: relative !important;
-    margin-bottom: 2rem !important;
+    margin-bottom: 1rem !important;
 }
 [data-testid="stImage"] img {
     max-width: 100% !important;
@@ -101,6 +101,20 @@ textarea, input {
     border: 1px solid #FF8C00 !important;
 }
 
+/* Force File Uploader Box & Buttons to be Solid Black with White Text */
+[data-testid="stFileUploader"], div[data-baseweb="file-uploader"] {
+    background-color: #000000 !important;
+    border: 2px dashed #FF8C00 !important;
+    border-radius: 8px !important;
+    padding: 10px !important;
+}
+[data-testid="stFileUploader"] section {
+    background-color: #000000 !important;
+}
+[data-testid="stFileUploader"] span, [data-testid="stFileUploader"] small, [data-testid="stFileUploader"] div {
+    color: #FFFFFF !important;
+}
+
 /* Force ALL buttons (StButton and DownloadButton) to be solid black with pure white bold text */
 div.stButton > button, div.stDownloadButton > button, button[kind="secondary"], button[kind="primary"] {
     background-color: #000000 !important;
@@ -119,16 +133,18 @@ div.stButton > button:hover, div.stDownloadButton > button:hover {
     border: 2px solid #00BFFF !important;
 }
 
-/* Fix main navigation radio labels and tabs font size & weight */
+/* Enhanced Navigation Radio Labels & Main Tabs */
 div[row-widget="stRadio"] label p, .stRadio div[data-baseweb="radio"] label span {
-    font-size: 16px !important;
-    font-weight: 700 !important;
+    font-size: 17px !important;
+    font-weight: 800 !important;
     color: #FFFFFF !important;
 }
 .stTabs [data-baseweb="tab"] {
-    font-size: 15px !important;
-    font-weight: 700 !important;
+    font-size: 16px !important;
+    font-weight: 800 !important;
     color: #FFFFFF !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
 }
 .stTabs [data-baseweb="tab"]:hover {
     color: #00BFFF !important;
@@ -140,13 +156,16 @@ hr {
 [data-testid="stDataFrame"], [data-testid="stTable"], div[data-baseweb="card"] {
     background-color: #1B2A4A !important;
 }
+
+/* Compact Low-Profile Footer Design */
 .footer-container {
     background: linear-gradient(135deg, #1B2A4A 0%, #031338 100%);
     border: 1px solid #FF8C00;
-    border-radius: 10px;
-    padding: 25px;
-    margin-top: 4rem;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    border-radius: 8px;
+    padding: 12px 20px;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 </style>
 """
@@ -157,7 +176,7 @@ if os.path.exists("logo.png"):
     st.image("logo.png")
 
 ticker_html = """
-<div style="overflow: hidden; white-space: nowrap; background-color: #FF8C00; color: #031338; padding: 8px 0; font-weight: bold; font-size: 15px; margin-bottom: 20px; border-radius: 4px;">
+<div style="overflow: hidden; white-space: nowrap; background-color: #FF8C00; color: #031338; padding: 6px 0; font-weight: bold; font-size: 14px; margin-bottom: 15px; border-radius: 4px;">
   <div style="display: inline-block; padding-left: 100%; animation: marquee 25s linear infinite;">
     🚀 ECP 203 Concrete Quality Control Active &nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp; ⚠️ Ensure all cube crushing results and batch tickets are verified daily &nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp; 🏗️ Current Project Inspection in Progress
   </div>
@@ -251,40 +270,47 @@ mix_audit_rows = [
 df_mix_audit = pd.DataFrame(mix_audit_rows)
 
 # --- MODULE CLASSES & FUNCTIONS FOR PROFESSIONAL PDFS ---
+def clean_for_pdf(text):
+    if not text:
+        return ""
+    # Clean markdown and problematic characters for ReportLab Paragraphs
+    cleaned = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    cleaned = cleaned.replace("•", "-").replace("—", "-")
+    return cleaned
+
 def build_professional_pdf_header(story, doc_title, subtitle, logo_bytes, engineer, project, location, rep_date):
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle("DocTitle", parent=styles["Heading1"], fontSize=16, textColor=colors.HexColor("#1B2A4A"), spaceAfter=4, alignment=1, fontName="Helvetica-Bold")
-    sub_style = ParagraphStyle("DocSub", parent=styles["Normal"], fontSize=10, textColor=colors.HexColor("#444444"), spaceAfter=10, alignment=1, fontName="Helvetica-Bold")
-    meta_style = ParagraphStyle("MetaStyle", parent=styles["Normal"], fontSize=9, textColor=colors.HexColor("#222222"), leading=12, fontName="Helvetica")
+    title_style = ParagraphStyle("DocTitle", parent=styles["Heading1"], fontSize=15, textColor=colors.HexColor("#1B2A4A"), spaceAfter=3, alignment=1, fontName="Helvetica-Bold")
+    sub_style = ParagraphStyle("DocSub", parent=styles["Normal"], fontSize=9, textColor=colors.HexColor("#444444"), spaceAfter=8, alignment=1, fontName="Helvetica-Bold")
+    meta_style = ParagraphStyle("MetaStyle", parent=styles["Normal"], fontSize=8.5, textColor=colors.HexColor("#222222"), leading=11, fontName="Helvetica")
 
     if logo_bytes:
         try:
-            story.append(ReportLabImage(io.BytesIO(logo_bytes), width=100, height=38))
-            story.append(Spacer(1, 4))
+            story.append(ReportLabImage(io.BytesIO(logo_bytes), width=90, height=34))
+            story.append(Spacer(1, 3))
         except Exception:
             pass
 
-    story.append(Paragraph(doc_title, title_style))
-    story.append(Paragraph(subtitle, sub_style))
-    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#1B2A4A"), spaceAfter=8))
+    story.append(Paragraph(clean_for_pdf(doc_title), title_style))
+    story.append(Paragraph(clean_for_pdf(subtitle), sub_style))
+    story.append(HRFlowable(width="100%", thickness=1.2, color=colors.HexColor("#1B2A4A"), spaceAfter=6))
 
-    # Metadata Block with explicit spaces for time & signatures
     meta_html = f"""
-    <b>Project Name:</b> {project} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Location:</b> {location}<br/>
-    <b>Engineer Name:</b> {engineer} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Report Date:</b> {rep_date} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Time:</b> ____________
+    <b>Project Name:</b> {clean_for_pdf(project)} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Location:</b> {clean_for_pdf(location)}<br/>
+    <b>Engineer Name:</b> {clean_for_pdf(engineer)} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Report Date:</b> {rep_date} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Time:</b> ____________
     """
     story.append(Paragraph(meta_html, meta_style))
-    story.append(Spacer(1, 10))
+    story.append(Spacer(1, 8))
 
 def build_professional_pdf_footer_and_signatures(story, qr_img_buffer):
     styles = getSampleStyleSheet()
     body_style = ParagraphStyle("BodyStyle", parent=styles["Normal"], fontSize=8, textColor=colors.HexColor("#222222"), leading=10, fontName="Helvetica")
-    sec_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=11, textColor=colors.HexColor("#1B2A4A"), spaceBefore=10, spaceAfter=4, fontName="Helvetica-Bold")
+    sec_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=10, textColor=colors.HexColor("#1B2A4A"), spaceBefore=8, spaceAfter=3, fontName="Helvetica-Bold")
 
-    story.append(Spacer(1, 10))
+    story.append(Spacer(1, 8))
     story.append(Paragraph("<b>Engineering Approvals & Verification Sign-Off</b>", sec_style))
     
-    qr_lab_img = ReportLabImage(qr_img_buffer, width=55, height=55)
+    qr_lab_img = ReportLabImage(qr_img_buffer, width=50, height=50)
     sign_cell_1 = Paragraph("<b>Prepared By:</b><br/>Engineer Sign:<br/>___________________", body_style)
     sign_cell_2 = Paragraph("<b>QA/QC Checked:</b><br/>Inspector Sign:<br/>___________________", body_style)
     sign_cell_3 = Paragraph("<b>Consultant Approved:</b><br/>Stamp & Sign:<br/>___________________", body_style)
@@ -295,8 +321,8 @@ def build_professional_pdf_footer_and_signatures(story, qr_img_buffer):
         ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F5F7FA")),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
-        ("TOPPADDING", (0, 0), (-1, -1), 6),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
         ("ALIGN", (3, 0), (3, 0), "CENTER"),
     ]))
     story.append(t_sign)
@@ -355,10 +381,7 @@ def run_ai_auditor_module():
                     3. Detailed engineering feedback addressing the specific scope of the uploaded document or image.
                     4. Professional recommendations, corrective actions, and required next steps for the site engineering/QC team.
 
-                    CRITICAL REQUIREMENT: In addition to your detailed text report, you MUST provide a structured markdown table at the very end of your response containing exactly 3 columns:
-                    Column 1: "Accepted / Within ECP 203 Limits"
-                    Column 2: "Not Accepted / Violations Found"
-                    Column 3: "Recommendations to Fix"
+                    CRITICAL REQUIREMENT: In addition to your detailed text report, provide a clean text summary table at the end with your findings. Do NOT use markdown pipe tables that break PDF parsing.
                     """
 
                     contents = []
@@ -407,12 +430,11 @@ def run_ai_auditor_module():
                     build_professional_pdf_header(story, "ECP 203 General Engineering Audit Report", f"Audit Focus: {audit_focus}", company_logo_bytes, disp_eng, disp_proj, disp_loc, rep_date_str)
 
                     styles = getSampleStyleSheet()
-                    body_style = ParagraphStyle("Body", parent=styles["Normal"], fontSize=9, textColor=colors.HexColor("#222222"), leading=13, spaceAfter=6)
+                    body_style = ParagraphStyle("Body", parent=styles["Normal"], fontSize=9, textColor=colors.HexColor("#222222"), leading=13, spaceAfter=5)
                     
-                    # Clean text and split into paragraphs
                     for para in audit_result.split("\n\n"):
                         if para.strip():
-                            clean_p = para.encode('latin-1', 'replace').decode('latin-1').replace('\n', '<br/>')
+                            clean_p = clean_for_pdf(para).replace('\n', '<br/>')
                             story.append(Paragraph(clean_p, body_style))
 
                     # Generate QR Code
@@ -446,7 +468,6 @@ def run_crack_defect_analyzer():
     defect_image = st.file_uploader("Upload Site Defect Photo", type=["png", "jpg", "jpeg"], key="crack_uploader")
     
     if defect_image is not None:
-        # Fixed image container layout to prevent vertical string rendering bugs
         col_img1, col_img2 = st.columns([1, 2])
         with col_img1:
             st.image(defect_image, caption="Uploaded Defect Sample", use_container_width=True)
@@ -469,13 +490,11 @@ def run_crack_defect_analyzer():
                     prompt = """
                     You are an expert structural forensic and concrete repair engineer operating in the Egyptian construction market. Analyze this site defect image.
                     Provide a structured diagnostic report containing:
-                    1. **Defect Classification & Root Cause:** (e.g., Structural Flexural Crack, Plastic Shrinkage, Honeycombing, Steel Corrosion Spalling, Thermal Cracking).
-                    2. **Severity Assessment & Structural Risk:** (Low, Medium, High Risk to Structural Integrity).
-                    3. **Egyptian Market Materials Required:** (Specify commercial product names available in Egypt such as Sika, CMB, or Fosroc products like SikaGrout, Sika Dur, CMB Injection Resins, etc.).
-                    4. **Step-by-Step Remediation Procedure:** (Detailed execution instructions compliant with ECP 203).
-
-                    CRITICAL REQUIREMENT: At the very end of your response, you MUST include a structured Markdown table with exactly 4 columns:
-                    | Crack Type & Description | Severity Level | Egyptian Market Materials (Sika/CMB/Fosroc) | Treatment & Repair Method |
+                    1. Defect Classification & Root Cause.
+                    2. Severity Assessment & Structural Risk.
+                    3. Egyptian Market Materials Required (Sika, CMB, Fosroc).
+                    4. Step-by-Step Remediation Procedure compliant with ECP 203.
+                    Provide clear text formatting without breaking tables.
                     """
                     
                     image_part = types.Part.from_bytes(data=defect_image.getvalue(), mime_type=defect_image.type)
@@ -500,27 +519,25 @@ def run_crack_defect_analyzer():
 
                     build_professional_pdf_header(story, "ECP 203 Concrete Crack & Defect Diagnostic Report", "Forensic Engineering Assessment & Egyptian Market Repair Protocol", company_logo_bytes, disp_eng, disp_proj, disp_loc, rep_date_str)
 
-                    # Embed defect photo in PDF
                     try:
                         img_temp_path = "temp_defect_img.jpg"
                         with open(img_temp_path, "wb") as f:
                             f.write(defect_image.getvalue())
-                        story.append(ReportLabImage(img_temp_path, width=150, height=110))
-                        story.append(Spacer(1, 8))
+                        story.append(ReportLabImage(img_temp_path, width=140, height=100))
+                        story.append(Spacer(1, 6))
                         if os.path.exists(img_temp_path):
                             os.remove(img_temp_path)
                     except Exception:
                         pass
 
                     styles = getSampleStyleSheet()
-                    body_style = ParagraphStyle("Body", parent=styles["Normal"], fontSize=9, textColor=colors.HexColor("#222222"), leading=13, spaceAfter=6)
+                    body_style = ParagraphStyle("Body", parent=styles["Normal"], fontSize=9, textColor=colors.HexColor("#222222"), leading=13, spaceAfter=5)
 
                     for para in diagnostic_text.split("\n\n"):
                         if para.strip():
-                            clean_p = para.encode('latin-1', 'replace').decode('latin-1').replace('\n', '<br/>')
+                            clean_p = clean_for_pdf(para).replace('\n', '<br/>')
                             story.append(Paragraph(clean_p, body_style))
 
-                    # QR Code verification for Crack Report
                     qr_data = f"ECP203_CRACK_REPORT | Project: {disp_proj} | Location: {disp_loc} | Date: {rep_date_str}"
                     qr = qrcode.QRCode(version=1, box_size=4, border=1)
                     qr.add_data(qr_data)
@@ -568,7 +585,6 @@ elif app_mode == "📖 ECP 203 Official Formulas & Site Instructions Handbook":
           $$s = \\sqrt{\\frac{\\sum_{i=1}^{n} (x_i - f_m)^2}{n - 1}}$$
         * **3. Characteristic Compressive Strength ($f_{cu}$):**
           $$f_{cu} = \\max\\left(f_m - k \\cdot s,\\; 0.85 \\cdot f_m\\right)$$
-          *(Note: Factor $k = 1.91$ for $n < 30$, and $1.64$ for $n \\ge 30$)*
         """)
 
     with tab_hb2:
@@ -705,15 +721,6 @@ else:
                 st.markdown("---")
                 st.markdown(f"#### 🔍 Detailed Sample-by-Sample & Statistical Breakdown ({stage_label})")
                 
-                st.markdown(
-                    f"* **Arithmetic Mean ($f_m$):** {res['mean']:.2f} N/mm²\n"
-                    f"* **Standard Deviation ($s$):** {res['s']:.2f} N/mm²\n"
-                    f"* **Factor ($k$):** {res['k']} (for $n = {res['n']}$)\n"
-                    f"* **Characteristic Strength ($f_{{cu}}$):** **{res['fcu_char']:.2f} N/mm²**\n"
-                    f"* **Target Required Strength ($f_{{cu,\\text{{target}}}}$):** {res['stage_target_fcu']:.2f} N/mm²\n"
-                    f"* **Minimum Individual Cube Limit ($0.85 \\cdot f_{{cu,\\text{{target}}}}$):** {res['min_threshold']:.2f} N/mm²"
-                )
-                
                 cube_vals = cubes_7 if stage_label == "7 Days" else (cubes_14 if stage_label == "14 Days" else cubes_28)
                 sample_breakdown = []
                 for i, val in enumerate(cube_vals):
@@ -740,17 +747,9 @@ else:
                 st.markdown(f"### 🔹 {stage_name} Evaluation Breakdown")
                 cube_vals = cubes_7 if stage_name == "7 Days" else (cubes_14 if stage_name == "14 Days" else cubes_28)
                 vals_str = ", ".join([str(v) for v in cube_vals])
-                
-                st.markdown(f"""
-                * **Input Samples ($x_i$):** `[{vals_str}]` ($n = {res['n']}$)
-                * **Arithmetic Mean ($f_m$):** {res['mean']:.2f} N/mm²
-                * **Standard Deviation ($s$):** {res['s']:.2f} N/mm²
-                * **Characteristic Strength ($f_{{cu}}$):** {res['fcu_char']:.2f} N/mm²
-                """)
-                st.markdown("---")
-            else:
-                st.markdown(f"### 🔹 {stage_name} Evaluation Breakdown")
-                st.info(f"No data available for {stage_name}.")
+                st.markdown(f"• **Input Samples:** `[{vals_str}]` ($n = {res['n']}$)")
+                st.markdown(f"• **Mean ($f_m$):** {res['mean']:.2f} N/mm² | **StdDev ($s$):** {res['s']:.2f} N/mm²")
+                st.markdown(f"• **Characteristic Strength ($f_{{cu}}$):** {res['fcu_char']:.2f} N/mm²")
                 st.markdown("---")
 
     # Visualizations Section
@@ -788,7 +787,6 @@ else:
             fig_lines.update_layout(plot_bgcolor="#031338", paper_bgcolor="#1B2A4A", font=dict(color="#FFFFFF", size=10))
             st.plotly_chart(fig_lines, use_container_width=True)
 
-    # DataFrames for Export
     display_project_name = project_name if project_name.strip() else "Unnamed Project"
     display_engineer_name = engineer_name if engineer_name.strip() else "Not Specified"
     formatted_report_date = report_date.strftime("%Y-%m-%d")
@@ -804,8 +802,6 @@ else:
         {"Parameter": "Cement Content", "Details": f"{cement_content} kg/m³"},
         {"Parameter": "Water Content", "Details": f"{water_content} kg/m³"},
         {"Parameter": "Water-Cement Ratio (W/C)", "Details": f"{wc_ratio:.2f}"},
-        {"Parameter": "Fresh Concrete Slump", "Details": f"{slump_value} mm"},
-        {"Parameter": "Fresh Concrete Temperature", "Details": f"{concrete_temp} °C"},
         {"Parameter": "Engineer Name", "Details": display_engineer_name},
         {"Parameter": "Report Date", "Details": formatted_report_date},
         {"Parameter": "Standard Specification", "Details": "Egyptian Code of Practice (ECP 203)"},
@@ -848,7 +844,7 @@ else:
         story = []
         styles = getSampleStyleSheet()
 
-        section_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=11, textColor=colors.HexColor("#1B2A4A"), spaceBefore=10, spaceAfter=4, fontName="Helvetica-Bold")
+        section_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=10, textColor=colors.HexColor("#1B2A4A"), spaceBefore=8, spaceAfter=3, fontName="Helvetica-Bold")
 
         build_professional_pdf_header(story, "ECP 203 Concrete Acceptance & Mix Compliance Report", "Multi-Stage Verification & Statistical Mix Audit", logo_bytes, display_engineer_name, display_project_name, pour_location, formatted_report_date)
 
@@ -864,7 +860,7 @@ else:
             ("BACKGROUND", (0, 1), (-1, -1), colors.HexColor("#F9F9F9")),
         ]))
         story.append(t_overview)
-        story.append(Spacer(1, 6))
+        story.append(Spacer(1, 5))
 
         story.append(Paragraph("<b>2. Batch Plant Mix Design ECP 203 Compliance Audit</b>", section_style))
         mix_table_rows = [list(df_mix_audit.columns)] + df_mix_audit.values.tolist()
@@ -877,7 +873,7 @@ else:
             ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
         ]))
         story.append(t_mix)
-        story.append(Spacer(1, 6))
+        story.append(Spacer(1, 5))
 
         story.append(Paragraph("<b>3. Cube Compliance Results Summary & Statistical Evaluation</b>", section_style))
         summary_headers = ["Stage", "n", "Target", "Req (MPa)", "Mean (MPa)", "StdDev", "fcu (MPa)", "Verdict"]
@@ -893,7 +889,7 @@ else:
             ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
         ]))
         story.append(t_summary)
-        story.append(Spacer(1, 6))
+        story.append(Spacer(1, 5))
 
         story.append(Paragraph("<b>4. Raw Individual Cube Strengths Matrix & Sample Counts</b>", section_style))
         raw_headers = list(df_raw_cubes.columns)
@@ -915,7 +911,7 @@ else:
             ("ALIGN", (0, 0), (-1, -1), "CENTER"),
         ]))
         story.append(t_raw)
-        story.append(Spacer(1, 6))
+        story.append(Spacer(1, 5))
 
         qr_data_content = f"ECP203_VERIFIED | Project: {display_project_name} | Location: {pour_location} | Ticket: {batch_ticket_id} | Date: {formatted_report_date} | Engineer: {display_engineer_name}"
         qr = qrcode.QRCode(version=1, box_size=4, border=1)
@@ -951,27 +947,27 @@ else:
             mime="application/pdf",
         )
 
-# --- LUXURY CORPORATE FOOTER SECTION ---
+# --- LUXURY CORPORATE FOOTER SECTION (COMPACT HEIGHT) ---
 st.markdown("---")
 st.markdown(
     """
     <div class="footer-container">
       <div style="display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center;">
-        <div style="flex: 1; min-width: 250px; margin-bottom: 15px;">
-          <h4 style="color: #FF8C00; margin-bottom: 5px; font-size: 1.1rem;">🏗️ ECP 203 Quality Assurance Portal</h4>
-          <p style="color: #CCCCCC; font-size: 0.85rem; margin: 0;">Automated statistical compliance verification and rigorous structural mix design auditing platform built for elite civil engineering teams.</p>
+        <div style="flex: 1; min-width: 250px;">
+          <h4 style="color: #FF8C00; margin-bottom: 2px; font-size: 1rem;">🏗️ ECP 203 Quality Assurance Portal</h4>
+          <p style="color: #CCCCCC; font-size: 0.8rem; margin: 0;">Automated statistical compliance verification and rigorous structural mix design auditing platform.</p>
         </div>
-        <div style="flex: 1; min-width: 200px; text-align: right; margin-bottom: 15px;">
-          <p style="color: #FFFFFF; font-size: 0.9rem; margin-bottom: 5px;"><b>Official Direct Contacts:</b></p>
-          <p style="margin: 0; font-size: 0.85rem;">
-            Linkedin: <a href='https://www.linkedin.com/in/mohamed-abd-al-aty-a326a1214/' target='_blank' style='color: #00BFFF; text-decoration: none;'>Mohamed Abd Al Aty</a><br>
+        <div style="flex: 1; min-width: 200px; text-align: right;">
+          <p style="color: #FFFFFF; font-size: 0.85rem; margin-bottom: 2px;"><b>Official Direct Contacts:</b></p>
+          <p style="margin: 0; font-size: 0.8rem;">
+            Linkedin: <a href='https://www.linkedin.com/in/mohamed-abd-al-aty-a326a1214/' target='_blank' style='color: #00BFFF; text-decoration: none;'>Mohamed Abd Al Aty</a> | 
             Gmail: <a href='mailto:mohamedabdalaty63@gmail.com' style='color: #00BFFF; text-decoration: none;'>mohamedabdalaty63@gmail.com</a>
           </p>
         </div>
       </div>
-      <hr style="border-color: rgba(255,140,0,0.3); margin: 15px 0;">
+      <hr style="border-color: rgba(255,140,0,0.3); margin: 8px 0;">
       <div style="text-align: center;">
-        <p style="color: #888888; font-size: 0.8rem; margin: 0;">© 2026 Eng. Mohamed Abd Al Aty. All rights reserved. Designed to Egyptian Code of Practice (ECP 203) standards.</p>
+        <p style="color: #888888; font-size: 0.75rem; margin: 0;">© 2026 Eng. Mohamed Abd Al Aty. All rights reserved. Designed to Egyptian Code of Practice (ECP 203) standards.</p>
       </div>
     </div>
     """,
