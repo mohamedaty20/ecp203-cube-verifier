@@ -45,7 +45,7 @@ st.set_page_config(
 class AuditPDFReport(FPDF):
     def header(self):
         self.set_font('helvetica', 'B', 14)
-        self.cell(0, 10, 'ECP 203 Lab Report Audit & Cube Verification', 0, 1, 'C')
+        self.cell(0, 10, 'ECP 203 Lab Report Audit & Compliance Review', 0, 1, 'C')
         self.ln(5)
 
     def footer(self):
@@ -55,7 +55,7 @@ class AuditPDFReport(FPDF):
 
 def run_ai_auditor_module():
     st.subheader("🤖 AI Lab Report & ECP 203 Auditor")
-    st.write("Upload a PDF document or a photo/image of a lab report or test sheet. The AI will instantly analyze and audit it against ECP 203 standards.")
+    st.write("Upload a PDF document or a photo/image of an independent laboratory test report. The AI will audit it independently against ECP 203 standards.")
 
     # File Uploader supporting both PDFs and image formats (PNG, JPG, JPEG)
     uploaded_file = st.file_uploader("Upload Lab Report / Data Sheet (PDF, PNG, JPG, JPEG)", type=["pdf", "png", "jpg", "jpeg"])
@@ -88,7 +88,6 @@ def run_ai_auditor_module():
 
                     contents = []
                     if file_extension == 'pdf':
-                        # Locally extract text from the PDF using Python
                         pdf_reader = pypdf.PdfReader(uploaded_file)
                         extracted_text = ""
                         for page in pdf_reader.pages:
@@ -101,14 +100,12 @@ def run_ai_auditor_module():
                             return
                         contents = [prompt, f"Extracted PDF Text:\n{extracted_text}"]
                     else:
-                        # Handle image uploads (PNG, JPG, JPEG)
                         image_part = types.Part.from_bytes(
                             data=uploaded_file.getvalue(),
                             mime_type=uploaded_file.type
                         )
                         contents = [prompt, image_part]
 
-                    # Send to Gemini (using gemini-2.5-flash for robust multi-modal and text processing)
                     response = client.models.generate_content(
                         model="gemini-3.5-flash-lite",
                         contents=contents,
@@ -122,7 +119,6 @@ def run_ai_auditor_module():
                     st.markdown("### 📋 Audit Findings")
                     st.markdown(audit_result)
 
-                    # PDF Report Generation for Audit
                     pdf = AuditPDFReport()
                     pdf.add_page()
                     pdf.set_font("helvetica", size=10)
@@ -280,7 +276,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- APP SCREEN NAVIGATION SELECTOR (Including AI Auditor) ---
+# --- APP SCREEN NAVIGATION SELECTOR ---
 app_mode = st.radio(
     "📱 App Screen Navigation:",
     [
