@@ -33,7 +33,7 @@ from reportlab.platypus import (
 
 # --- 1. PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
 st.set_page_config(
-    page_title="ECP 203 Concrete Verifier & AI General Engineering Auditor",
+    page_title="Multi-Standard Geotechnical, Pavement & Concrete Engineering Auditor",
     page_icon="🏗️",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -193,7 +193,7 @@ if os.path.exists("logo.png"):
 ticker_html = """
 <div style="overflow: hidden; white-space: nowrap; background-color: #FF8C00; color: #031338; padding: 6px 0; font-weight: bold; font-size: 14px; margin-bottom: 15px; border-radius: 4px;">
   <div style="display: inline-block; padding-left: 100%; animation: marquee 25s linear infinite;">
-    🚀 ECP 203 Concrete Quality Control Active &nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp; ⚠️ Ensure all cube crushing results and batch tickets are verified daily &nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp; 🏗️ Current Project Inspection in Progress
+    🚀 Core Compliance Active: ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN, ISO &nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp; ⚠️ Multi-Disciplinary Engineering & Geotechnical QA/QC Verifier &nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp; 🏗️ Active Site Inspection Portal
   </div>
 </div>
 <style>
@@ -205,7 +205,7 @@ ticker_html = """
 """
 st.markdown(ticker_html, unsafe_allow_html=True)
 
-st.title("ECP 203 Concrete Acceptance & Mix Compliance Verifier")
+st.title("Multi-Disciplinary Civil, Geotechnical & Pavement Engineering Auditor")
 st.markdown(
     '<p style="color: #FFFFFF !important; font-size: 1rem; font-weight: bold; margin-top: -15px; margin-bottom: 15px;">Made by Eng. Mohamed Abd Al Aty</p>',
     unsafe_allow_html=True,
@@ -214,25 +214,37 @@ st.markdown(
 app_mode = st.radio(
     "📱 App Screen Navigation:",
     [
-        "📊 Verifier Dashboard",
-        "🤖 AI General Engineering Auditor",
-        "🔍 Crack & Defect Diagnostic",
-        "📖 ECP 203 Official Formulas & Site Instructions Handbook",
+        "📊 Concrete Verifier Dashboard",
+        "🤖 AI Multi-Standard Engineering Auditor",
+        "🔍 Crack, Pavement & Geotechnical Defect Diagnostic",
+        "📖 Multi-Standard Technical Codes Handbook (ECP, ASTM, AASHTO, BS, EN, ISO)",
     ],
     horizontal=True,
 )
 st.markdown("---")
 
 # --- SIDEBAR CONFIGURATION ---
-st.sidebar.header("PROJECT & BATCH DETAILS")
+st.sidebar.header("PROJECT & REGULATORY STANDARDS")
 project_name = st.sidebar.text_input("Project Name", value="", placeholder="Enter project name")
-pour_location = st.sidebar.text_input("Structural Element / Pour Location", "Slab Axis A1-C5")
+pour_location = st.sidebar.text_input("Structural Element / Road Chainage", "Highway Section Ch. 12+500 / Slab A1")
+
+st.sidebar.subheader("🌐 Governing Standards Core & Supplement")
+st.sidebar.info("Core Fundamental Standards active by default: **ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN, ISO**")
+
+supplementary_code = st.sidebar.selectbox("Supplementary / International Code Selector", [
+    "None (Strictly Core: ECP 203/202/104 + ASTM/AASHTO/BS/EN/ISO)",
+    "ACI 318-25 — Building Code Requirements for Structural Concrete",
+    "IBC — International Building Code",
+    "BS EN 1990 / BS EN 1992 / Eurocode 2 + UK National Annex",
+    "AASHTO LRFD Bridge Design Specifications / Highway Pavements"
+])
+
 fcu_spec = st.sidebar.number_input("Specified 28-Day Grade fcu (N/mm²)", min_value=10.0, max_value=100.0, value=30.0, step=5.0)
 
 st.sidebar.subheader("🚚 Batch Plant & Site Logs")
-mixer_truck_no = st.sidebar.text_input("Mixer Truck No.", value="TRK-104")
-batch_ticket_id = st.sidebar.text_input("Batch Ticket ID", value="BT-99482")
-casting_date = st.sidebar.date_input("Casting Date", value=datetime.date.today() - datetime.timedelta(days=7))
+mixer_truck_no = st.sidebar.text_input("Mixer Truck No. / Equipment ID", value="TRK-104")
+batch_ticket_id = st.sidebar.text_input("Batch Ticket / Geo-Log ID", value="BT-99482")
+casting_date = st.sidebar.date_input("Casting / Inspection Date", value=datetime.date.today() - datetime.timedelta(days=7))
 
 st.sidebar.subheader("⚖️ Mix Design Specifications")
 cement_content = st.sidebar.text_input("Cement Content (kg/m³)", value="350.0")
@@ -250,8 +262,8 @@ except ValueError:
 wc_ratio = water_content_val / cement_content_val if cement_content_val > 0 else 0.0
 st.sidebar.write(f"• **Calculated W/C Ratio:** `{wc_ratio:.2f}`")
 
-slump_value = st.sidebar.number_input("Slump Test Value (mm)", min_value=0.0, max_value=300.0, value=150.0, step=5.0)
-concrete_temp = st.sidebar.number_input("Concrete Temp (°C)", min_value=0.0, max_value=60.0, value=28.5, step=0.5)
+slump_value = st.sidebar.number_input("Slump / Workability Test Value (mm)", min_value=0.0, max_value=300.0, value=150.0, step=5.0)
+concrete_temp = st.sidebar.number_input("Concrete / Soil Temp (°C)", min_value=0.0, max_value=60.0, value=28.5, step=0.5)
 
 engineer_name = st.sidebar.text_input("Engineer Name", value="", placeholder="Enter your name")
 report_date = st.sidebar.date_input("Report Date", value=datetime.date.today())
@@ -275,19 +287,19 @@ mix_audit_rows = [
     {
         "Mix Parameter": "Water-Cement Ratio (W/C)",
         "Actual Value": f"{wc_ratio:.2f}",
-        "ECP 203 Limit": f"≤ {max_allowed_wc:.2f}",
+        "Standard Limit": f"≤ {max_allowed_wc:.2f} (ECP 203 / ASTM C94)",
         "Status": "PASS" if wc_compliant else "FAIL"
     },
     {
         "Mix Parameter": "Minimum Cement Content",
         "Actual Value": f"{cement_content_val} kg/m³",
-        "ECP 203 Limit": f"≥ {min_allowed_cement} kg/m³",
+        "Standard Limit": f"≥ {min_allowed_cement} kg/m³ (ECP 203)",
         "Status": "PASS" if cement_compliant else "FAIL"
     },
     {
         "Mix Parameter": "Fresh Concrete Temperature",
         "Actual Value": f"{concrete_temp} °C",
-        "ECP 203 Limit": f"≤ {max_allowed_temp} °C",
+        "Standard Limit": f"≤ {max_allowed_temp} °C (ASTM C1064 / ECP 203)",
         "Status": "PASS" if temp_compliant else "FAIL"
     }
 ]
@@ -318,9 +330,9 @@ def clean_for_pdf(text):
 
 def build_professional_pdf_header(story, doc_title, subtitle, logo_bytes, engineer, project, location, rep_date):
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle("DocTitle", parent=styles["Heading1"], fontSize=18, textColor=colors.HexColor("#1B2A4A"), spaceAfter=4, alignment=1, fontName="Helvetica-Bold")
-    sub_style = ParagraphStyle("DocSub", parent=styles["Normal"], fontSize=10, textColor=colors.HexColor("#444444"), spaceAfter=10, alignment=1, fontName="Helvetica-Bold")
-    meta_style = ParagraphStyle("MetaStyle", parent=styles["Normal"], fontSize=9, textColor=colors.HexColor("#222222"), leading=12, fontName="Helvetica")
+    title_style = ParagraphStyle("DocTitle", parent=styles["Heading1"], fontSize=16, textColor=colors.HexColor("#1B2A4A"), spaceAfter=4, alignment=1, fontName="Helvetica-Bold")
+    sub_style = ParagraphStyle("DocSub", parent=styles["Normal"], fontSize=9.5, textColor=colors.HexColor("#444444"), spaceAfter=10, alignment=1, fontName="Helvetica-Bold")
+    meta_style = ParagraphStyle("MetaStyle", parent=styles["Normal"], fontSize=8.5, textColor=colors.HexColor("#222222"), leading=12, fontName="Helvetica")
 
     if logo_bytes:
         try:
@@ -334,8 +346,8 @@ def build_professional_pdf_header(story, doc_title, subtitle, logo_bytes, engine
     story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#1B2A4A"), spaceAfter=8))
 
     meta_html = f"""
-    <b>Project Name:</b> {clean_for_pdf(project)} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Location:</b> {clean_for_pdf(location)}<br/>
-    <b>Engineer Name:</b> {clean_for_pdf(engineer)} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Report Date:</b> {rep_date} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Time:</b> ____________
+    <b>Project:</b> {clean_for_pdf(project)} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Location/Chainage:</b> {clean_for_pdf(location)}<br/>
+    <b>Engineer:</b> {clean_for_pdf(engineer)} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Date:</b> {rep_date} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Governing Codes:</b> ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN, ISO
     """
     story.append(Paragraph(meta_html, meta_style))
     story.append(Spacer(1, 10))
@@ -343,10 +355,10 @@ def build_professional_pdf_header(story, doc_title, subtitle, logo_bytes, engine
 def build_professional_pdf_footer_and_signatures(story, qr_img_buffer):
     styles = getSampleStyleSheet()
     body_style = ParagraphStyle("BodyStyle", parent=styles["Normal"], fontSize=8.5, textColor=colors.HexColor("#222222"), leading=11, fontName="Helvetica")
-    sec_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=12, textColor=colors.HexColor("#1B2A4A"), spaceBefore=10, spaceAfter=4, fontName="Helvetica-Bold")
+    sec_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=11, textColor=colors.HexColor("#1B2A4A"), spaceBefore=10, spaceAfter=4, fontName="Helvetica-Bold")
 
     story.append(Spacer(1, 10))
-    story.append(Paragraph("<b>Engineering Approvals & Verification Sign-Off</b>", sec_style))
+    story.append(Paragraph("<b>Engineering Approvals & Multi-Standard Compliance Sign-Off</b>", sec_style))
     
     qr_lab_img = ReportLabImage(qr_img_buffer, width=50, height=50)
     sign_cell_1 = Paragraph("<b>Prepared By:</b><br/>Engineer Sign:<br/>___________________", body_style)
@@ -365,17 +377,17 @@ def build_professional_pdf_footer_and_signatures(story, qr_img_buffer):
     ]))
     story.append(t_sign)
 
-# --- AI AUDITOR & CRACK DIAGNOSTIC MODULES ---
+# --- AI AUDITOR & DEFECT DIAGNOSTIC MODULES ---
 def run_ai_auditor_module():
-    st.subheader("🤖 ECP 203 General Engineering AI Auditor")
-    st.write("Upload any structural engineering document, drawing spec, mix design, inspection sheet, or photo/image. The AI will audit it comprehensively against Egyptian Code of Practice (ECP 203) standards.")
+    st.subheader("🤖 AI Multi-Standard Engineering Auditor")
+    st.write("Upload any structural, geotechnical, pavement, or material testing document, drawing spec, mix design, or photo. The AI will audit it against **ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN, and ISO** standards.")
     
     audit_focus = st.sidebar.selectbox("Engineering Audit Focus", [
-        "General Structural Compliance (ECP 203)",
-        "Reinforcement & Steel Detailing Specs",
-        "Mix Design, Admixtures & Batching Parameters",
-        "Site Pouring, Curing & Formwork Procedures",
-        "Non-Conformance Report (NCR) Technical Review"
+        "Multi-Standard Structural & Geotechnical Compliance",
+        "Roads, Pavements & Subgrade Materials (ECP 104 & AASHTO)",
+        "Soil Mechanics & Foundations (ECP 202 & ASTM / ISO)",
+        "Reinforced Concrete Structures & Mix Design (ECP 203 & ACI / BS EN)",
+        "Non-Conformance Report (NCR) & Material Testing Review"
     ])
 
     uploaded_file = st.file_uploader("Upload Engineering Document / Photo (PDF, PNG, JPG, JPEG)", type=["pdf", "png", "jpg", "jpeg"], key="ai_auditor_file_uploader")
@@ -384,8 +396,8 @@ def run_ai_auditor_module():
         file_extension = uploaded_file.name.split('.')[-1].lower()
         st.info(f"Uploaded File: {uploaded_file.name}")
 
-        if st.button("Run Comprehensive ECP 203 Audit"):
-            with st.spinner("Processing file and running engineering AI audit..."):
+        if st.button("Run Multi-Standard Engineering Audit"):
+            with st.spinner("Processing file and running multi-standard engineering AI audit..."):
                 try:
                     api_key = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY"))
                     if not api_key:
@@ -395,13 +407,13 @@ def run_ai_auditor_module():
                     client = genai.Client(api_key=api_key)
                     
                     prompt = f"""
-                    You are an expert senior civil quality control and structural consultant specialized in the Egyptian Code of Practice (ECP 203) for reinforced concrete structures.
+                    You are an expert senior civil, geotechnical, and highway engineering consultant specialized in core Egyptian Codes (ECP 203 for structures, ECP 202 for geotechnical/foundations, ECP 104 for roads and pavements) alongside international standards (ASTM, AASHTO, BS, EN, ISO, and supplementary code: {supplementary_code}).
                     Analyze the provided engineering document, technical data sheet, specifications, or image with a focus on: {audit_focus}.
                     
                     Perform a rigorous technical audit checking:
-                    1. Compliance with ECP 203 clauses, limits, material specifications, and execution rules relevant to the submitted content.
-                    2. Identification of any technical discrepancies, code violations, potential structural risks, or missing data requirements.
-                    3. Detailed engineering feedback addressing the specific scope of the uploaded document or image.
+                    1. Correct identification of the element type (Is it a structural concrete element, a geotechnical subgrade/soil layer, or a road pavement layer? NEVER misclassify soils/pavements as concrete slabs!).
+                    2. Compliance with ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN, and ISO clauses, limits, material specifications, and execution rules.
+                    3. Identification of any technical discrepancies, code violations, potential structural or geotechnical risks, or missing data requirements.
                     4. Professional recommendations, corrective actions, and required next steps for the site engineering/QC team.
                     """
 
@@ -435,7 +447,7 @@ def run_ai_auditor_module():
                     
                     audit_result = response.text
                     st.success("Audit Completed Successfully!")
-                    st.markdown("### 📋 Engineering Audit Findings & Compliance Breakdown")
+                    st.markdown("### 📋 Multi-Standard Engineering Audit Findings & Compliance Breakdown")
                     st.markdown(audit_result)
 
                     # Professional ReportLab PDF Generation with Cleaned Formatting
@@ -448,7 +460,7 @@ def run_ai_auditor_module():
                     disp_loc = pour_location if pour_location.strip() else "General Site"
                     rep_date_str = report_date.strftime("%Y-%m-%d")
 
-                    build_professional_pdf_header(story, "ECP 203 General Engineering Audit Report", f"Audit Focus: {audit_focus}", company_logo_bytes, disp_eng, disp_proj, disp_loc, rep_date_str)
+                    build_professional_pdf_header(story, "Multi-Standard Engineering Audit Report", f"Audit Focus: {audit_focus}", company_logo_bytes, disp_eng, disp_proj, disp_loc, rep_date_str)
 
                     styles = getSampleStyleSheet()
                     body_style = ParagraphStyle("Body", parent=styles["Normal"], fontSize=9.5, textColor=colors.HexColor("#222222"), leading=14, spaceAfter=6)
@@ -463,7 +475,7 @@ def run_ai_auditor_module():
                             else:
                                 story.append(Paragraph(cleaned_para.replace('\n', '<br/>'), body_style))
 
-                    qr_data = f"ECP203_AUDIT | Project: {disp_proj} | Date: {rep_date_str} | Eng: {disp_eng}"
+                    qr_data = f"MULTI_CODE_AUDIT | Project: {disp_proj} | Date: {rep_date_str} | Eng: {disp_eng}"
                     qr = qrcode.QRCode(version=1, box_size=4, border=1)
                     qr.add_data(qr_data)
                     qr.make(fit=True)
@@ -479,7 +491,7 @@ def run_ai_auditor_module():
                     st.download_button(
                         label="📥 Download Audit Report (PDF)",
                         data=pdf_buffer,
-                        file_name="ECP203_Engineering_Audit_Report.pdf",
+                        file_name="Multi_Standard_Engineering_Audit_Report.pdf",
                         mime="application/pdf"
                     )
 
@@ -487,10 +499,10 @@ def run_ai_auditor_module():
                     st.error(f"An error occurred during AI processing: {e}")
 
 def run_crack_defect_analyzer():
-    st.subheader("🔍 AI Concrete Crack & Surface Defect Diagnostic Tool")
-    st.write("Snap or upload a photo of site defects (cracks, honeycombing, spalling). The AI will diagnose structural severity and suggest ECP 203 compliant repairs using Egyptian market materials.")
+    st.subheader("🔍 AI Crack, Pavement & Geotechnical Defect Diagnostic Tool")
+    st.write("Snap or upload a photo of site defects. The AI automatically distinguishes between **Structural Concrete Members (ECP 203 / ACI / BS EN)**, **Road Pavements & Subbase Layers (ECP 104 / AASHTO)**, and **Geotechnical Soils / Subgrades (ECP 202 / ASTM / ISO)** to provide accurate, context-specific repair protocols.")
     
-    defect_image = st.file_uploader("Upload Site Defect Photo", type=["png", "jpg", "jpeg"], key="crack_uploader")
+    defect_image = st.file_uploader("Upload Site Defect Photo (Pavement, Soil, Subgrade, or Concrete)", type=["png", "jpg", "jpeg"], key="crack_uploader")
     
     if defect_image is not None:
         col_img1, col_img2 = st.columns([1, 2])
@@ -499,11 +511,11 @@ def run_crack_defect_analyzer():
         with col_img2:
             st.markdown("### 📌 Defect Inspection Ready")
             st.write(f"• **Project:** {project_name if project_name.strip() else 'N/A'}")
-            st.write(f"• **Location:** {pour_location}")
+            st.write(f"• **Location/Chainage:** {pour_location}")
             st.write(f"• **Inspection Date:** {report_date.strftime('%Y-%m-%d')}")
         
-        if st.button("Diagnose Defect & Get Egyptian Market Repair Protocol"):
-            with st.spinner("Analyzing defect severity and ECP 203 repair guidelines..."):
+        if st.button("Diagnose Defect & Get Correct Multi-Standard Repair Protocol"):
+            with st.spinner("Analyzing defect element type (Concrete vs. Pavement vs. Soil) and generating code-compliant repair protocol..."):
                 try:
                     api_key = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY"))
                     if not api_key:
@@ -512,13 +524,19 @@ def run_crack_defect_analyzer():
 
                     client = genai.Client(api_key=api_key)
                     
-                    prompt = """
-                    You are an expert structural forensic and concrete repair engineer operating in the Egyptian construction market. Analyze this site defect image.
+                    prompt = f"""
+                    You are an expert forensic civil, geotechnical, and highway repair engineer operating in accordance with ECP 203 (Concrete), ECP 202 (Geotechnical/Soil), ECP 104 (Roads & Pavements), ASTM, AASHTO, BS, EN, and ISO standards.
+                    
+                    CRITICAL INSTRUCTION: Analyze the uploaded site image carefully. First, determine whether the image shows:
+                    1. A structural concrete element (beams, columns, slabs, walls) -> apply ECP 203 / ACI / BS EN and epoxy/grouting repairs if applicable.
+                    2. A road pavement layer (asphalt surface, base course, subbase, concrete highway slab) -> apply ECP 104 / AASHTO standards, asphalt patching, stabilization, or slab joint sealing (DO NOT suggest epoxy crack injection for soil or unbound road bases!).
+                    3. A geotechnical soil feature, trench, slope, or subgrade settlement -> apply ECP 202 / ASTM / AASHTO soil mechanics, compaction verification, stabilization, or grouting.
+                    
                     Provide a structured diagnostic report containing:
-                    1. Defect Classification & Root Cause.
-                    2. Severity Assessment & Structural Risk.
-                    3. Egyptian Market Materials Required (Sika, CMB, Fosroc).
-                    4. Step-by-Step Remediation Procedure compliant with ECP 203.
+                    1. Element Identification & Defect Classification (Concrete vs. Pavement/Road vs. Geotechnical Soil).
+                    2. Root Cause Analysis & Severity Assessment.
+                    3. Applicable Standards (ECP 203/202/104, ASTM, AASHTO, BS, EN, ISO).
+                    4. Correct Materials & Step-by-Step Remediation Procedure tailored strictly to the actual element type shown in the photo.
                     """
                     
                     image_part = types.Part.from_bytes(data=defect_image.getvalue(), mime_type=defect_image.type)
@@ -528,10 +546,10 @@ def run_crack_defect_analyzer():
                     )
                     
                     diagnostic_text = response.text
-                    st.markdown("### 🛠️ Forensic Diagnosis & Repair Protocol")
+                    st.markdown("### 🛠️ Forensic Diagnosis & Multi-Standard Repair Protocol")
                     st.markdown(diagnostic_text)
 
-                    # Generate Professional PDF Report for Crack Diagnosis with Cleaned Formatting
+                    # Generate Professional PDF Report for Defect Diagnosis with Cleaned Formatting
                     pdf_buffer = io.BytesIO()
                     doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
                     story = []
@@ -541,7 +559,7 @@ def run_crack_defect_analyzer():
                     disp_loc = pour_location if pour_location.strip() else "General Site"
                     rep_date_str = report_date.strftime("%Y-%m-%d")
 
-                    build_professional_pdf_header(story, "ECP 203 Concrete Crack & Defect Diagnostic Report", "Forensic Engineering Assessment & Egyptian Market Repair Protocol", company_logo_bytes, disp_eng, disp_proj, disp_loc, rep_date_str)
+                    build_professional_pdf_header(story, "Multi-Standard Defect & Forensic Diagnostic Report", "Geotechnical, Pavement & Concrete Engineering Assessment", company_logo_bytes, disp_eng, disp_proj, disp_loc, rep_date_str)
 
                     try:
                         story.append(ReportLabImage(io.BytesIO(defect_image.getvalue()), width=140, height=100))
@@ -562,7 +580,7 @@ def run_crack_defect_analyzer():
                             else:
                                 story.append(Paragraph(cleaned_para.replace('\n', '<br/>'), body_style))
 
-                    qr_data = f"ECP203_CRACK_REPORT | Project: {disp_proj} | Location: {disp_loc} | Date: {rep_date_str}"
+                    qr_data = f"DEFECT_DIAGNOSTIC_REPORT | Project: {disp_proj} | Location: {disp_loc} | Date: {rep_date_str}"
                     qr = qrcode.QRCode(version=1, box_size=4, border=1)
                     qr.add_data(qr_data)
                     qr.make(fit=True)
@@ -578,7 +596,7 @@ def run_crack_defect_analyzer():
                     st.download_button(
                         label="📥 Download Defect Report (PDF)",
                         data=pdf_buffer,
-                        file_name="ECP203_Crack_Diagnostic_Report.pdf",
+                        file_name="Multi_Standard_Defect_Diagnostic_Report.pdf",
                         mime="application/pdf"
                     )
 
@@ -586,44 +604,54 @@ def run_crack_defect_analyzer():
                     st.error(f"Error processing image: {e}")
 
 # --- CONDITIONAL ROUTING BASED ON APP NAVIGATION SELECTION ---
-if app_mode == "🤖 AI General Engineering Auditor":
+if app_mode == "🤖 AI Multi-Standard Engineering Auditor":
     run_ai_auditor_module()
 
-elif app_mode == "🔍 Crack & Defect Diagnostic":
+elif app_mode == "🔍 Crack, Pavement & Geotechnical Defect Diagnostic":
     run_crack_defect_analyzer()
 
-elif app_mode == "📖 ECP 203 Official Formulas & Site Instructions Handbook":
-    st.header("📖 Egyptian Code of Practice (ECP 203) - Technical Reference Handbook")
-    st.markdown("Professional guidance notes, acceptance criteria formulas, and site quality control protocols.")
+elif app_mode == "📖 Multi-Standard Technical Codes Handbook (ECP, ASTM, AASHTO, BS, EN, ISO)":
+    st.header("📖 Multi-Standard Civil Engineering Technical Handbook")
+    st.markdown("Comprehensive reference notes covering **ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN, and ISO** standards.")
 
-    tab_hb1, tab_hb2, tab_hb3 = st.tabs(["🏗️ 1. Characteristic Strength Formulas", "⚖️ 2. Mix Proportioning & Limits", "📋 3. Site Inspection Instructions"])
+    tab_hb1, tab_hb2, tab_hb3, tab_hb4 = st.tabs([
+        "🏗️ 1. ECP 203 & Structural Concrete", 
+        "🌍 2. ECP 202 & Geotechnical Soils", 
+        "🛣️ 3. ECP 104 & Roads/Pavements",
+        "🌐 4. International Standards (ASTM, AASHTO, BS, EN, ISO)"
+    ])
 
     with tab_hb1:
-        st.subheader("Statistical Acceptance Criteria & Formulas (ECP 203)")
+        st.subheader("Egyptian Code for Reinforced Concrete (ECP 203)")
         st.markdown("""
-        According to the Egyptian Code for Design and Construction of Reinforced Concrete Structures (**ECP 203**), structural concrete acceptance is evaluated based on standard cube crushing tests (150mm cubes tested at 28 days unless specified otherwise).
-
-        * **1. Arithmetic Mean Strength (f_m):**
-          f_m = (Sum of x_i) / n
-        * **2. Standard Deviation (s):**
-          s = sqrt(Sum((x_i - f_m)^2) / (n - 1))
-        * **3. Characteristic Compressive Strength (f_cu):**
-          f_cu = max(f_m - k * s, 0.85 * f_m)
+        * **Scope:** Design and construction of reinforced concrete structures, materials, mixing, placing, and acceptance criteria.
+        * **Characteristic Strength ($f_{cu}$):** Evaluated via 150mm cube crushing tests at 28 days.
+        * **Statistical Acceptance:** $f_{cu} \\ge \\max(f_m - k \\cdot s, 0.85 f_m)$.
+        * **Durability Limits:** Max W/C ratio 0.45 for high grades ($\ge 30\text{ N/mm}^2$), minimum cement content $300\text{ kg/m}^3$.
         """)
 
     with tab_hb2:
-        st.subheader("Mix Design Limits & Compliance Thresholds (ECP 203)")
+        st.subheader("Egyptian Code for Soil Mechanics & Foundations (ECP 202)")
         st.markdown("""
-        * **Water-Cement Ratio (W/C):** Max 0.45 for grade >= 30 N/mm²; Max 0.50 for lower grades.
-        * **Minimum Cement Content:** At least 300 kg/m³ for durability.
-        * **Fresh Concrete Temperature:** Must not exceed 35 °C during placement.
+        * **Scope:** Subsurface investigation, bearing capacity, shallow and deep foundations, earth retaining structures, and slope stability.
+        * **Soil Compaction:** Minimum Proctor compaction density (95% to 98% Modified Proctor for subgrades).
+        * **Settlement Control:** Differential and total settlement limits under service loads.
         """)
 
     with tab_hb3:
-        st.subheader("Site Quality Control Guidelines")
+        st.subheader("Egyptian Code for Roads and Airfields (ECP 104)")
         st.markdown("""
-        1. **Sampling Frequency:** At least one set of 6 cubes per 100 m³ or structural pour per shift.
-        2. **Curing:** Immediate water curing at 20 ± 2 °C until testing age.
+        * **Scope:** Highway alignment, subgrade preparation, unbound subbase and base courses, bituminous asphalt layers, and concrete pavement joints.
+        * **Pavement Layers:** Subgrade CBR testing (ASTM D1883 / AASHTO T193), crushed stone base course compaction, and asphalt Marshall stability (ASTM D6927 / AASHTO T245).
+        * **Defect Management:** Pavement cracking, rutting, and subgrade settlement are treated via stabilization, milling, and resurfacing—**never** structural epoxy injection.
+        """)
+
+    with tab_hb4:
+        st.subheader("International Standards Integration (ASTM, AASHTO, BS, EN, ISO)")
+        st.markdown("""
+        * **ASTM:** American Society for Testing and Materials (e.g., ASTM C39 for concrete cylinders/cubes, ASTM D1557 for soil compaction).
+        * **AASHTO:** American Association of State Highway and Transportation Officials (Highway and pavement design and testing).
+        * **BS / EN / ISO:** British Standards, European Norms, and International Organization for Standardization governing quality management, cement testing, and structural safety (e.g., ISO 9001, BS EN 1992 / Eurocode 2).
         """)
 
 else:
@@ -715,13 +743,13 @@ else:
     }
 
     st.markdown("---")
-    st.header("2. Batch Plant Mix Design ECP 203 Compliance Audit")
+    st.header("2. Batch Plant Mix Design Compliance Audit (ECP 203 & ASTM C94)")
 
     with st.container():
         st.markdown("### 🚚 Batch Plant Mix Design Audit Summary")
         st.dataframe(df_mix_audit, use_container_width=True)
         
-        mix_overall_text = "PASS - All site mix parameters comply with ECP 203 limits." if mix_overall_pass else "FAIL - One or more parameters exceed ECP 203 allowable limits."
+        mix_overall_text = "PASS - All site mix parameters comply with ECP 203 / ASTM limits." if mix_overall_pass else "FAIL - One or more parameters exceed allowable limits."
         if mix_overall_pass:
             st.success(f"**Overall Mix Verdict:** {mix_overall_text}")
         else:
@@ -760,20 +788,20 @@ else:
                 st.dataframe(df_sb, use_container_width=True)
                 
                 if res["is_compliant"]:
-                    st.success(f"✅ **STAGE PASS ({stage_label}):** Fully satisfied according to ECP 203.")
+                    st.success(f"✅ **STAGE PASS ({stage_label}):** Fully satisfied according to ECP 203 & ASTM standards.")
                 else:
-                    st.error(f"❌ **STAGE FAIL ({stage_label}):** Non-compliant with ECP 203 limits.")
+                    st.error(f"❌ **STAGE FAIL ({stage_label}):** Non-compliant with standard limits.")
 
     with tabs[3]:
-        st.subheader("📐 Fully Worked Numerical Calculation Sheet (ECP 203)")
+        st.subheader("📐 Fully Worked Numerical Calculation Sheet (ECP 203 / ASTM / ACI)")
         for stage_name, res in stages_data.items():
             if res is not None:
                 st.markdown(f"### 🔹 {stage_name} Evaluation Breakdown")
                 cube_vals = cubes_7 if stage_name == "7 Days" else (cubes_14 if stage_name == "14 Days" else cubes_28)
                 vals_str = ", ".join([str(v) for v in cube_vals])
                 st.markdown(f"• **Input Samples:** `[{vals_str}]` (n = {res['n']})")
-                st.markdown(f"• **Mean (f_m):** {res['mean']:.2f} N/mm² | **StdDev (s):** {res['s']:.2f} N/mm²")
-                st.markdown(f"• **Characteristic Strength (f_cu):** {res['fcu_char']:.2f} N/mm²")
+                st.markdown(f"• **Mean ($f_m$):** {res['mean']:.2f} N/mm² | **StdDev ($s$):** {res['s']:.2f} N/mm²")
+                st.markdown(f"• **Characteristic Strength ($f_{{cu}}$):** {res['fcu_char']:.2f} N/mm²")
                 st.markdown("---")
 
     # Visualizations Section
@@ -802,7 +830,7 @@ else:
             summary_chart_data.append({"Stage": stage_key, "Calculated fcu": res["fcu_char"], "Target Requirement": res["stage_target_fcu"]})
 
     with chart_col2:
-        st.subheader("Characteristic fcu vs Target")
+        st.subheader("Characteristic $f_{cu}$ vs Target")
         if summary_chart_data:
             df_summary_chart = pd.DataFrame(summary_chart_data)
             fig_lines = go.Figure()
@@ -818,17 +846,17 @@ else:
 
     overview_data = [
         {"Parameter": "Project Name", "Details": display_project_name},
-        {"Parameter": "Structural Element / Pour Location", "Details": pour_location},
-        {"Parameter": "Specified 28-Day Grade (fcu)", "Details": f"{fcu_spec} N/mm²"},
-        {"Parameter": "Mixer Truck Number", "Details": mixer_truck_no},
-        {"Parameter": "Batch Ticket ID", "Details": batch_ticket_id},
+        {"Parameter": "Structural Element / Chainage", "Details": pour_location},
+        {"Parameter": "Specified 28-Day Grade ($f_{cu}$)", "Details": f"{fcu_spec} N/mm²"},
+        {"Parameter": "Mixer Truck / Equipment ID", "Details": mixer_truck_no},
+        {"Parameter": "Batch Ticket / Geo-Log ID", "Details": batch_ticket_id},
         {"Parameter": "Casting Date", "Details": formatted_casting_date},
         {"Parameter": "Cement Content", "Details": f"{cement_content_val} kg/m³"},
         {"Parameter": "Water Content", "Details": f"{water_content_val} kg/m³"},
         {"Parameter": "Water-Cement Ratio (W/C)", "Details": f"{wc_ratio:.2f}"},
         {"Parameter": "Engineer Name", "Details": display_engineer_name},
         {"Parameter": "Report Date", "Details": formatted_report_date},
-        {"Parameter": "Standard Specification", "Details": "Egyptian Code of Practice (ECP 203)"},
+        {"Parameter": "Governing Standards", "Details": f"Core: ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN, ISO | Suppl: {supplementary_code}"},
     ]
     df_overview = pd.DataFrame(overview_data)
 
@@ -868,9 +896,9 @@ else:
         story = []
         styles = getSampleStyleSheet()
 
-        section_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=12, textColor=colors.HexColor("#1B2A4A"), spaceBefore=12, spaceAfter=4, fontName="Helvetica-Bold")
+        section_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=11, textColor=colors.HexColor("#1B2A4A"), spaceBefore=12, spaceAfter=4, fontName="Helvetica-Bold")
 
-        build_professional_pdf_header(story, "ECP 203 Concrete Acceptance & Mix Compliance Report", "Multi-Stage Verification & Statistical Mix Audit", logo_bytes, display_engineer_name, display_project_name, pour_location, formatted_report_date)
+        build_professional_pdf_header(story, "Multi-Standard Concrete Acceptance & Mix Compliance Report", "Multi-Stage Verification & Statistical Audit", logo_bytes, display_engineer_name, display_project_name, pour_location, formatted_report_date)
 
         story.append(Paragraph("<b>1. Project Overview & Traceability Metadata</b>", section_style))
         overview_data_list = [["Parameter", "Details"]] + df_overview.values.tolist()
@@ -886,7 +914,7 @@ else:
         story.append(t_overview)
         story.append(Spacer(1, 6))
 
-        story.append(Paragraph("<b>2. Batch Plant Mix Design ECP 203 Compliance Audit</b>", section_style))
+        story.append(Paragraph("<b>2. Batch Plant Mix Design Compliance Audit</b>", section_style))
         mix_table_rows = [list(df_mix_audit.columns)] + df_mix_audit.values.tolist()
         t_mix = Table(mix_table_rows, colWidths=[180, 120, 120, 120])
         t_mix.setStyle(TableStyle([
@@ -937,7 +965,7 @@ else:
         story.append(t_raw)
         story.append(Spacer(1, 6))
 
-        qr_data_content = f"ECP203_VERIFIED | Project: {display_project_name} | Location: {pour_location} | Ticket: {batch_ticket_id} | Date: {formatted_report_date} | Engineer: {display_engineer_name}"
+        qr_data_content = f"MULTI_CODE_VERIFIED | Project: {display_project_name} | Location: {pour_location} | Ticket: {batch_ticket_id} | Date: {formatted_report_date} | Engineer: {display_engineer_name}"
         qr = qrcode.QRCode(version=1, box_size=4, border=1)
         qr.add_data(qr_data_content)
         qr.make(fit=True)
@@ -960,14 +988,14 @@ else:
         st.download_button(
             label="📥 Download Excel Report (.xlsx)",
             data=excel_buffer,
-            file_name=f"ECP203_Report_{display_project_name.replace(' ', '_')}.xlsx",
+            file_name=f"MultiCode_Report_{display_project_name.replace(' ', '_')}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
     with col_btn2:
         st.download_button(
             label="📄 Download Professional PDF Report (.pdf)",
             data=pdf_data,
-            file_name=f"ECP203_Report_{display_project_name.replace(' ', '_')}.pdf",
+            file_name=f"MultiCode_Report_{display_project_name.replace(' ', '_')}.pdf",
             mime="application/pdf",
         )
 
@@ -978,8 +1006,8 @@ st.markdown(
     <div class="footer-container">
       <div style="display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center;">
         <div style="flex: 1; min-width: 250px;">
-          <h4 style="color: #FF8C00; margin-bottom: 2px; font-size: 1rem;">🏗️ ECP 203 Quality Assurance Portal</h4>
-          <p style="color: #CCCCCC; font-size: 0.8rem; margin: 0;">Automated statistical compliance verification and rigorous structural mix design auditing platform.</p>
+          <h4 style="color: #FF8C00; margin-bottom: 2px; font-size: 1rem;">🏗️ Multi-Standard Engineering Quality Assurance Portal</h4>
+          <p style="color: #CCCCCC; font-size: 0.8rem; margin: 0;">Automated compliance verification across ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN, and ISO standards.</p>
         </div>
         <div style="flex: 1; min-width: 200px; text-align: right;">
           <p style="color: #FFFFFF; font-size: 0.85rem; margin-bottom: 2px;"><b>Official Direct Contacts:</b></p>
@@ -991,7 +1019,7 @@ st.markdown(
       </div>
       <hr style="border-color: rgba(255,140,0,0.3); margin: 8px 0;">
       <div style="text-align: center;">
-        <p style="color: #888888; font-size: 0.75rem; margin: 0;">© 2026 Eng. Mohamed Abd Al Aty. All rights reserved. Designed to Egyptian Code of Practice (ECP 203) standards.</p>
+        <p style="color: #888888; font-size: 0.75rem; margin: 0;">© 2026 Eng. Mohamed Abd Al Aty. All rights reserved. Designed for ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN & ISO compliance.</p>
       </div>
     </div>
     """,
