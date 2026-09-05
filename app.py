@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import qrcode
 import pypdf
 
-# Google GenAI for AI Auditor
+# Google GenAI for AI Auditor & Crack Diagnostic
 from google import genai
 from google.genai import types
 
@@ -103,17 +103,20 @@ textarea, input {
     color: #FFFFFF !important;
     border: 1px solid #FF8C00 !important;
 }
-.stDownloadButton>button {
-    background-color: #020461 !important;
+/* Force ALL buttons (StButton and DownloadButton) to be black with white text */
+.stButton>button, .stDownloadButton>button {
+    background-color: #000000 !important;
     color: #FFFFFF !important;
-    border: none;
+    border: 1px solid #FF8C00 !important;
     font-family: 'Segoe UI', Arial, sans-serif !important;
     font-size: 15px !important;
     font-weight: 600 !important;
+    border-radius: 6px !important;
 }
-.stDownloadButton>button:hover {
-    background-color: #8f010b !important;
-    color: #FFFFFF !important;
+.stButton>button:hover, .stDownloadButton>button:hover {
+    background-color: #1E222D !important;
+    color: #FF8C00 !important;
+    border: 1px solid #00BFFF !important;
 }
 hr {
     border-color: #262730 !important;
@@ -243,6 +246,17 @@ class AuditPDFReport(FPDF):
         self.set_font('helvetica', 'I', 8)
         self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
 
+class CrackPDFReport(FPDF):
+    def header(self):
+        self.set_font('helvetica', 'B', 14)
+        self.cell(0, 10, 'ECP 203 Concrete Crack & Defect Diagnostic Report', 0, 1, 'C')
+        self.ln(5)
+
+    def footer(self):
+        self.set_y(-15)
+        self.set_font('helvetica', 'I', 8)
+        self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
+
 def run_ai_auditor_module():
     st.subheader("🤖 ECP 203 General Engineering AI Auditor")
     st.write("Upload any structural engineering document, drawing spec, mix design, inspection sheet, or photo/image. The AI will audit it comprehensively against Egyptian Code of Practice (ECP 203) standards.")
@@ -342,25 +356,34 @@ def run_ai_auditor_module():
 
 def run_crack_defect_analyzer():
     st.subheader("🔍 AI Concrete Crack & Surface Defect Diagnostic Tool")
-    st.write("Snap or upload a photo of site defects (cracks, honeycombing, spalling). The AI will diagnose structural severity and suggest ECP 203 compliant repairs.")
+    st.write("Snap or upload a photo of site defects (cracks, honeycombing, spalling). The AI will diagnose structural severity and suggest ECP 203 compliant repairs using Egyptian market materials.")
     
     defect_image = st.file_uploader("Upload Site Defect Photo", type=["png", "jpg", "jpeg"], key="crack_uploader")
     
     if defect_image is not None:
+        # Fixed image container styling to avoid vertical text bugs
         st.image(defect_image, caption="Uploaded Site Defect", use_container_width=True)
-        if st.button("Diagnose Defect & Get Repair Protocol"):
+        
+        if st.button("Diagnose Defect & Get Egyptian Market Repair Protocol"):
             with st.spinner("Analyzing defect severity and ECP 203 repair guidelines..."):
                 try:
                     api_key = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY"))
+                    if not api_key:
+                        st.error("⚠️ GEMINI_API_KEY is not configured in your Streamlit secrets or environment variables.")
+                        return
+
                     client = genai.Client(api_key=api_key)
                     
                     prompt = """
-                    You are an expert structural forensic and concrete repair engineer. Analyze this site defect image.
+                    You are an expert structural forensic and concrete repair engineer operating in the Egyptian construction market. Analyze this site defect image.
                     Provide a structured diagnostic report containing:
-                    1. **Defect Classification:** (e.g., Structural Crack, Plastic Shrinkage, Honeycombing, Corrosion Spalling)
-                    2. **Severity Assessment:** (Low, Medium, High Risk to Structural Integrity)
-                    3. **Root Cause Analysis:** (Why did this happen according to ECP execution rules?)
-                    4. **Repair Procedure:** (Step-by-step remediation method using approved materials).
+                    1. **Defect Classification & Root Cause:** (e.g., Structural Flexural Crack, Plastic Shrinkage, Honeycombing, Steel Corrosion Spalling, Thermal Cracking).
+                    2. **Severity Assessment & Structural Risk:** (Low, Medium, High Risk to Structural Integrity).
+                    3. **Egyptian Market Materials Required:** (Specify commercial product names available in Egypt such as Sika, CMB, or Fosroc products like SikaGrout, Sika Dur, CMB Injection Resins, etc.).
+                    4. **Step-by-Step Remediation Procedure:** (Detailed execution instructions compliant with ECP 203).
+
+                    CRITICAL REQUIREMENT: At the very end of your response, you MUST include a structured Markdown table with exactly 4 columns:
+                    | Crack Type & Description | Severity Level | Egyptian Market Materials (Sika/CMB/Fosroc) | Treatment & Repair Method |
                     """
                     
                     image_part = types.Part.from_bytes(data=defect_image.getvalue(), mime_type=defect_image.type)
@@ -368,8 +391,43 @@ def run_crack_defect_analyzer():
                         model="gemini-3.5-flash-lite",
                         contents=[prompt, image_part]
                     )
+                    
+                    diagnostic_text = response.text
                     st.markdown("### 🛠️ Forensic Diagnosis & Repair Protocol")
-                    st.markdown(response.text)
+                    st.markdown(diagnostic_text)
+
+                    # Generate PDF Report for Crack Diagnosis
+                    pdf = CrackPDFReport()
+                    pdf.add_page()
+                    
+                    # Embed image in PDF report if possible
+                    try:
+                        img_temp_path = "temp_defect_img.jpg"
+                        # Convert/save image bytes temporarily for ReportLab
+                        with open(img_temp_path, "wb") as f:
+                            f.write(defect_image.getvalue())
+                        pdf.image(img_temp_path, x=15, y=25, w=80)
+                        pdf.ln(70)
+                        if os.path.exists(img_temp_path):
+                            os.remove(img_temp_path)
+                    except Exception:
+                        pdf.ln(10)
+
+                    pdf.set_font("helvetica", size=9)
+                    clean_diag_text = diagnostic_text.encode('latin-1', 'replace').decode('latin-1')
+                    pdf.multi_cell(0, 6, clean_diag_text)
+                    
+                    crack_pdf_path = "ecp203_crack_diagnostic_report.pdf"
+                    pdf.output(crack_pdf_path)
+
+                    with open(crack_pdf_path, "rb") as crack_pdf_file:
+                        st.download_button(
+                            label="📥 Download Defect Report (PDF)",
+                            data=crack_pdf_file,
+                            file_name="ECP203_Crack_Diagnostic_Report.pdf",
+                            mime="application/pdf"
+                        )
+
                 except Exception as e:
                     st.error(f"Error processing image: {e}")
 
