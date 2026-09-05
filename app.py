@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import qrcode
 import pypdf
 
-# Google GenAI for AI Auditor & Crack Diagnostic
+# Google GenAI for AI Auditor & Chatbot
 from google import genai
 from google.genai import types
 
@@ -31,7 +31,7 @@ from reportlab.platypus import (
     Image as ReportLabImage,
 )
 
-# --- 1. PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
+# --- 1. PAGE CONFIGURATION ---
 st.set_page_config(
     page_title="Multi-Standard Geotechnical, Pavement & Concrete Engineering Auditor",
     page_icon="🏗️",
@@ -39,7 +39,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# --- 2. CUSTOM STYLING ---
+# --- 2. CUSTOM STYLING (FIXING DROPDOWNS & UI ELEMENTS) ---
 dark_style = """
 <style>
 .stApp {
@@ -99,6 +99,7 @@ textarea, input {
     border: 1px solid #FF8C00 !important;
 }
 
+/* FIX DROPDOWN AND SELECTBOX TEXT & BACKGROUND ISSUES */
 div[data-baseweb="input"], div[data-baseweb="base-input"], div[data-baseweb="select"], div[data-baseweb="calendar"], div[data-baseweb="popover"], div[data-baseweb="menu"] {
     background-color: #1E222D !important;
     color: #FFFFFF !important;
@@ -111,6 +112,14 @@ div[data-baseweb="select"] > div {
     background-color: #1E222D !important;
     border: 1px solid #FF8C00 !important;
     color: #FFFFFF !important;
+}
+div[data-baseweb="popover"] *, div[role="listbox"] *, ul[role="listbox"] li {
+    background-color: #1E222D !important;
+    color: #FFFFFF !important;
+}
+ul[role="listbox"] li:hover {
+    background-color: #FF8C00 !important;
+    color: #031338 !important;
 }
 .stDateInput div, .stDateInput div[data-baseweb="input"] {
     background-color: #1E222D !important;
@@ -211,12 +220,14 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# --- MAIN APP NAVIGATION (LARGER FONT & AI-FEATURED LABELS) ---
 app_mode = st.radio(
     "📱 App Screen Navigation:",
     [
         "📊 Concrete Verifier Dashboard",
-        "🤖 AI Multi-Standard Engineering Auditor",
-        "🔍 Crack, Pavement & Geotechnical Defect Diagnostic",
+        "🤖 AI Multi-Standard Engineering Auditor (AI Featured)",
+        "🔍 Crack, Pavement & Geotechnical Defect Diagnostic (AI Featured)",
+        "💬 Core-Code Intelligent Assistant Chatbot (AI Featured)",
         "📖 Multi-Standard Technical Codes Handbook (ECP, ASTM, AASHTO, BS, EN, ISO)",
     ],
     horizontal=True,
@@ -224,6 +235,23 @@ app_mode = st.radio(
 st.markdown("---")
 
 # --- SIDEBAR CONFIGURATION ---
+# 1. Professional introductory phrases in the free space above the title
+st.sidebar.markdown(
+    """
+    <div style="background-color: #121E36; border: 1px solid #00BFFF; border-radius: 6px; padding: 10px; margin-bottom: 12px;">
+      <p style="color: #00BFFF !important; font-size: 0.82rem; font-weight: bold; margin-bottom: 6px;">💡 Portal Navigation Guide:</p>
+      <ul style="color: #E2E8F0 !important; font-size: 0.78rem; padding-left: 15px; margin: 0; line-height: 1.4;">
+        <li>Select governing standards & input site metadata.</li>
+        <li>Audit test results against ECP & international codes.</li>
+        <li>Inspect structural, soil & highway compliance instantly.</li>
+        <li>Upload documents or photos for automated AI diagnostics.</li>
+        <li>Engage with the Core-Code AI Chatbot for instant QA answers.</li>
+      </ul>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
 st.sidebar.header("PROJECT & REGULATORY STANDARDS")
 project_name = st.sidebar.text_input("Project Name", value="", placeholder="Enter project name")
 pour_location = st.sidebar.text_input("Structural Element / Road Chainage", "Highway Section Ch. 12+500 / Slab A1")
@@ -305,23 +333,16 @@ mix_audit_rows = [
 ]
 df_mix_audit = pd.DataFrame(mix_audit_rows)
 
-# --- ADVANCED TEXT CLEANER FOR PDF EXPORTS (REMOVES ALL MARKDOWN, TABLES, & DOLLAR SIGNS) ---
+# --- ADVANCED TEXT CLEANER FOR PDF EXPORTS ---
 def format_markdown_for_reportlab(text):
     if not text:
         return ""
-    # Strip out LaTeX math dollar signs completely
     cleaned = re.sub(r'\$(.*?)\$', r'\1', text)
-    # XML escape
     cleaned = cleaned.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-    # Strip markdown table formatting rows (---|---|---)
     cleaned = re.sub(r'[\-\|\:]+', ' ', cleaned)
-    # Remove markdown headers like ### or ##
     cleaned = re.sub(r'#{1,6}\s*', '', cleaned)
-    # Convert **bold** to ReportLab <b>bold</b>
     cleaned = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', cleaned)
-    # Convert *italic* to <i>italic</i>
     cleaned = re.sub(r'\*(.*?)\*', r'<i>\1</i>', cleaned)
-    # Clean up leading bullet points into bullet symbols
     cleaned = re.sub(r'^\s*[\*\-]\s+', '&bull; ', cleaned, flags=re.MULTILINE)
     return cleaned
 
@@ -377,7 +398,7 @@ def build_professional_pdf_footer_and_signatures(story, qr_img_buffer):
     ]))
     story.append(t_sign)
 
-# --- AI AUDITOR & DEFECT DIAGNOSTIC MODULES ---
+# --- AI MODULES & CHATBOT ---
 def run_ai_auditor_module():
     st.subheader("🤖 AI Multi-Standard Engineering Auditor")
     st.write("Upload any structural, geotechnical, pavement, or material testing document, drawing spec, mix design, or photo. The AI will audit it against **ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN, and ISO** standards.")
@@ -411,7 +432,7 @@ def run_ai_auditor_module():
                     Analyze the provided engineering document, technical data sheet, specifications, or image with a focus on: {audit_focus}.
                     
                     Perform a rigorous technical audit checking:
-                    1. Correct identification of the element type (Is it a structural concrete element, a geotechnical subgrade/soil layer, or a road pavement layer? NEVER misclassify soils/pavements as concrete slabs!).
+                    1. Correct identification of the element type (Is it a structural concrete element, a geotechnical subgrade/soil layer, or a road pavement layer?).
                     2. Compliance with ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN, and ISO clauses, limits, material specifications, and execution rules.
                     3. Identification of any technical discrepancies, code violations, potential structural or geotechnical risks, or missing data requirements.
                     4. Professional recommendations, corrective actions, and required next steps for the site engineering/QC team.
@@ -438,11 +459,8 @@ def run_ai_auditor_module():
                         contents = [prompt, image_part]
 
                     response = client.models.generate_content(
-                        model="gemini-3.5-flash-lite",
+                        model="gemini-2.5-flash",
                         contents=contents,
-                        config=types.GenerateContentConfig(
-                            thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW)
-                        )
                     )
                     
                     audit_result = response.text
@@ -450,7 +468,7 @@ def run_ai_auditor_module():
                     st.markdown("### 📋 Multi-Standard Engineering Audit Findings & Compliance Breakdown")
                     st.markdown(audit_result)
 
-                    # Professional ReportLab PDF Generation with Cleaned Formatting
+                    # Professional ReportLab PDF Generation
                     pdf_buffer = io.BytesIO()
                     doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
                     story = []
@@ -499,7 +517,7 @@ def run_ai_auditor_module():
                     st.error(f"An error occurred during AI processing: {e}")
 
 def run_crack_defect_analyzer():
-    st.subheader("🔍 AI Crack, Pavement & Geotechnical Defect Diagnostic Tool")
+    st.subheader("🔍 AI Crack, Pavement & Geotechnical Defect Diagnostic")
     st.write("Snap or upload a photo of site defects. The AI automatically distinguishes between **Structural Concrete Members (ECP 203 / ACI / BS EN)**, **Road Pavements & Subbase Layers (ECP 104 / AASHTO)**, and **Geotechnical Soils / Subgrades (ECP 202 / ASTM / ISO)** to provide accurate, context-specific repair protocols.")
     
     defect_image = st.file_uploader("Upload Site Defect Photo (Pavement, Soil, Subgrade, or Concrete)", type=["png", "jpg", "jpeg"], key="crack_uploader")
@@ -515,7 +533,7 @@ def run_crack_defect_analyzer():
             st.write(f"• **Inspection Date:** {report_date.strftime('%Y-%m-%d')}")
         
         if st.button("Diagnose Defect & Get Correct Multi-Standard Repair Protocol"):
-            with st.spinner("Analyzing defect element type (Concrete vs. Pavement vs. Soil) and generating code-compliant repair protocol..."):
+            with st.spinner("Analyzing defect element type and generating code-compliant repair protocol..."):
                 try:
                     api_key = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY"))
                     if not api_key:
@@ -525,23 +543,18 @@ def run_crack_defect_analyzer():
                     client = genai.Client(api_key=api_key)
                     
                     prompt = f"""
-                    You are an expert forensic civil, geotechnical, and highway repair engineer operating in accordance with ECP 203 (Concrete), ECP 202 (Geotechnical/Soil), ECP 104 (Roads & Pavements), ASTM, AASHTO, BS, EN, and ISO standards.
+                    You are an expert forensic civil, geotechnical, and highway repair engineer operating in accordance with ECP 203 (Concrete), ECP 202 (Geotechnical/Soil), ECP 104 (Roads & Pavements), ASTM, AASHTO, BS, EN, and ISO standards (Supplementary Code: {supplementary_code}).
                     
-                    CRITICAL INSTRUCTION: Analyze the uploaded site image carefully. First, determine whether the image shows:
-                    1. A structural concrete element (beams, columns, slabs, walls) -> apply ECP 203 / ACI / BS EN and epoxy/grouting repairs if applicable.
-                    2. A road pavement layer (asphalt surface, base course, subbase, concrete highway slab) -> apply ECP 104 / AASHTO standards, asphalt patching, stabilization, or slab joint sealing (DO NOT suggest epoxy crack injection for soil or unbound road bases!).
-                    3. A geotechnical soil feature, trench, slope, or subgrade settlement -> apply ECP 202 / ASTM / AASHTO soil mechanics, compaction verification, stabilization, or grouting.
-                    
-                    Provide a structured diagnostic report containing:
-                    1. Element Identification & Defect Classification (Concrete vs. Pavement/Road vs. Geotechnical Soil).
+                    Analyze the uploaded site image carefully and determine whether it shows a structural concrete element, a road pavement layer, or a geotechnical soil feature. Provide a structured diagnostic report containing:
+                    1. Element Identification & Defect Classification.
                     2. Root Cause Analysis & Severity Assessment.
                     3. Applicable Standards (ECP 203/202/104, ASTM, AASHTO, BS, EN, ISO).
-                    4. Correct Materials & Step-by-Step Remediation Procedure tailored strictly to the actual element type shown in the photo.
+                    4. Correct Materials & Step-by-Step Remediation Procedure.
                     """
                     
                     image_part = types.Part.from_bytes(data=defect_image.getvalue(), mime_type=defect_image.type)
                     response = client.models.generate_content(
-                        model="gemini-3.5-flash-lite",
+                        model="gemini-2.5-flash",
                         contents=[prompt, image_part]
                     )
                     
@@ -549,7 +562,7 @@ def run_crack_defect_analyzer():
                     st.markdown("### 🛠️ Forensic Diagnosis & Multi-Standard Repair Protocol")
                     st.markdown(diagnostic_text)
 
-                    # Generate Professional PDF Report for Defect Diagnosis with Cleaned Formatting
+                    # Generate Professional PDF Report for Defect Diagnosis
                     pdf_buffer = io.BytesIO()
                     doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
                     story = []
@@ -603,12 +616,69 @@ def run_crack_defect_analyzer():
                 except Exception as e:
                     st.error(f"Error processing image: {e}")
 
+# --- NEW CHATBOT MODULE ---
+def run_core_code_chatbot():
+    st.subheader("💬 Core-Code Intelligent Assistant Chatbot")
+    st.markdown("Ask any engineering, quality control, mix design, geotechnical, or pavement question. The AI answers strictly from our core codes (**ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN, ISO**) unless you have selected a specific supplementary code in the sidebar.")
+
+    # Initialize chat history in session state
+    if "chatbot_messages" not in st.session_state:
+        st.session_state.chatbot_messages = [
+            {"role": "assistant", "content": "Hello! I am your Multi-Standard Engineering Assistant. How can I assist you with your civil, geotechnical, pavement, or concrete queries today?"}
+        ]
+
+    # Display chat history
+    for message in st.session_state.chatbot_messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    # Chat input box
+    if user_query := st.chat_input("Ask about ECP, ASTM, AASHTO, mix design, soil compaction, or structural standards..."):
+        st.session_state.chatbot_messages.append({"role": "user", "content": user_query})
+        with st.chat_message("user"):
+            st.markdown(user_query)
+
+        with st.chat_message("assistant"):
+            with st.spinner("Consulting core codes & standards..."):
+                try:
+                    api_key = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY"))
+                    if not api_key:
+                        response_text = "⚠️ GEMINI_API_KEY is not configured in your Streamlit secrets or environment variables."
+                    else:
+                        client = genai.Client(api_key=api_key)
+                        
+                        system_context = f"""
+                        You are an expert AI engineering assistant embedded in a Multi-Standard Civil & Geotechnical QA/QC portal.
+                        Your primary knowledge base consists of core standards: ECP 203 (Concrete Structures), ECP 202 (Geotechnical & Foundations), ECP 104 (Roads & Pavements), ASTM, AASHTO, BS, EN, and ISO.
+                        The user's currently selected supplementary code is: {supplementary_code}.
+                        
+                        Provide accurate, professional, concise, and technically rigorous engineering answers citing exact clauses, formulas, limits, and testing protocols from these standards. Always prioritize the core codes unless a supplementary code is specified.
+                        """
+                        
+                        full_prompt = f"{system_context}\n\nUser Question: {user_query}"
+                        
+                        response = client.models.generate_content(
+                            model="gemini-2.5-flash",
+                            contents=full_prompt,
+                        )
+                        response_text = response.text
+
+                    st.markdown(response_text)
+                    st.session_state.chatbot_messages.append({"role": "assistant", "content": response_text})
+                except Exception as e:
+                    err_msg = f"An error occurred: {e}"
+                    st.error(err_msg)
+                    st.session_state.chatbot_messages.append({"role": "assistant", "content": err_msg})
+
 # --- CONDITIONAL ROUTING BASED ON APP NAVIGATION SELECTION ---
-if app_mode == "🤖 AI Multi-Standard Engineering Auditor":
+if app_mode == "🤖 AI Multi-Standard Engineering Auditor (AI Featured)":
     run_ai_auditor_module()
 
-elif app_mode == "🔍 Crack, Pavement & Geotechnical Defect Diagnostic":
+elif app_mode == "🔍 Crack, Pavement & Geotechnical Defect Diagnostic (AI Featured)":
     run_crack_defect_analyzer()
+
+elif app_mode == "💬 Core-Code Intelligent Assistant Chatbot (AI Featured)":
+    run_core_code_chatbot()
 
 elif app_mode == "📖 Multi-Standard Technical Codes Handbook (ECP, ASTM, AASHTO, BS, EN, ISO)":
     st.header("📖 Multi-Standard Civil Engineering Technical Handbook")
@@ -999,7 +1069,7 @@ else:
             mime="application/pdf",
         )
 
-# --- LUXURY CORPORATE FOOTER SECTION (COMPACT HEIGHT) ---
+# --- LUXURY CORPORATE FOOTER SECTION (ENHANCED CONTACTS & PHRASES) ---
 st.markdown("---")
 st.markdown(
     """
@@ -1010,10 +1080,11 @@ st.markdown(
           <p style="color: #CCCCCC; font-size: 0.8rem; margin: 0;">Automated compliance verification across ECP 203, ECP 202, ECP 104, ASTM, AASHTO, BS, EN, and ISO standards.</p>
         </div>
         <div style="flex: 1; min-width: 200px; text-align: right;">
-          <p style="color: #FFFFFF; font-size: 0.85rem; margin-bottom: 2px;"><b>Official Direct Contacts:</b></p>
-          <p style="margin: 0; font-size: 0.8rem;">
-            Linkedin: <a href='https://www.linkedin.com/in/mohamed-abd-al-aty-a326a1214/' target='_blank' style='color: #00BFFF; text-decoration: none;'>Mohamed Abd Al Aty</a> | 
-            Gmail: <a href='mailto:mohamedabdalaty63@gmail.com' style='color: #00BFFF; text-decoration: none;'>mohamedabdalaty63@gmail.com</a>
+          <p style="color: #FFFFFF; font-size: 0.85rem; margin-bottom: 2px;"><b>Official Direct Contacts & Professional Network:</b></p>
+          <p style="margin: 0; font-size: 0.8rem; line-height: 1.4;">
+            Connect on LinkedIn: <a href='https://www.linkedin.com/in/mohamed-abd-al-aty-a326a1214/' target='_blank' style='color: #00BFFF; text-decoration: none;'>Mohamed Abd Al Aty</a><br/>
+            Direct Email Inquiries: <a href='mailto:mohamedabdalaty63@gmail.com' style='color: #00BFFF; text-decoration: none;'>mohamedabdalaty63@gmail.com</a><br/>
+            <span style="color: #A0AEC0; font-size: 0.75rem;">Specialized in Geotechnical QA/QC, Civil Engineering Standards & Automated Compliance.</span>
           </p>
         </div>
       </div>
