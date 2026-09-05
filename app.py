@@ -35,7 +35,7 @@ from fpdf import FPDF
 
 # --- 1. PAGE CONFIGURATION (MUST BE THE FIRST STREAMLIT COMMAND) ---
 st.set_page_config(
-    page_title="ECP 203 Concrete Cube & Mix Verifier",
+    page_title="ECP 203 Concrete Verifier & AI General Engineering Auditor",
     page_icon="🏗️",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -45,7 +45,7 @@ st.set_page_config(
 class AuditPDFReport(FPDF):
     def header(self):
         self.set_font('helvetica', 'B', 14)
-        self.cell(0, 10, 'ECP 203 Lab Report Audit & Cube Verification', 0, 1, 'C')
+        self.cell(0, 10, 'ECP 203 General Engineering Audit & Compliance Review', 0, 1, 'C')
         self.ln(5)
 
     def footer(self):
@@ -54,31 +54,29 @@ class AuditPDFReport(FPDF):
         self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
 
 def run_ai_auditor_module():
-    st.subheader("🤖 AI Lab Report & ECP 203 Auditor")
-    st.write("Upload a PDF lab report. Python will instantly extract the text locally and audit it against ECP 203 standards.")
+    st.subheader("🤖 ECP 203 General Engineering AI Auditor")
+    st.write("Upload any structural engineering document, drawing spec, mix design, inspection sheet, or photo/image. The AI will audit it comprehensively against Egyptian Code of Practice (ECP 203) standards.")
+    
+    # Sidebar parameter for AI audit focus
+    audit_focus = st.sidebar.selectbox("Engineering Audit Focus", [
+        "General Structural Compliance (ECP 203)",
+        "Reinforcement & Steel Detailing Specs",
+        "Mix Design, Admixtures & Batching Parameters",
+        "Site Pouring, Curing & Formwork Procedures",
+        "Non-Conformance Report (NCR) Technical Review"
+    ])
 
-    # File Uploader focused on PDFs for local text extraction
-    uploaded_file = st.file_uploader("Upload Lab Report (PDF)", type=["pdf"])
+    # File Uploader supporting PDFs and image formats
+    uploaded_file = st.file_uploader("Upload Engineering Document / Photo (PDF, PNG, JPG, JPEG)", type=["pdf", "png", "jpg", "jpeg"])
 
     if uploaded_file is not None:
-        st.info(f"Uploaded Document: {uploaded_file.name}")
+        file_extension = uploaded_file.name.split('.')[-1].lower()
+        st.info(f"Uploaded File: {uploaded_file.name}")
 
-        if st.button("Run Fast ECP 203 Audit"):
-            with st.spinner("Extracting text and running audit..."):
+        if st.button("Run Comprehensive ECP 203 Audit"):
+            with st.spinner("Processing file and running engineering AI audit..."):
                 try:
-                    # 1. Locally extract text from the PDF using Python (Super fast, zero API lag)
-                    pdf_reader = pypdf.PdfReader(uploaded_file)
-                    extracted_text = ""
-                    for page in pdf_reader.pages:
-                        page_text = page.extract_text()
-                        if page_text:
-                            extracted_text += page_text + "\n"
-
-                    if not extracted_text.strip():
-                        st.error("⚠️ Could not extract text from this PDF. It might be scanned as an image. Please ensure it's a text-based PDF.")
-                        return
-
-                    # 2. Initialize Gemini Client using Streamlit secrets or environment variables
+                    # Initialize Gemini Client using Streamlit secrets or environment variables
                     api_key = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY"))
                     if not api_key:
                         st.error("⚠️ GEMINI_API_KEY is not configured in your Streamlit secrets or environment variables.")
@@ -86,34 +84,57 @@ def run_ai_auditor_module():
 
                     client = genai.Client(api_key=api_key)
                     
+                    # Broadened prompt requesting the 3-column structured compliance output
                     prompt = f"""
-                    You are an expert civil quality control engineer specialized in the Egyptian Code of Practice (ECP 203) for reinforced concrete structures.
-                    Analyze the following extracted text from a concrete cube test report or data sheet:
+                    You are an expert senior civil quality control and structural consultant specialized in the Egyptian Code of Practice (ECP 203) for reinforced concrete structures.
+                    Analyze the provided engineering document, technical data sheet, specifications, or image with a focus on: {audit_focus}.
                     
-                    {extracted_text}
-                    
-                    Verify the following:
-                    1. Check if characteristic compressive strength (fcu) meets the specified design grade.
-                    2. Check testing ages (7-day and 28-day strength criteria and progression).
-                    3. Identify any non-conformances (NCR), outliers, or failures to meet ECP 203 compliance tolerances.
-                    Provide a detailed, professional audit report with clear headings, findings, and recommendations.
+                    Perform a rigorous technical audit checking:
+                    1. Compliance with ECP 203 clauses, limits, material specifications, and execution rules relevant to the submitted content.
+                    2. Identification of any technical discrepancies, code violations, potential structural risks, or missing data requirements.
+                    3. Detailed engineering feedback addressing the specific scope of the uploaded document or image.
+                    4. Professional recommendations, corrective actions, and required next steps for the site engineering/QC team.
+
+                    CRITICAL REQUIREMENT: In addition to your detailed text report, you MUST provide a structured markdown table at the very end of your response containing exactly 3 columns:
+                    Column 1: "Accepted / Within ECP 203 Limits" (Details of what matches code requirements).
+                    Column 2: "Not Accepted / Violations Found" (Exact corresponding non-compliant text, values, or findings from the review).
+                    Column 3: "Recommendations to Fix" (Specific corrective engineering steps required to make it fully compliant with ECP 203).
                     """
 
-                    # 3. Send text with thinking_level set to LOW for instant generation on 3.7-flash
+                    contents = []
+                    if file_extension == 'pdf':
+                        pdf_reader = pypdf.PdfReader(uploaded_file)
+                        extracted_text = ""
+                        for page in pdf_reader.pages:
+                            page_text = page.extract_text()
+                            if page_text:
+                                extracted_text += page_text + "\n"
+
+                        if not extracted_text.strip():
+                            st.error("⚠️ Could not extract text from this PDF. It might be scanned as an image. Please upload it directly as an image file (PNG/JPG) instead.")
+                            return
+                        contents = [prompt, f"Extracted PDF Text:\n{extracted_text}"]
+                    else:
+                        image_part = types.Part.from_bytes(
+                            data=uploaded_file.getvalue(),
+                            mime_type=uploaded_file.type
+                        )
+                        contents = [prompt, image_part]
+
                     response = client.models.generate_content(
-                        model="gemini-3.5-flash-lite",
-                        contents=prompt,
+                        model="gemini-2.5-flash",
+                        contents=contents,
                         config=types.GenerateContentConfig(
                             thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW)
                         )
                     )
                     
                     audit_result = response.text
-                    st.success("Audit Completed Instantly!")
-                    st.markdown("### 📋 Audit Findings")
+                    st.success("Audit Completed Successfully!")
+                    st.markdown("### 📋 Engineering Audit Findings & Compliance Breakdown")
                     st.markdown(audit_result)
 
-                    # PDF Report Generation for Audit
+                    # Generate PDF Report for Audit
                     pdf = AuditPDFReport()
                     pdf.add_page()
                     pdf.set_font("helvetica", size=10)
@@ -121,14 +142,14 @@ def run_ai_auditor_module():
                     clean_text = audit_result.encode('latin-1', 'replace').decode('latin-1')
                     pdf.multi_cell(0, 8, clean_text)
                     
-                    pdf_output_path = "ecp203_audit_report.pdf"
+                    pdf_output_path = "ecp203_engineering_audit_report.pdf"
                     pdf.output(pdf_output_path)
 
                     with open(pdf_output_path, "rb") as pdf_file:
                         st.download_button(
                             label="📥 Download Audit Report (PDF)",
                             data=pdf_file,
-                            file_name="ECP203_Lab_Audit_Report.pdf",
+                            file_name="ECP203_Engineering_Audit_Report.pdf",
                             mime="application/pdf"
                         )
 
@@ -271,12 +292,12 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# --- APP SCREEN NAVIGATION SELECTOR (Including AI Auditor) ---
+# --- APP SCREEN NAVIGATION SELECTOR ---
 app_mode = st.radio(
     "📱 App Screen Navigation:",
     [
         "📊 Verifier Dashboard",
-        "🤖 AI Lab Report Auditor",
+        "🤖 AI General Engineering Auditor",
         "📖 ECP 203 Official Formulas & Site Instructions Handbook",
     ],
     horizontal=True,
@@ -343,10 +364,7 @@ mix_audit_rows = [
 ]
 df_mix_audit = pd.DataFrame(mix_audit_rows)
 
-# Input Mode Selector for Cubes
-st.header("1. Input Cube Crushing Results (N/mm²)")
-input_method = st.radio("Choose Input Method:", ["Manual Entry", "Upload Excel File (.xlsx)"], horizontal=True)
-
+# Input Mode Selector for Cubes (Used in Verifier Dashboard)
 cubes_7, cubes_14, cubes_28 = [], [], []
 
 def parse_input(text_str):
@@ -354,57 +372,61 @@ def parse_input(text_str):
     return []
   return [float(x.strip()) for x in text_str.split(",") if x.strip() != ""]
 
-if input_method == "Manual Entry":
-  st.info("💡 Enter strength values separated by commas.")
-  col_a, col_b, col_c = st.columns(3)
-  with col_a:
-    st.subheader("7-Day Test")
-    input_7 = st.text_area("7-Day Cubes:", value="21.0, 22.5, 20.5", height=100)
-  with col_b:
-    st.subheader("14-Day Test")
-    input_14 = st.text_area("14-Day Cubes:", value="26.0, 27.2, 25.8", height=100)
-  with col_c:
-    st.subheader("28-Day Test")
-    input_28 = st.text_area("28-Day Cubes:", value="32.5, 34.0, 31.0, 35.5, 29.0, 33.0", height=100)
+if app_mode == "📊 Verifier Dashboard":
+  st.header("1. Input Cube Crushing Results (N/mm²)")
+  input_method = st.radio("Choose Input Method:", ["Manual Entry", "Upload Excel File (.xlsx)"], horizontal=True)
 
-  try:
-    cubes_7 = parse_input(input_7)
-    cubes_14 = parse_input(input_14)
-    cubes_28 = parse_input(input_28)
-  except ValueError:
-    st.error("⚠️ Please enter valid numerical values separated by commas.")
-    st.stop()
-else:
-  st.info("💡 Upload an Excel file containing cube crushing test data.")
-  uploaded_excel = st.file_uploader("Choose an Excel file", type=["xlsx", "xls"], key="excel_uploader")
-  if uploaded_excel is not None:
+  if input_method == "Manual Entry":
+    st.info("💡 Enter strength values separated by commas.")
+    col_a, col_b, col_c = st.columns(3)
+    with col_a:
+      st.subheader("7-Day Test")
+      input_7 = st.text_area("7-Day Cubes:", value="21.0, 22.5, 20.5", height=100)
+    with col_b:
+      st.subheader("14-Day Test")
+      input_14 = st.text_area("14-Day Cubes:", value="26.0, 27.2, 25.8", height=100)
+    with col_c:
+      st.subheader("28-Day Test")
+      input_28 = st.text_area("28-Day Cubes:", value="32.5, 34.0, 31.0, 35.5, 29.0, 33.0", height=100)
+
     try:
-      excel_file = pd.ExcelFile(uploaded_excel)
-      sheet_selected = st.selectbox("Select Sheet:", excel_file.sheet_names)
-      df = pd.read_excel(uploaded_excel, sheet_name=sheet_selected)
-      numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-      
-      col_1, col_2, col_3 = st.columns(3)
-      with col_1:
-        col_7_name = st.selectbox("7-Day Column:", ["None"] + numeric_cols)
-      with col_2:
-        col_14_name = st.selectbox("14-Day Column:", ["None"] + numeric_cols)
-      with col_3:
-        col_28_name = st.selectbox("28-Day Column:", ["None"] + numeric_cols)
-
-      if col_7_name != "None": cubes_7 = df[col_7_name].dropna().astype(float).tolist()
-      if col_14_name != "None": cubes_14 = df[col_14_name].dropna().astype(float).tolist()
-      if col_28_name != "None": cubes_28 = df[col_28_name].dropna().astype(float).tolist()
-    except Exception as e:
-      st.error(f"⚠️ Error reading file: {e}")
+      cubes_7 = parse_input(input_7)
+      cubes_14 = parse_input(input_14)
+      cubes_28 = parse_input(input_28)
+    except ValueError:
+      st.error("⚠️ Please enter valid numerical values separated by commas.")
       st.stop()
   else:
-    st.warning("👈 Please upload an Excel sheet or switch to Manual Entry to continue.")
-    st.stop()
+    st.info("💡 Upload an Excel file containing cube crushing test data.")
+    uploaded_excel = st.file_uploader("Choose an Excel file", type=["xlsx", "xls"], key="excel_uploader")
+    if uploaded_excel is not None:
+      try:
+        excel_file = pd.ExcelFile(uploaded_excel)
+        sheet_selected = st.selectbox("Select Sheet:", excel_file.sheet_names)
+        df = pd.read_excel(uploaded_excel, sheet_name=sheet_selected)
+        numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+        
+        col_1, col_2, col_3 = st.columns(3)
+        with col_1:
+          col_7_name = st.selectbox("7-Day Column:", ["None"] + numeric_cols)
+        with col_2:
+          col_14_name = st.selectbox("14-Day Column:", ["None"] + numeric_cols)
+        with col_3:
+          col_28_name = st.selectbox("28-Day Column:", ["None"] + numeric_cols)
 
-if not (cubes_7 or cubes_14 or cubes_28):
-  st.warning("⚠️ Please provide cube strength data for at least one testing age.")
-  st.stop()
+        if col_7_name != "None": cubes_7 = df[col_7_name].dropna().astype(float).tolist()
+        if col_14_name != "None": cubes_14 = df[col_14_name].dropna().astype(float).tolist()
+        if col_28_name != "None": cubes_28 = df[col_28_name].dropna().astype(float).tolist()
+      except Exception as e:
+        st.error(f"⚠️ Error reading file: {e}")
+        st.stop()
+    else:
+      st.warning("👈 Please upload an Excel sheet or switch to Manual Entry to continue.")
+      st.stop()
+
+  if not (cubes_7 or cubes_14 or cubes_28):
+    st.warning("⚠️ Please provide cube strength data for at least one testing age.")
+    st.stop()
 
 # Statistical analysis function
 def analyze_stage(cube_list, age_name, target_ratio):
@@ -472,7 +494,7 @@ if app_mode == "📖 ECP 203 Official Formulas & Site Instructions Handbook":
     2. **Curing:** Immediate water curing at $20 \\pm 2\\text{ °C}$ until testing age.
     """)
 
-elif app_mode == "🤖 AI Lab Report Auditor":
+elif app_mode == "🤖 AI General Engineering Auditor":
   st.markdown("---")
   run_ai_auditor_module()
 
@@ -773,24 +795,25 @@ def generate_pdf_report(logo_bytes=None):
   pdf_buffer.seek(0)
   return pdf_buffer
 
-pdf_data = generate_pdf_report(company_logo_bytes)
+if app_mode == "📊 Verifier Dashboard":
+  pdf_data = generate_pdf_report(company_logo_bytes)
 
-# Download Buttons Section
-col_btn1, col_btn2 = st.columns(2)
-with col_btn1:
-  st.download_button(
-      label="📥 Download Excel Report (.xlsx)",
-      data=excel_buffer,
-      file_name=f"ECP203_Report_{display_project_name.replace(' ', '_')}.xlsx",
-      mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  )
-with col_btn2:
-  st.download_button(
-      label="📄 Download Professional PDF Report (.pdf)",
-      data=pdf_data,
-      file_name=f"ECP203_Report_{display_project_name.replace(' ', '_')}.pdf",
-      mime="application/pdf",
-  )
+  # Download Buttons Section
+  col_btn1, col_btn2 = st.columns(2)
+  with col_btn1:
+    st.download_button(
+        label="📥 Download Excel Report (.xlsx)",
+        data=excel_buffer,
+        file_name=f"ECP203_Report_{display_project_name.replace(' ', '_')}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+  with col_btn2:
+    st.download_button(
+        label="📄 Download Professional PDF Report (.pdf)",
+        data=pdf_data,
+        file_name=f"ECP203_Report_{display_project_name.replace(' ', '_')}.pdf",
+        mime="application/pdf",
+    )
 
 # --- LUXURY CORPORATE FOOTER SECTION ---
 st.markdown("---")
