@@ -87,22 +87,23 @@ def run_ai_auditor_module():
                     """
 
                    from google import genai
+from google import genai
 from google.genai import types
+
 try:
-                    # Send text with thinking_level set to LOW for instant generation
-                    response = client.models.generate_content(
-                        model='gemini-3.7-flash',
-                        contents=prompt,
-                        config=types.GenerateContentConfig(
-                            thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW)
-                        )
-                    )
-                except Exception as e:
-                    st.error(f"An error occurred during AI processing: {e}")
-                    return
-                except Exception as e:
-                    st.error(f"An error occurred during AI processing: {e}")
-                    return
+    # Send text with thinking_level set to LOW for instant generation
+    response = client.models.generate_content(
+        model='gemini-3.7-flash',
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW)
+        )
+    )
+except Exception as e:
+    st.error(f"An error occurred during AI processing: {e}")
+    return
+
+audit_result = response.text
                      
                     
                     audit_result = response.text
