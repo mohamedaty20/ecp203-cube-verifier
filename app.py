@@ -101,7 +101,7 @@ textarea, input {
     border: 1px solid #FF8C00 !important;
 }
 
-/* FIX: Complete Overrides for Date Inputs, Selectboxes, Calendars & Base Inputs to Remove White Blocks */
+/* Complete Overrides for Date Inputs, Selectboxes, Calendars & Base Inputs to Remove White Blocks */
 div[data-baseweb="input"], div[data-baseweb="base-input"], div[data-baseweb="select"], div[data-baseweb="calendar"], div[data-baseweb="popover"], div[data-baseweb="menu"] {
     background-color: #1E222D !important;
     color: #FFFFFF !important;
@@ -155,18 +155,18 @@ div.stButton > button:hover, div.stDownloadButton > button:hover {
     border: 2px solid #00BFFF !important;
 }
 
-/* Enhanced Navigation Radio Labels & Main Tabs Text Size & Readability */
+/* Enhanced Navigation Radio Labels & Main Tabs Text Size & Readability (Enlarged and Bolded) */
 div[row-widget="stRadio"] label p, .stRadio div[data-baseweb="radio"] label span {
     font-size: 18px !important;
     font-weight: 800 !important;
     color: #FFFFFF !important;
 }
 .stTabs [data-baseweb="tab"] {
-    font-size: 18px !important;
+    font-size: 20px !important;
     font-weight: 800 !important;
     color: #FFFFFF !important;
-    padding-top: 12px !important;
-    padding-bottom: 12px !important;
+    padding-top: 14px !important;
+    padding-bottom: 14px !important;
 }
 .stTabs [data-baseweb="tab"]:hover {
     color: #00BFFF !important;
@@ -291,7 +291,7 @@ mix_audit_rows = [
 ]
 df_mix_audit = pd.DataFrame(mix_audit_rows)
 
-# --- MODULE CLASSES & FUNCTIONS FOR PROFESSIONAL PDFS ---
+# --- MODULE CLASSES & FUNCTIONS FOR PROFESSIONAL PDFS WITH ENHANCED HIERARCHY ---
 def clean_for_pdf(text):
     if not text:
         return ""
@@ -301,34 +301,34 @@ def clean_for_pdf(text):
 
 def build_professional_pdf_header(story, doc_title, subtitle, logo_bytes, engineer, project, location, rep_date):
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle("DocTitle", parent=styles["Heading1"], fontSize=15, textColor=colors.HexColor("#1B2A4A"), spaceAfter=3, alignment=1, fontName="Helvetica-Bold")
-    sub_style = ParagraphStyle("DocSub", parent=styles["Normal"], fontSize=9, textColor=colors.HexColor("#444444"), spaceAfter=8, alignment=1, fontName="Helvetica-Bold")
-    meta_style = ParagraphStyle("MetaStyle", parent=styles["Normal"], fontSize=8.5, textColor=colors.HexColor("#222222"), leading=11, fontName="Helvetica")
+    title_style = ParagraphStyle("DocTitle", parent=styles["Heading1"], fontSize=18, textColor=colors.HexColor("#1B2A4A"), spaceAfter=4, alignment=1, fontName="Helvetica-Bold")
+    sub_style = ParagraphStyle("DocSub", parent=styles["Normal"], fontSize=10, textColor=colors.HexColor("#444444"), spaceAfter=10, alignment=1, fontName="Helvetica-Bold")
+    meta_style = ParagraphStyle("MetaStyle", parent=styles["Normal"], fontSize=9, textColor=colors.HexColor("#222222"), leading=12, fontName="Helvetica")
 
     if logo_bytes:
         try:
             story.append(ReportLabImage(io.BytesIO(logo_bytes), width=90, height=34))
-            story.append(Spacer(1, 3))
+            story.append(Spacer(1, 4))
         except Exception:
             pass
 
     story.append(Paragraph(clean_for_pdf(doc_title), title_style))
     story.append(Paragraph(clean_for_pdf(subtitle), sub_style))
-    story.append(HRFlowable(width="100%", thickness=1.2, color=colors.HexColor("#1B2A4A"), spaceAfter=6))
+    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#1B2A4A"), spaceAfter=8))
 
     meta_html = f"""
     <b>Project Name:</b> {clean_for_pdf(project)} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Location:</b> {clean_for_pdf(location)}<br/>
     <b>Engineer Name:</b> {clean_for_pdf(engineer)} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Report Date:</b> {rep_date} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Time:</b> ____________
     """
     story.append(Paragraph(meta_html, meta_style))
-    story.append(Spacer(1, 8))
+    story.append(Spacer(1, 10))
 
 def build_professional_pdf_footer_and_signatures(story, qr_img_buffer):
     styles = getSampleStyleSheet()
-    body_style = ParagraphStyle("BodyStyle", parent=styles["Normal"], fontSize=8, textColor=colors.HexColor("#222222"), leading=10, fontName="Helvetica")
-    sec_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=10, textColor=colors.HexColor("#1B2A4A"), spaceBefore=8, spaceAfter=3, fontName="Helvetica-Bold")
+    body_style = ParagraphStyle("BodyStyle", parent=styles["Normal"], fontSize=8.5, textColor=colors.HexColor("#222222"), leading=11, fontName="Helvetica")
+    sec_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=12, textColor=colors.HexColor("#1B2A4A"), spaceBefore=10, spaceAfter=4, fontName="Helvetica-Bold")
 
-    story.append(Spacer(1, 8))
+    story.append(Spacer(1, 10))
     story.append(Paragraph("<b>Engineering Approvals & Verification Sign-Off</b>", sec_style))
     
     qr_lab_img = ReportLabImage(qr_img_buffer, width=50, height=50)
@@ -342,8 +342,8 @@ def build_professional_pdf_footer_and_signatures(story, qr_img_buffer):
         ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F5F7FA")),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
-        ("TOPPADDING", (0, 0), (-1, -1), 5),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
         ("ALIGN", (3, 0), (3, 0), "CENTER"),
     ]))
     story.append(t_sign)
@@ -421,7 +421,7 @@ def run_ai_auditor_module():
                     st.markdown("### 📋 Engineering Audit Findings & Compliance Breakdown")
                     st.markdown(audit_result)
 
-                    # Professional ReportLab PDF Generation
+                    # Professional ReportLab PDF Generation with Bold Subheadings
                     pdf_buffer = io.BytesIO()
                     doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
                     story = []
@@ -434,12 +434,18 @@ def run_ai_auditor_module():
                     build_professional_pdf_header(story, "ECP 203 General Engineering Audit Report", f"Audit Focus: {audit_focus}", company_logo_bytes, disp_eng, disp_proj, disp_loc, rep_date_str)
 
                     styles = getSampleStyleSheet()
-                    body_style = ParagraphStyle("Body", parent=styles["Normal"], fontSize=9, textColor=colors.HexColor("#222222"), leading=13, spaceAfter=5)
+                    body_style = ParagraphStyle("Body", parent=styles["Normal"], fontSize=9.5, textColor=colors.HexColor("#222222"), leading=14, spaceAfter=6)
+                    heading_style = ParagraphStyle("CustomHeading", parent=styles["Heading3"], fontSize=11.5, textColor=colors.HexColor("#1B2A4A"), spaceBefore=10, spaceAfter=4, fontName="Helvetica-Bold")
                     
                     for para in audit_result.split("\n\n"):
                         if para.strip():
-                            clean_p = clean_for_pdf(para).replace('\n', '<br/>')
-                            story.append(Paragraph(clean_p, body_style))
+                            clean_p = clean_for_pdf(para)
+                            # Render bold titles if paragraph looks like a header/section title
+                            if clean_p.startswith("###") or clean_p.startswith("**") or (len(clean_p) < 80 and not clean_p.endswith(".")):
+                                clean_p = clean_p.replace("###", "").replace("**", "").strip()
+                                story.append(Paragraph(f"<b>{clean_p}</b>", heading_style))
+                            else:
+                                story.append(Paragraph(clean_p.replace('\n', '<br/>'), body_style))
 
                     qr_data = f"ECP203_AUDIT | Project: {disp_proj} | Date: {rep_date_str} | Eng: {disp_eng}"
                     qr = qrcode.QRCode(version=1, box_size=4, border=1)
@@ -509,7 +515,7 @@ def run_crack_defect_analyzer():
                     st.markdown("### 🛠️ Forensic Diagnosis & Repair Protocol")
                     st.markdown(diagnostic_text)
 
-                    # Generate Professional PDF Report for Crack Diagnosis using io.BytesIO directly (No disk writing required)
+                    # Generate Professional PDF Report for Crack Diagnosis with distinct bold headers
                     pdf_buffer = io.BytesIO()
                     doc = SimpleDocTemplate(pdf_buffer, pagesize=letter, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
                     story = []
@@ -528,12 +534,17 @@ def run_crack_defect_analyzer():
                         pass
 
                     styles = getSampleStyleSheet()
-                    body_style = ParagraphStyle("Body", parent=styles["Normal"], fontSize=9, textColor=colors.HexColor("#222222"), leading=13, spaceAfter=5)
+                    body_style = ParagraphStyle("Body", parent=styles["Normal"], fontSize=9.5, textColor=colors.HexColor("#222222"), leading=14, spaceAfter=6)
+                    heading_style = ParagraphStyle("CustomHeading", parent=styles["Heading3"], fontSize=11.5, textColor=colors.HexColor("#1B2A4A"), spaceBefore=10, spaceAfter=4, fontName="Helvetica-Bold")
 
                     for para in diagnostic_text.split("\n\n"):
                         if para.strip():
-                            clean_p = clean_for_pdf(para).replace('\n', '<br/>')
-                            story.append(Paragraph(clean_p, body_style))
+                            clean_p = clean_for_pdf(para)
+                            if clean_p.startswith("###") or clean_p.startswith("**") or (len(clean_p) < 80 and not clean_p.endswith(".")):
+                                clean_p = clean_p.replace("###", "").replace("**", "").strip()
+                                story.append(Paragraph(f"<b>{clean_p}</b>", heading_style))
+                            else:
+                                story.append(Paragraph(clean_p.replace('\n', '<br/>'), body_style))
 
                     qr_data = f"ECP203_CRACK_REPORT | Project: {disp_proj} | Location: {disp_loc} | Date: {rep_date_str}"
                     qr = qrcode.QRCode(version=1, box_size=4, border=1)
@@ -841,7 +852,7 @@ else:
         story = []
         styles = getSampleStyleSheet()
 
-        section_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=10, textColor=colors.HexColor("#1B2A4A"), spaceBefore=8, spaceAfter=3, fontName="Helvetica-Bold")
+        section_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=12, textColor=colors.HexColor("#1B2A4A"), spaceBefore=12, spaceAfter=4, fontName="Helvetica-Bold")
 
         build_professional_pdf_header(story, "ECP 203 Concrete Acceptance & Mix Compliance Report", "Multi-Stage Verification & Statistical Mix Audit", logo_bytes, display_engineer_name, display_project_name, pour_location, formatted_report_date)
 
@@ -852,12 +863,12 @@ else:
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
             ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
             ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("FONTSIZE", (0, 0), (-1, -1), 8),
+            ("FONTSIZE", (0, 0), (-1, -1), 8.5),
             ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
             ("BACKGROUND", (0, 1), (-1, -1), colors.HexColor("#F9F9F9")),
         ]))
         story.append(t_overview)
-        story.append(Spacer(1, 5))
+        story.append(Spacer(1, 6))
 
         story.append(Paragraph("<b>2. Batch Plant Mix Design ECP 203 Compliance Audit</b>", section_style))
         mix_table_rows = [list(df_mix_audit.columns)] + df_mix_audit.values.tolist()
@@ -866,11 +877,11 @@ else:
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
             ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
             ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("FONTSIZE", (0, 0), (-1, -1), 8),
+            ("FONTSIZE", (0, 0), (-1, -1), 8.5),
             ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
         ]))
         story.append(t_mix)
-        story.append(Spacer(1, 5))
+        story.append(Spacer(1, 6))
 
         story.append(Paragraph("<b>3. Cube Compliance Results Summary & Statistical Evaluation</b>", section_style))
         summary_headers = ["Stage", "n", "Target", "Req (MPa)", "Mean (MPa)", "StdDev", "fcu (MPa)", "Verdict"]
@@ -882,11 +893,11 @@ else:
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
             ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
             ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("FONTSIZE", (0, 0), (-1, -1), 8),
+            ("FONTSIZE", (0, 0), (-1, -1), 8.5),
             ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
         ]))
         story.append(t_summary)
-        story.append(Spacer(1, 5))
+        story.append(Spacer(1, 6))
 
         story.append(Paragraph("<b>4. Raw Individual Cube Strengths Matrix & Sample Counts</b>", section_style))
         raw_headers = list(df_raw_cubes.columns)
@@ -903,12 +914,12 @@ else:
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2A4A")),
             ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
             ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("FONTSIZE", (0, 0), (-1, -1), 8),
+            ("FONTSIZE", (0, 0), (-1, -1), 8.5),
             ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CCCCCC")),
             ("ALIGN", (0, 0), (-1, -1), "CENTER"),
         ]))
         story.append(t_raw)
-        story.append(Spacer(1, 5))
+        story.append(Spacer(1, 6))
 
         qr_data_content = f"ECP203_VERIFIED | Project: {display_project_name} | Location: {pour_location} | Ticket: {batch_ticket_id} | Date: {formatted_report_date} | Engineer: {display_engineer_name}"
         qr = qrcode.QRCode(version=1, box_size=4, border=1)
