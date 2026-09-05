@@ -86,7 +86,6 @@ def run_ai_auditor_module():
                     Provide a detailed, professional audit report with clear headings, findings, and recommendations.
                     """
 
-                   from google import genai
 from google import genai
 from google.genai import types
 
