@@ -10,9 +10,11 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import qrcode
+import pypdf
 
 # Google GenAI for AI Auditor
 from google import genai
+from google.genai import types
 
 # ReportLab imports for professional PDF generation
 from reportlab.lib import colors
@@ -53,32 +55,43 @@ class AuditPDFReport(FPDF):
 
 def run_ai_auditor_module():
     st.subheader("🤖 AI Lab Report & ECP 203 Auditor")
-    st.write("Upload a lab report photo or PDF to automatically audit it against Egyptian Code (ECP 203) concrete quality requirements.")
+    st.write("Upload a PDF lab report. Python will instantly extract the text locally and audit it against ECP 203 standards.")
 
-    # File Uploader for Images and PDFs
-    uploaded_file = st.file_uploader("Upload Lab Report (Image or PDF)", type=["png", "jpg", "jpeg", "pdf"])
+    # File Uploader focused on PDFs for local text extraction
+    uploaded_file = st.file_uploader("Upload Lab Report (PDF)", type=["pdf"])
 
     if uploaded_file is not None:
-        if uploaded_file.type.startswith("image/"):
-            st.image(uploaded_file, caption="Uploaded Lab Report", use_container_width=True)
-        else:
-            st.info(f"Uploaded Document: {uploaded_file.name}")
+        st.info(f"Uploaded Document: {uploaded_file.name}")
 
-        if st.button("Run ECP 203 Audit"):
-            with st.spinner("Analyzing report against ECP 203 standards..."):
+        if st.button("Run Fast ECP 203 Audit"):
+            with st.spinner("Extracting text and running audit..."):
                 try:
-                    # Initialize Gemini Client using Streamlit secrets or environment variables
+                    # 1. Locally extract text from the PDF using Python (Super fast, zero API lag)
+                    pdf_reader = pypdf.PdfReader(uploaded_file)
+                    extracted_text = ""
+                    for page in pdf_reader.pages:
+                        page_text = page.extract_text()
+                        if page_text:
+                            extracted_text += page_text + "\n"
+
+                    if not extracted_text.strip():
+                        st.error("⚠️ Could not extract text from this PDF. It might be scanned as an image. Please ensure it's a text-based PDF.")
+                        return
+
+                    # 2. Initialize Gemini Client using Streamlit secrets or environment variables
                     api_key = st.secrets.get("GEMINI_API_KEY", os.environ.get("GEMINI_API_KEY"))
                     if not api_key:
                         st.error("⚠️ GEMINI_API_KEY is not configured in your Streamlit secrets or environment variables.")
                         return
 
                     client = genai.Client(api_key=api_key)
-                    bytes_data = uploaded_file.getvalue()
                     
-                    prompt = """
+                    prompt = f"""
                     You are an expert civil quality control engineer specialized in the Egyptian Code of Practice (ECP 203) for reinforced concrete structures.
-                    Analyze the uploaded concrete cube test report or data sheet. 
+                    Analyze the following extracted text from a concrete cube test report or data sheet:
+                    
+                    {extracted_text}
+                    
                     Verify the following:
                     1. Check if characteristic compressive strength (fcu) meets the specified design grade.
                     2. Check testing ages (7-day and 28-day strength criteria and progression).
@@ -86,27 +99,17 @@ def run_ai_auditor_module():
                     Provide a detailed, professional audit report with clear headings, findings, and recommendations.
                     """
 
-from google import genai
-from google.genai import types
-
-try:
-    # Send text with thinking_level set to LOW for instant generation
-    response = client.models.generate_content(
-        model='gemini-3.7-flash',
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW)
-        )
-    )
-except Exception as e:
-    st.error(f"An error occurred during AI processing: {e}")
-    return
-
-audit_result = response.text
-                     
+                    # 3. Send text with thinking_level set to LOW for instant generation on 3.7-flash
+                    response = client.models.generate_content(
+                        model='gemini-3.7-flash',
+                        contents=prompt,
+                        config=types.GenerateContentConfig(
+                            thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW)
+                        )
+                    )
                     
                     audit_result = response.text
-                    st.success("Audit Completed Successfully!")
+                    st.success("Audit Completed Instantly!")
                     st.markdown("### 📋 Audit Findings")
                     st.markdown(audit_result)
 
@@ -244,7 +247,8 @@ div[data-testid="stDataFrame"] > div {
 st.markdown(dark_style, unsafe_allow_html=True)
 
 # --- 3. TOP BANNER / COVER PHOTO ---
-st.image("logo.png")
+if os.path.exists("logo.png"):
+    st.image("logo.png")
 
 ticker_html = """
 <div style="overflow: hidden; white-space: nowrap; background-color: #FF8C00; color: #031338; padding: 8px 0; font-weight: bold; font-size: 15px; margin-bottom: 20px; border-radius: 4px;">
