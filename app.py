@@ -135,7 +135,7 @@ def run_ai_auditor_module():
                         contents = [prompt, image_part]
 
                     response = client.models.generate_content(
-                        model="gemini-2.5-flash",
+                        model="gemini-3.5-flash-lite",
                         contents=contents,
                         config=types.GenerateContentConfig(
                             thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel.LOW)
@@ -195,7 +195,7 @@ def run_crack_defect_analyzer():
                     
                     image_part = types.Part.from_bytes(data=defect_image.getvalue(), mime_type=defect_image.type)
                     response = client.models.generate_content(
-                        model="gemini-2.5-flash",
+                        model="gemini-3.5-flash-lite",
                         contents=[prompt, image_part]
                     )
                     st.markdown("### 🛠️ Forensic Diagnosis & Repair Protocol")
