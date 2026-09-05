@@ -89,7 +89,7 @@ def run_ai_auditor_module():
                     from google.genai import types
 
                     response = client.models.generate_content(
-                        model='gemini-1.5-flash',
+                        model='gemini-3.7-flash',
                         contents=[
                             prompt,
                             types.Part.from_bytes(
